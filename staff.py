@@ -81,16 +81,14 @@ class Ui_MainWindow(object):
         FONT_BUTTON.setWeight(75)
 
         # INVENTORY BUTTON
-        self.INVENTORY_BUTTON = QPushButton(self.TASKBAR_FRAME)
-        self.INVENTORY_BUTTON.setObjectName(u"INVENTORY_BUTTON")
+        self.INVENTORY_BUTTON = QPushButton(self.TASKBAR_FRAME, objectName = "INVENTORY_BUTTON")
         self.INVENTORY_BUTTON.setMaximumSize(QSize(250, 60))
         self.INVENTORY_BUTTON.setFont(FONT_BUTTON)
         self.INVENTORY_BUTTON.setFocusPolicy(Qt.StrongFocus)
         self.TASKBAR_FRAME_LAYOUT.addWidget(self.INVENTORY_BUTTON)
     
         # REGISTRATION BUTTON
-        self.REGISTRATION_BUTTON = QPushButton(self.TASKBAR_FRAME)
-        self.REGISTRATION_BUTTON.setObjectName(u"REGISTRATION_BUTTON")
+        self.REGISTRATION_BUTTON = QPushButton(self.TASKBAR_FRAME, objectName = "REGISTRATION_BUTTON")
         self.REGISTRATION_BUTTON.setMaximumSize(QSize(250, 60))
         self.REGISTRATION_BUTTON.setFont(FONT_BUTTON)
         self.REGISTRATION_BUTTON.setFocusPolicy(Qt.StrongFocus)
@@ -213,9 +211,9 @@ class Ui_MainWindow(object):
     # retranslateUi
 
 
-class MainWindow(QMainWindow):
+class Staff(QMainWindow):
     def __init__(self):
-        super(MainWindow, self).__init__()
+        super(Staff, self).__init__()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
 
@@ -248,6 +246,6 @@ class MainWindow(QMainWindow):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    window = MainWindow()
+    window = Staff()
     window.show()
     sys.exit(app.exec_())
