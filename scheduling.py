@@ -3,9 +3,9 @@ from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 
 
-class SCHEDULING(QWidget):  # Inherit from QWidget
+class Scheduling(QWidget):  # Inherit from QWidget
     def __init__(self, parent=None):
-        super(SCHEDULING, self).__init__(parent)
+        super(Scheduling, self).__init__(parent)
         self.setObjectName(u"Inventory")
         self.resize(950, 800)
         self.setStyleSheet(u"background-color: #FFFFFF;")

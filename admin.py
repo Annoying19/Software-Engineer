@@ -3,6 +3,14 @@ from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 from functools import partial
 from login import *
+from inventory import *
+from registration import *
+from scheduling import *
+from report import *
+from payment import *
+from help import *
+from about import *
+
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
@@ -13,9 +21,9 @@ class Ui_MainWindow(object):
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
 
-        self.centralwidget_Layout = QHBoxLayout(self.centralwidget)
-        self.centralwidget_Layout.setSpacing(0)
-        self.centralwidget_Layout.setContentsMargins(0, 0, 0, 0)
+        self.centralwidget_layout = QHBoxLayout(self.centralwidget)
+        self.centralwidget_layout.setSpacing(0)
+        self.centralwidget_layout.setContentsMargins(0, 0, 0, 0)
 
         self.side_frame = QFrame(self.centralwidget)
         self.side_frame.setObjectName("side_frame")
@@ -28,26 +36,20 @@ class Ui_MainWindow(object):
         self.side_frame_layout.setContentsMargins(0, 0, 0, 0)
         
         self.logo_frame = QFrame(self.side_frame)
-        self.logo_frame.setObjectName("logo_frame")
+        self.logo_frame.setObjectName(u"logo_frame")
         self.logo_frame.setMinimumSize(QSize(150, 190))
         self.logo_frame.setMaximumSize(QSize(250, 190))
 
-        self.logo_frame_layout = QVBoxLayout(self.logo_frame)
-        self.logo_frame_layout.setSpacing(0)
-        self.logo_frame_layout.setContentsMargins(25, 0, 0, 0)
-
         self.logo = QLabel(self.logo_frame)
-        self.logo.setObjectName("logo")
-        self.logo.setMinimumSize(QSize(150, 190))
-        self.logo.setMaximumSize(QSize(200, 190))
-        self.logo.setPixmap(QPixmap("assets\slimmerslogo.jpg"))
-        self.logo.setStyleSheet("border-radius: 20px; background-color: #FFFFFF")
+        self.logo.setObjectName(u"logo")
+        self.logo.setGeometry(QRect(50, 20, 150, 150))
+        self.logo.setStyleSheet(u"border-radius: 75px; background-color: #FFFFFF")
+        self.logo.setPixmap(QPixmap(u"../../Downloads/slimmerslogo-removebg-preview.png"))
         self.logo.setScaledContents(True)
 
         self.taskbar_frame = QFrame(self.side_frame)
         self.taskbar_frame.setObjectName("taskbar_frame")
         self.taskbar_frame.setMinimumSize(QSize(250, 550))
-
         self.taskbar_frame_layout = QVBoxLayout(self.taskbar_frame)
         self.taskbar_frame_layout.setSpacing(0)
         self.taskbar_frame_layout.setContentsMargins(0, 6, 0, 0)
@@ -58,20 +60,19 @@ class Ui_MainWindow(object):
             "User Logs", "Maintenance", "Help", "About"
         ]
 
-        font = QFont()
-        font.setPointSize(16)
+        FONT = QFont()
+        FONT.setPointSize(16)
 
         # Creating the Buttons
         for name in button_names:
             button = QPushButton(self.taskbar_frame)
             button.setObjectName(f"{name.lower()}_button")
             button.setMinimumSize(QSize(250, 60))
-            button.setFont(font)
+            button.setFont(FONT)
             button.setText(name)
             self.taskbar_frame_layout.addWidget(button)
             self.buttons[name.lower()] = button
 
-        # logout frame
         self.logout_frame = QFrame(self.side_frame)
         self.logout_frame.setObjectName("logout_frame")
         self.logout_frame.setMinimumSize(QSize(250, 60))
@@ -80,13 +81,11 @@ class Ui_MainWindow(object):
         self.logout_frame_layout.setSpacing(0)
         self.logout_frame_layout.setContentsMargins(0, 0, 0, 0)
 
-        # logout button
         self.logout_button = QPushButton(self.logout_frame)
         self.logout_button.setObjectName("logout_button")
         self.logout_button.setMinimumSize(QSize(250, 60))
-        self.logout_button.setFont(font)
+        self.logout_button.setFont(FONT)
         self.logout_button.setStyleSheet("background-color: #000000; color: #FFFFFF")
-        self.logout_button.setText("Logout")
 
         self.main_frame = QFrame(self.centralwidget)
         self.main_frame.setObjectName("main_frame")
@@ -101,27 +100,37 @@ class Ui_MainWindow(object):
         self.stacked_widget.setObjectName("stacked_widget")
 
         self.pages = {}
-        for name in button_names:
-            page = QWidget()
-            page.setObjectName(name.lower())
-            self.stacked_widget.addWidget(page)
-            self.pages[name.lower()] = page
+        page_classes = [Inventory, Registration, Scheduling, Reports, Payment, Help, About]
+        extra_pages = ["User Logs", "Maintenance"]
+        
+        for page_class in page_classes:
+            page_instance = page_class()
+            page_name = page_class.__name__.lower()
+            page_instance.setObjectName(page_name)
+            self.stacked_widget.addWidget(page_instance)
+            self.pages[page_name] = page_instance
 
-        self.logo_frame_layout.addWidget(self.logo)
+        for name in extra_pages:
+            page_instance = QWidget()
+            page_name = name.lower().replace(" ", "_")
+            page_instance.setObjectName(page_name)
+            self.stacked_widget.addWidget(page_instance)
+            self.pages[page_name] = page_instance
+
         self.side_frame_layout.addWidget(self.logo_frame)
         self.side_frame_layout.addWidget(self.taskbar_frame)
         self.side_frame_layout.addWidget(self.logout_frame)
         self.logout_frame_layout.addWidget(self.logout_button)
-        self.centralwidget_Layout.addWidget(self.side_frame)
+        self.centralwidget_layout.addWidget(self.side_frame)
         self.main_frame_layout.addWidget(self.stacked_widget)
-        self.centralwidget_Layout.addWidget(self.main_frame)
+        self.centralwidget_layout.addWidget(self.main_frame)
 
         MainWindow.setCentralWidget(self.centralwidget)
         self.retranslateUi(MainWindow)
         QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
-        MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", "MainWindow", None))
+        MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", "Admin", None))
         self.logout_button.setText(QCoreApplication.translate("MainWindow", "Logout", None))
 
 
@@ -140,11 +149,12 @@ class Admin(QMainWindow):
         self.update_button_styles("inventory")
 
     def switch_login_window(self):
-        self.login_window = LoginWindow()
+        self.login_window = Login()
         self.login_window.show()
         self.close()
 
     def switch_page(self, page_name):
+        page_name = page_name.replace(" ", "_")  # Adjust for spaces in button names
         self.ui.stacked_widget.setCurrentWidget(self.ui.pages[page_name])
         self.update_button_styles(page_name)
 

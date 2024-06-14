@@ -3,9 +3,9 @@ from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 
 
-class HELP(QWidget):  # Inherit from QWidget
+class Help(QWidget):  # Inherit from QWidget
     def __init__(self, parent=None):
-        super(HELP, self).__init__(parent)
+        super(Help, self).__init__(parent)
         self.setObjectName(u"Inventory")
         self.resize(950, 800)
         self.setStyleSheet(u"background-color: #FFFFFF;")
@@ -26,4 +26,4 @@ class HELP(QWidget):  # Inherit from QWidget
 
     def retranslateUi(self):
         self.setWindowTitle(QCoreApplication.translate("Inventory", u"Inventory", None))
-        self.label.setText(QCoreApplication.translate("Inventory", u"HELP", None))
+        self.label.setText(QCoreApplication.translate("Inventory", u"Help", None))

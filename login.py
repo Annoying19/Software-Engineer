@@ -4,15 +4,15 @@ from PySide2.QtCore import QSize, Qt, QCoreApplication
 from PySide2.QtGui import QPixmap, QFont
 from PySide2.QtWidgets import QApplication, QMainWindow, QWidget, QLabel, QLineEdit, QPushButton, QMessageBox
 from staff import *
+from admin import * 
 
-class LoginWindow(QMainWindow):
+class Login(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Login Window")
         self.resize(1200, 800)
         self.setMaximumSize(QSize(1200, 800))
         self.setStyleSheet("background-color: #002877")
-
         self.central_widget = QWidget()
         self.setCentralWidget(self.central_widget)
 
@@ -74,29 +74,34 @@ class LoginWindow(QMainWindow):
         self.login_button.setStyleSheet(button_style)
         self.login_button.clicked.connect(self.handle_login)
 
-    def open_main_window(self):
-        self.main_window = Staff()
-        self.main_window.show()
-        self.close()
+    def open_main_window(self, role):
+        if role == "admin":
+            self.main_window = Admin()
+            self.main_window.show()
+            self.close()
+        else:
+            self.main_window = Staff()
+            self.main_window.show()
+            self.close()
+
     def handle_login(self):
         username = self.username_input.text()
         password = self.password_input.text()
 
-        if self.check_credentials(username, password):
-            QMessageBox.information(self, "Login Successful", "You have successfully logged in.")
-                                    
-            self.open_main_window()
-
+        valid, role = self.check_credentials(username, password)
+        if valid:
+            QMessageBox.information(self, "Login Successful", "You have successfully logged in.")                         
+            self.open_main_window(role)
         else:
             QMessageBox.warning(self, "Login Failed", "Invalid username or password.")
             
 
     def check_credentials(self, username, password):
-        connection = sqlite3.connect('staff.db')
+        connection = sqlite3.connect('database.db')
         cursor = connection.cursor()
 
         cursor.execute('''
-        SELECT password_hash, role FROM User_Accounts WHERE username = ?
+        SELECT password_hash, role FROM Users WHERE username = ?
         ''', (username,))
         result = cursor.fetchone()
         print(result)
@@ -106,7 +111,7 @@ class LoginWindow(QMainWindow):
             password_hash, role = result
             if self.verify_password(password, password_hash):
                 print(f"Logged in as {role}")
-                return True
+                return True, role
         return False
 
     def verify_password(self, password, password_hash):
@@ -117,6 +122,6 @@ class LoginWindow(QMainWindow):
 
 if __name__ == "__main__":
     app = QApplication([])
-    window = LoginWindow()
+    window = Login()
     window.show()
     app.exec_()

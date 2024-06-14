@@ -26,7 +26,7 @@
      <height>16777215</height>
     </size>
    </property>
-   <layout class="QHBoxLayout" name="centralwidget_Layout" stretch="0,0">
+   <layout class="QHBoxLayout" name="centralwidget_layout" stretch="0,0">
     <property name="spacing">
      <number>0</number>
     </property>
@@ -43,7 +43,7 @@
      <number>0</number>
     </property>
     <item>
-     <widget class="QFrame" name="Side_Frame">
+     <widget class="QFrame" name="side_frame">
       <property name="minimumSize">
        <size>
         <width>250</width>
@@ -63,7 +63,7 @@
       <property name="lineWidth">
        <number>1</number>
       </property>
-      <layout class="QVBoxLayout" name="Side_Frame_Layout">
+      <layout class="QVBoxLayout" name="side_frame_layout">
        <property name="spacing">
         <number>0</number>
        </property>
@@ -80,7 +80,7 @@
         <number>0</number>
        </property>
        <item>
-        <widget class="QFrame" name="Logo_Frame">
+        <widget class="QFrame" name="logo_frame">
          <property name="minimumSize">
           <size>
            <width>150</width>
@@ -102,55 +102,44 @@
          <property name="frameShadow">
           <enum>QFrame::Raised</enum>
          </property>
-         <layout class="QVBoxLayout" name="Logo_Frame_Layout">
-          <property name="spacing">
-           <number>0</number>
+         <widget class="QLabel" name="logo">
+          <property name="geometry">
+           <rect>
+            <x>50</x>
+            <y>20</y>
+            <width>150</width>
+            <height>150</height>
+           </rect>
           </property>
-          <property name="leftMargin">
-           <number>25</number>
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>0</height>
+           </size>
           </property>
-          <property name="topMargin">
-           <number>0</number>
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>16777215</height>
+           </size>
           </property>
-          <property name="rightMargin">
-           <number>0</number>
+          <property name="styleSheet">
+           <string notr="true">border-radius: 75px; background-color: #FFFFFF</string>
           </property>
-          <property name="bottomMargin">
-           <number>0</number>
+          <property name="text">
+           <string/>
           </property>
-          <item>
-           <widget class="QLabel" name="Logo">
-            <property name="minimumSize">
-             <size>
-              <width>150</width>
-              <height>190</height>
-             </size>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>200</width>
-              <height>190</height>
-             </size>
-            </property>
-            <property name="styleSheet">
-             <string notr="true">border-radius: 95px; background-color: #FFFFFF</string>
-            </property>
-            <property name="text">
-             <string/>
-            </property>
-            <property name="pixmap">
-             <pixmap>../../Downloads/slimmerslogo-removebg-preview.png</pixmap>
-            </property>
-            <property name="scaledContents">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-         </layout>
+          <property name="pixmap">
+           <pixmap>../../Downloads/slimmerslogo-removebg-preview.png</pixmap>
+          </property>
+          <property name="scaledContents">
+           <bool>true</bool>
+          </property>
+         </widget>
         </widget>
        </item>
        <item>
-        <widget class="QFrame" name="Taskbar_Frame">
+        <widget class="QFrame" name="taskbar_frame">
          <property name="minimumSize">
           <size>
            <width>250</width>
@@ -166,7 +155,7 @@
          <property name="frameShadow">
           <enum>QFrame::Raised</enum>
          </property>
-         <layout class="QVBoxLayout" name="Taskbar_Frame_Layout">
+         <layout class="QVBoxLayout" name="taskbar_frame_layout">
           <property name="spacing">
            <number>0</number>
           </property>
@@ -183,7 +172,7 @@
            <number>0</number>
           </property>
           <item>
-           <widget class="QPushButton" name="Inventory_Burton">
+           <widget class="QPushButton" name="inventory_button">
             <property name="minimumSize">
              <size>
               <width>250</width>
@@ -201,7 +190,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="Registration_Button">
+           <widget class="QPushButton" name="registration_button">
             <property name="minimumSize">
              <size>
               <width>250</width>
@@ -219,7 +208,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="Scheduling_Button">
+           <widget class="QPushButton" name="scheduling_button">
             <property name="minimumSize">
              <size>
               <width>250</width>
@@ -237,7 +226,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="Reports_Button">
+           <widget class="QPushButton" name="reports_button">
             <property name="minimumSize">
              <size>
               <width>250</width>
@@ -255,7 +244,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="Payment_Button">
+           <widget class="QPushButton" name="payment_button">
             <property name="minimumSize">
              <size>
               <width>250</width>
@@ -273,7 +262,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="Help_Button">
+           <widget class="QPushButton" name="help_button">
             <property name="minimumSize">
              <size>
               <width>250</width>
@@ -291,7 +280,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="About_Button">
+           <widget class="QPushButton" name="about_button">
             <property name="minimumSize">
              <size>
               <width>250</width>
@@ -312,7 +301,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QFrame" name="Logout_Frame">
+        <widget class="QFrame" name="logout_frame">
          <property name="minimumSize">
           <size>
            <width>250</width>
@@ -328,7 +317,7 @@
          <property name="frameShadow">
           <enum>QFrame::Raised</enum>
          </property>
-         <layout class="QVBoxLayout" name="Logout_Frame_Layout">
+         <layout class="QVBoxLayout" name="logout_frame_layout">
           <property name="spacing">
            <number>0</number>
           </property>
@@ -345,7 +334,7 @@
            <number>0</number>
           </property>
           <item>
-           <widget class="QPushButton" name="Logout_Button">
+           <widget class="QPushButton" name="logout_button">
             <property name="minimumSize">
              <size>
               <width>250</width>
@@ -372,7 +361,7 @@
      </widget>
     </item>
     <item>
-     <widget class="QFrame" name="Main_Frame">
+     <widget class="QFrame" name="main_frame">
       <property name="minimumSize">
        <size>
         <width>950</width>
@@ -389,7 +378,7 @@
       <property name="frameShadow">
        <enum>QFrame::Raised</enum>
       </property>
-      <layout class="QVBoxLayout" name="Main_Frame_Layout">
+      <layout class="QVBoxLayout" name="main_frame_layout">
        <property name="spacing">
         <number>0</number>
        </property>

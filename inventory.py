@@ -3,9 +3,9 @@ from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 
 
-class INVENTORY(QWidget):  # Inherit from QWidget
+class Inventory(QWidget):  # Inherit from QWidget
     def __init__(self, parent=None):
-        super(INVENTORY, self).__init__(parent)
+        super(Inventory, self).__init__(parent)
         self.setObjectName(u"Inventory")
         self.resize(950, 800)
         self.setStyleSheet(u"background-color: #FFFFFF;")
