@@ -15,6 +15,7 @@ class Payment(QWidget):  # Inherit from QWidget
         self.search_bar = QLineEdit(self)
         self.search_bar.setGeometry(QRect(30, 20, 400, 61))
         self.search_bar.setObjectName("search_bar_payment")
+        self.search_bar.setPlaceholderText("Enter Member ID here")
         self.search_bar.setStyleSheet("background: white")
 
         # Search Button
@@ -45,8 +46,8 @@ class Payment(QWidget):  # Inherit from QWidget
         self.btn_record.setObjectName("btn_record")
         self.btn_record.setStyleSheet(u"background: lime;\n""color: white")
 
-
-        self.btn_search.clicked.connect(self.loadData)
+        self.loadData
+        self.btn_search.clicked.connect(self.search)
         self.btn_record.clicked.connect(self.showRecord)
         self.retranslateUi()
 
@@ -67,21 +68,55 @@ class Payment(QWidget):  # Inherit from QWidget
             for row_number, row_data in enumerate(cursor):
                 self.tableWidget.insertRow(row_number)  
                 for column_number, data in enumerate(row_data):
-                    item = QTableWidgetItem(str(data))
-                    item.setTextAlignment(Qt.AlignRight)  # Align text to the right
-                    self.tableWidget.setItem(row_number, column_number, item)
+                    # Handle BLOB data
+                    if isinstance(data, bytes):
+                        image = QImage.fromData(data)
+                        if not image.isNull():
+                            pixmap = QPixmap.fromImage(image)
+                            label = QLabel()
+                            label.setPixmap(pixmap.scaled(100, 100, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+                            label.setAlignment(Qt.AlignRight)
+                            self.tableWidget.setCellWidget(row_number, column_number, label)
+                        else:
+                            item = QTableWidgetItem("Invalid Image")
+                            item.setTextAlignment(Qt.AlignRight)
+                            self.tableWidget.setItem(row_number, column_number, item)
+                    else:
+                        item = QTableWidgetItem(str(data))
+                        item.setTextAlignment(Qt.AlignRight)
+                        self.tableWidget.setItem(row_number, column_number, item)
             
             conn.close()
 
-    def insert_image(self, image):
-        # Open a file dialog to select an image file
-        file_name, _ = QFileDialog.getOpenFileName(self, "Select Image", "", "Image Files (*.png *.jpg *.bmp *.gif)")
-        image_label = image
-        if file_name:
-            # Load the image and set it to the label
-            pixmap = QPixmap(file_name)
-            image_label.setPixmap(pixmap.scaled(image_label.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation))
+    def search(self):
+        search_term = self.search_bar.text()
+        conn = sqlite3.connect("Software-Engineer-master/database.db")
+        cursor = conn.cursor()
+        self.tableWidget.setRowCount(0)
 
+        cursor.execute("SELECT * FROM Contracts WHERE member_id = ?", (search_term,))
+        for row_number, row_data in enumerate(cursor):
+            self.tableWidget.insertRow(row_number)  
+            for column_number, data in enumerate(row_data):
+                # Handle BLOB data
+                if isinstance(data, bytes):
+                    image = QImage.fromData(data)
+                    if not image.isNull():
+                        pixmap = QPixmap.fromImage(image)
+                        label = QLabel()
+                        label.setPixmap(pixmap.scaled(100, 100, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+                        label.setAlignment(Qt.AlignRight)
+                        self.tableWidget.setCellWidget(row_number, column_number, label)
+                    else:
+                        item = QTableWidgetItem("Invalid Image")
+                        item.setTextAlignment(Qt.AlignRight)
+                        self.tableWidget.setItem(row_number, column_number, item)
+                else:
+                    item = QTableWidgetItem(str(data))
+                    item.setTextAlignment(Qt.AlignRight)
+                    self.tableWidget.setItem(row_number, column_number, item)
+        
+        conn.close()
 
     def showRecord(self):
         popup = Record(self)
@@ -99,7 +134,7 @@ class Record(QDialog):
         super(Record, self).__init__(parent)
         self.setWindowTitle("Record")
         self.resize(700, 600)
-        self.setStyleSheet("background-color: #FFFFFF;")
+        self.setStyleSheet("background-color: #E0E0E0;")
          
         # initializaitons
         self.btn_search = QPushButton(self)
@@ -113,11 +148,12 @@ class Record(QDialog):
         self.softcopy = QLabel(self)
 
 
-
         # Search Bar
         self.search_bar = QLineEdit(self)
         self.search_bar.setGeometry(QRect(30, 20, 574, 61))
         self.search_bar.setObjectName("search_bar_record")
+        self.search_bar.setPlaceholderText("Enter Member ID here")
+        self.search_bar.setStyleSheet("background: white")
 
         # Search Button 
         search = self.btn_search
@@ -131,6 +167,12 @@ class Record(QDialog):
         add.setGeometry(QRect(535, 530, 140, 45))
         add.setStyleSheet(u"background: lime;\n""color: white")
         add.clicked.connect(self.close)
+        
+        # Insert button
+        insert = self.insert_button
+        insert.setObjectName("record_insert_button")
+        insert.setGeometry(QRect(50, 520, 361, 61))
+        insert.setStyleSheet("background: red;\n""color: white")
 
         # label font Style 
         label_font = QFont()
@@ -148,6 +190,7 @@ class Record(QDialog):
         name.setText("Name")
         name.setFont(label_font)
 
+
         id = self.id
         id.setGeometry(QRect(40, 200, 301, 51))
         id.setText("Membership ID")
@@ -156,40 +199,146 @@ class Record(QDialog):
         name_id = self.name_id
         name_id.setGeometry(QRect(40, 150, 361, 51))
         name_id.setFont(id_font)
+        name_id.setStyleSheet("background: white;\n""border: 1px solid black")
 
         id_id = self.id_id
         id_id.setGeometry(QRect(40, 260, 361, 51))
         id_id.setFont(id_font)
+        id_id.setStyleSheet("background: white;\n""border: 1px solid black")
 
         photo = self.photo
         photo.setGeometry(QRect(450, 100, 225, 255))
-        photo.setStyleSheet(u"border: 1px solid black")
+        photo.setStyleSheet("background: white;\n""border: 1px solid black")
 
         softcopy = self.softcopy
         softcopy.setGeometry(QRect(50, 373, 361, 151))
-        softcopy.setStyleSheet(u"border: 1px solid black")
+        softcopy.setStyleSheet("background: white;\n""border: 1px solid black")
+        self.copy = None
 
-        insert = self.insert_button
-        insert.setObjectName("record_insert_button")
-        insert.setGeometry(QRect(50, 520, 361, 61))
+        
 
-
+        self.btn_search.clicked.connect(self.search)
+        insert.clicked.connect(self.insert)
+        add.clicked.connect(self.record)
 
         # translate
         add.setText(QCoreApplication.translate("Record", "Add"))
         search.setText(QCoreApplication.translate("Record", "Search"))
         insert.setText(QCoreApplication.translate("Record", "Insert File"))
     
-    def searchData(self):
+    # Identify the member first
+    def search(self):
         search_term = self.search_bar.text()
         conn = sqlite3.connect("Software-Engineer-master/database.db")
         cursor = conn.cursor()
 
+        cursor.execute("SELECT member_id, first_name || ' ' || middle_name || ' ' || last_name AS full_name, photo FROM Members WHERE member_id = ?", (search_term,))
+        result = cursor.fetchone()
 
+        if result:
+            membership_id, full_name, photo = result
+            self.name_id.setText(full_name)
+            self.id_id.setText(str(membership_id))
 
+            pixmap = QPixmap()
+            pixmap.loadFromData(photo)
+            if not pixmap.isNull():
+                self.photo.setPixmap(pixmap.scaled(self.photo.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation))
+            else:
+                self.photo.setText("No image available")
+                self.photo.setAlignment(Qt.AlignCenter)
 
+            return membership_id, True
         
+        else:
+            self.name_id.setText('No match found.')
+            self.id_id.setText('No match found.')
+            self.photo.clear()
+            self.photo.setText("No image available")
+            self.photo.setAlignment(Qt.AlignCenter)
+            
+            
+        conn.close()
+        return None, False
+    
+    # Insert Softcopy function
+    def insert(self):
+        file_name, _ = QFileDialog.getOpenFileName(self, "Select Image", "", "Image Files (*.png *.jpg *.bmp *.gif)")
+        if file_name:
+            self.copy = file_name
+            pixmap = QPixmap(file_name)
+            self.softcopy.setPixmap(pixmap.scaled(self.softcopy.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation))
+            self.softcopy.setAlignment(Qt.AlignCenter)
 
+    def convert_to_bytes(self):
+        if self.copy:
+            try:
+                pixmap = QPixmap(self.copy)
+                image = pixmap.toImage()
+
+                byte_array = QByteArray()
+                buffer = QBuffer(byte_array)
+                buffer.open(QIODevice.WriteOnly)
+                image.save(buffer, 'PNG')  # Change 'PNG' to 'JPEG' or another format if needed
+                buffer.close()
+                bytes_data = bytes(byte_array)
+
+                return bytes_data
+
+            except Exception as e:
+                print(f"Error converting image to bytes: {e}")
+                QMessageBox.critical(self, "Error", f"Failed to convert image to bytes: {e}")
+
+        return None
+
+
+    # Then Record When The member is Identified and Softcopy is inserted
+    def record(self):
+        conn = sqlite3.connect("Software-Engineer-master/database.db")
+        cursor = conn.cursor()
+
+        try:
+            # Get count of existing rows in Contracts table
+            cursor.execute("SELECT COUNT(reference_number) FROM Contracts")
+            count_result = cursor.fetchone()  # Fetch the count result
+            count = count_result[0] if count_result else 0  # Extract count value or default to 0
+
+            # Call search to get membership_id and found
+            membership_id, found = self.search()
+
+            # Call insert to get softcopy data
+            softcopy = self.convert_to_bytes()
+
+            if softcopy is not None and found:
+                # Insert new record into Contracts table
+                cursor.execute("INSERT INTO Contracts (reference_number, member_id, softcopy_contract) VALUES (?, ?, ?)",
+                            (count + 1, membership_id, softcopy))
+                conn.commit()
+                alert = QMessageBox()
+                alert.setWindowTitle('Success')
+                alert.setText('Recorded')
+                alert.setIcon(QMessageBox.Information)
+                alert.exec_()
+    
+            else:
+                # Display error message if recording failed
+                alert = QMessageBox()
+                alert.setWindowTitle('Error')
+                alert.setText('Recording failed. Please try again.')
+                alert.setIcon(QMessageBox.Critical)
+                alert.exec_()
+
+        except sqlite3.Error as e:
+            # Handle any SQLite errors
+            alert = QMessageBox()
+            alert.setWindowTitle('Error')
+            alert.setText('Recording failed. Please try again.')
+            alert.setIcon(QMessageBox.Critical)
+            alert.exec_()
+            conn.rollback()  # Rollback changes if error occurs
+
+        finally:
+            conn.close()
 
 
 if __name__ == "__main__":
