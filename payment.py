@@ -2,11 +2,7 @@ from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 import sqlite3
-<<<<<<< HEAD
 from assets import *
-=======
-
->>>>>>> 59ca9150ac29b0972ce66de73dffd4a526f2b064
 
 class Payment(QWidget):  # Inherit from QWidget
     def __init__(self, parent=None):
@@ -57,12 +53,6 @@ class Payment(QWidget):  # Inherit from QWidget
 
     # Populate Table View
     def loadData(self):
-<<<<<<< HEAD
-=======
-            conn = sqlite3.connect("Software-Engineer-master/database.db")
-            cursor = conn.cursor()
-            
->>>>>>> 59ca9150ac29b0972ce66de73dffd4a526f2b064
             # Load Table
             self.tableWidget.setRowCount(0)
             cursor.execute('PRAGMA table_info(Contracts)')
@@ -93,19 +83,10 @@ class Payment(QWidget):  # Inherit from QWidget
                         item.setTextAlignment(Qt.AlignRight)
                         self.tableWidget.setItem(row_number, column_number, item)
             
-<<<<<<< HEAD
 
 
     def search(self):
         search_term = self.search_bar.text()
-=======
-            conn.close()
-
-    def search(self):
-        search_term = self.search_bar.text()
-        conn = sqlite3.connect("Software-Engineer-master/database.db")
-        cursor = conn.cursor()
->>>>>>> 59ca9150ac29b0972ce66de73dffd4a526f2b064
         self.tableWidget.setRowCount(0)
 
         cursor.execute("SELECT * FROM Contracts WHERE member_id = ?", (search_term,))
@@ -129,12 +110,7 @@ class Payment(QWidget):  # Inherit from QWidget
                     item = QTableWidgetItem(str(data))
                     item.setTextAlignment(Qt.AlignRight)
                     self.tableWidget.setItem(row_number, column_number, item)
-<<<<<<< HEAD
     
-=======
-        
-        conn.close()
->>>>>>> 59ca9150ac29b0972ce66de73dffd4a526f2b064
 
     def showRecord(self):
         popup = Record(self)
@@ -247,11 +223,6 @@ class Record(QDialog):
     # Identify the member first
     def search(self):
         search_term = self.search_bar.text()
-<<<<<<< HEAD
-=======
-        conn = sqlite3.connect("Software-Engineer-master/database.db")
-        cursor = conn.cursor()
->>>>>>> 59ca9150ac29b0972ce66de73dffd4a526f2b064
 
         cursor.execute("SELECT member_id, first_name || ' ' || middle_name || ' ' || last_name AS full_name, photo FROM Members WHERE member_id = ?", (search_term,))
         result = cursor.fetchone()
@@ -278,12 +249,6 @@ class Record(QDialog):
             self.photo.setText("No image available")
             self.photo.setAlignment(Qt.AlignCenter)
             
-<<<<<<< HEAD
-
-=======
-            
-        conn.close()
->>>>>>> 59ca9150ac29b0972ce66de73dffd4a526f2b064
         return None, False
     
     # Insert Softcopy function
@@ -319,11 +284,6 @@ class Record(QDialog):
 
     # Then Record When The member is Identified and Softcopy is inserted
     def record(self):
-<<<<<<< HEAD
-=======
-        conn = sqlite3.connect("Software-Engineer-master/database.db")
-        cursor = conn.cursor()
->>>>>>> 59ca9150ac29b0972ce66de73dffd4a526f2b064
 
         try:
             # Get count of existing rows in Contracts table
@@ -341,11 +301,7 @@ class Record(QDialog):
                 # Insert new record into Contracts table
                 cursor.execute("INSERT INTO Contracts (reference_number, member_id, softcopy_contract) VALUES (?, ?, ?)",
                             (count + 1, membership_id, softcopy))
-<<<<<<< HEAD
                 connection.commit()
-=======
-                conn.commit()
->>>>>>> 59ca9150ac29b0972ce66de73dffd4a526f2b064
                 alert = QMessageBox()
                 alert.setWindowTitle('Success')
                 alert.setText('Recorded')
@@ -367,15 +323,8 @@ class Record(QDialog):
             alert.setText('Recording failed. Please try again.')
             alert.setIcon(QMessageBox.Critical)
             alert.exec_()
-<<<<<<< HEAD
             connection.rollback()  # Rollback changes if error occurs
 
-=======
-            conn.rollback()  # Rollback changes if error occurs
-
-        finally:
-            conn.close()
->>>>>>> 59ca9150ac29b0972ce66de73dffd4a526f2b064
 
 
 if __name__ == "__main__":
