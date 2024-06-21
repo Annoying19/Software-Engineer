@@ -45,7 +45,6 @@ class Registration(QWidget):
         self.open_main_page()               # MAIN PAGE
         self.open_create_member_page()      # MEMBER PAGE
         self.open_create_attendance_page()  # ATTENDANCE PAGE
-        self.open_create_employee_page()    # EMPLOYEE PAGE
 
         self.verticalLayout.addWidget(self.stackedWidget)
         self.stackedWidget.setCurrentIndex(0)
@@ -55,7 +54,7 @@ class Registration(QWidget):
         self.stackedWidget.setCurrentIndex(0)
         
     def show_member_page(self):
-        self.generate_employee_id()
+        self.generate_member_id()
         self.clear_inputs(self.member_page)
         self.stackedWidget.setCurrentIndex(1)
         
@@ -699,312 +698,6 @@ class Registration(QWidget):
         self.attendance_back_button.clicked.connect(lambda: self.back_button(self.attendance_page))
         self.attendance_clear_button.clicked.connect(lambda: self.clear_inputs(self.attendance_page))
 
-        
-# =============================================================
-#                     CREATE EMPLOYEE PAGE
-# =============================================================    
-    def open_create_employee_page(self):
-        self.employee_page = QWidget()
-        self.employee_page.setObjectName("employee_page")
-        # ===========================================
-        #             EMPLOYEE PAGE LABELS
-        # ===========================================
-
-        # employee REGISTRATION TEXT LABEL
-        self.employee_registration_text_label = createLabel(
-            parent = self.employee_page,
-            name = "employee_registration_text_label",
-            geometry = QRect(305, 50, 385, 40),
-            text = "Employee Registration",
-            font = font4,
-            style = "font: bold"
-        )
-
-        # employee ID LABEL
-        self.employee_id_label = createLabel(
-            parent = self.employee_page,
-            name = "employee_id_label",
-            geometry = QRect(40, 150, 191, 40),
-            text = "Employee ID:",
-            font = font1,
-            style = ""
-        )
-
-        # employee ID OUTPUT LABEL
-        self.employee_id_output_label = createLabel(
-            parent = self.employee_page,
-            name = "employee_id_output",
-            geometry = QRect(240, 150, 410, 40),
-            text = "",
-            font = font1,
-            style = "background-color: #F9F7FF; border: 1px solid black"
-        )
-
-        # FIRST NAME LABEL
-        self.employee_first_name_label = createLabel(
-            parent = self.employee_page,
-            name = "first_name_label",
-            geometry = QRect(40, 210, 130, 40),
-            text = "First Name",
-            font = font1,
-            style = ""
-        )
-
-        # MIDDLE NAME LABEL
-        self.employee_middle_name_label = createLabel(
-            parent = self.employee_page,
-            name = "middle_name_label",
-            geometry = QRect(380, 210, 160, 40),
-            text = "Middle Name",
-            font = font1,
-            style = ""
-        )
-
-        # LAST NAME LABEL
-        self.employee_last_name_label = createLabel(
-            parent = self.employee_page,
-            name = "last_name_label",
-            geometry = QRect(40, 310, 130, 40),
-            text = "Last Name",
-            font = font1,
-            style = ""
-        )
-
-        # GENDER LABEL
-        self.employee_gender_label = createLabel(
-            parent = self.employee_page,
-            name = "gender_label",
-            geometry = QRect(380, 310, 130, 40),
-            text = "Gender",
-            font = font1,
-            style = ""
-        )
-
-        # ADDRESS LABEL
-        self.employee_address_label = createLabel(
-            parent = self.employee_page,
-            name = "addresslabel",
-            geometry = QRect(40, 420, 130, 40),
-            text = "Address",
-            font = font1,
-            style = ""
-        )
-
-        # BIRTHDATE LABEL
-        self.employee_birthdate_label = createLabel(
-            parent = self.employee_page,
-            name = "birthdate_label",
-            geometry = QRect(380, 420, 130, 40),
-            text = "Birthdate",
-            font = font1,
-            style = ""
-        )
-
-        # PHONE NUMBER LABEL
-        self.employee_phone_number_label = createLabel(
-            parent = self.employee_page,
-            name = "phone_number_label",
-            geometry = QRect(40, 530, 180, 40),
-            text = "Phone Number",
-            font = font1,
-            style = ""
-        )
-
-        # EMPLOYEE TYPE LABEL
-        self.employee_position_label = createLabel(
-            parent = self.employee_page,
-            name = "position_label",
-            geometry = QRect(380, 530, 210, 40),
-            text = "Position",
-            font = font1,
-            style = ""
-        )
-
-        # START DATE LABEL
-        self.employee_start_date_label = createLabel(
-            parent = self.employee_page,
-            name = "start_date_label",
-            geometry = QRect(40, 630, 180, 40),
-            text = "Hire Date",
-            font = font1,
-            style = ""
-        )
-
-        # IMAGE LABEL 
-        self.employee_image_label = createLabel(
-            parent = self.employee_page,
-            name = "image_label",
-            geometry = QRect(680, 140, 250, 250),
-            text = "",
-            font = font1,
-            style = "background-color: #F9F7FF; border: 1.5px solid black"
-        )
-        
-        # SIGNATURE LABEL
-        self.employee_signature_label = createLabel(
-            parent = self.employee_page,
-            name = "signature_label",
-            geometry = QRect(750, 460, 180, 90),
-            text = "",
-            font = font1,
-            style = "background-color: #F9F7FF; border: 1.5px solid black"
-        )
-        
-        # ===========================================
-        #             EMPLOYEE PAGE INPUTS
-        # ===========================================
-
-        # FIRST NAME INPUT
-        self.employee_first_name_input = createLineInput(
-            parent = self.employee_page,
-            name = "first_name_output",
-            geometry = QRect(40, 260, 330, 40),
-            font = font2,
-            style = "background-color: #F9F7FF; border: 1px solid black"
-        )
-
-        # MIDDLE NAME INPUT
-        self.employee_middle_name_input = createLineInput(
-            parent = self.employee_page,
-            name = "middle_name_output",
-            geometry = QRect(380, 260, 280, 40),
-            font = font2,
-            style = "background-color: #F9F7FF; border: 1px solid black"
-        )
-
-        # LAST NAME INPUT
-        self.employee_last_name_input = createLineInput(
-            parent = self.employee_page,
-            name = "last_name_output",
-            geometry = QRect(40, 360, 330, 40),
-            font = font2,
-            style = "background-color: #F9F7FF; border: 1px solid black"
-        )
-
-        # ADDRESS INPUT
-        self.employee_address_input = createLineInput(
-            parent = self.employee_page,
-            name = "address_output",
-            geometry = QRect(40, 470, 330, 40),
-            font = font2,
-            style = "background-color: #F9F7FF; border: 1px solid black"
-        )
-        # PHONE NUMBER INPUT
-        self.employee_phone_number_input = createLineInput(
-            parent = self.employee_page,
-            name = "phone_number_output",
-            geometry = QRect(40, 570, 330, 40),
-            font = font2,
-            style = "background-color: #F9F7FF; border: 1px solid black"
-        )
-
-        # ===========================================
-        #            EMPLOYEE PAGE COMBO BOX
-        # ===========================================
-
-        # GENDER BOX
-        self.employee_gender_combo_box = createComboBox(
-            parent = self.employee_page,
-            name = "gender_combo_box",
-            geometry = QRect(380, 360, 140, 40),
-            font = font2,
-            item = ['Male', 'Female'],
-            style = "background-color: #F9F7FF; border: 1px solid black"
-        )
-
-        # EMPLOYEE TYPE BOX
-        self.employee_position_combo_box = createLineInput(
-            parent = self.employee_page,
-            name = "position",
-            geometry = QRect(380, 570, 210, 40),
-            font = font2,
-            style = "background-color: #F9F7FF; border: 1px solid black"
-        )
-
-        # ===========================================
-        #              EMPLOYEE PAGE DATE
-        # ===========================================
-
-        # BIRTH DATE
-        self.employee_birth_date = createDate(
-            parent = self.employee_page,
-            name = "birthdate",
-            geometry = QRect(380, 470, 200, 40),
-            font = font2,
-            style = "background-color: #F9F7FF; border: 1px solid black"
-        )
-
-        # START DATE
-        self.employee_start_date = createDate(
-            parent = self.employee_page,
-            name = "employee_start_date",
-            geometry = QRect(40, 670, 200, 40),
-            font = font2,
-            style = "background-color: #F9F7FF; border: 1px solid black"
-        )
-
-        # ===========================================
-        #              EMPLOYEE PAGE BUTTONS
-        # ===========================================
-    
-        # BACK BUTTON
-        self.employee_back_button = createButton(
-            parent = self.employee_page,
-            name = "back_button",
-            geometry = QRect(40, 50, 70, 50),
-            text = "Back",
-            font = font3,
-            style = "background-color: #004F9A"
-        )
-
-        # INSERT IMAGE BUTTON
-        self.employee_insert_image_button = createButton(
-            parent = self.employee_page,
-            name = "insert_image_button",
-            geometry = QRect(680, 400, 250, 50),
-            text = "Insert Image",
-            font = font3,
-            style = "background-color: #004F9A"
-        )
-
-        # INSERT SIGNATURE BUTTON
-        self.employee_insert_signature_button = createButton(
-            parent = self.employee_page,
-            name = "insert_signature_button",
-            geometry = QRect(680, 560, 250, 50),
-            text = "Insert Signature",
-            font = font3,
-            style = "background-color: #004F9A"
-        )
-
-        # CLEAR BUTTON
-        self.employee_clear_button = createButton(
-            parent = self.employee_page,
-            name = "clear_button",
-            geometry = QRect(510, 730, 170, 50),
-            text = "Clear",
-            font = font3,
-            style = "background-color: #882400"
-        )
-
-        # REGISTER BUTTON
-        self.employee_register_button = createButton(
-            parent = self.employee_page,
-            name = "register_button",
-            geometry = QRect(690, 730, 250, 50),
-            text = "Register",
-            font = font3,
-            style = "background-color: #006646"
-        )
-
-
-        self.employee_insert_image_button.clicked.connect(lambda: self.insert_image(self.employee_image_label))
-        self.employee_insert_signature_button.clicked.connect(lambda: self.insert_image(self.employee_signature_label))
-        self.employee_clear_button.clicked.connect(lambda : self.clear_inputs(self.employee_page))
-        self.employee_back_button.clicked.connect(self.show_main_page)
-        self.stackedWidget.addWidget(self.employee_page)
-
-
 # =============================================================
 #                      BACK-END FUNCTIONS
 # ============================================================= 
@@ -1129,12 +822,12 @@ class Registration(QWidget):
     def update_search_results(self):
         search_text = self.attendance_member_name_input.text()
         self.search_results.clear()
-        self.cursor = cursor
+
         if search_text:
             # Fetch members from database based on search text
             query = "SELECT first_name, last_name FROM Members WHERE first_name || ' ' || last_name LIKE ?"
-            self.cursor.execute(query, ('%' + search_text + '%',))
-            results = self.cursor.fetchall()
+            cursor.execute(query, ('%' + search_text + '%',))
+            results = cursor.fetchall()
             # Add results to list widget
             for first_name, last_name in results:
                 full_name = f"{first_name} {last_name}"
@@ -1195,13 +888,6 @@ class Registration(QWidget):
         self.attendance_start_date_output_label.setText(start_date)
         self.attendance_end_date_output_label.setText(end_date)
 
-        self.attendance_membership_id_output_label.show()
-        self.attendance_gender_output_label.show()
-        self.attendance_phone_number_output_label.show()
-        self.attendance_membership_type_output_label.show()
-        self.attendance_start_date_output_label.show()
-        self.attendance_end_date_output_label.show()
-
 
     def handle_item_selection(self, item):
         selected_name = item.text()
@@ -1211,7 +897,7 @@ class Registration(QWidget):
 
         self.search_results.hide()  # Hide list widget after selection
 
-    def generate_employee_id(self):
+    def generate_member_id(self):
         current_time = datetime.now()
         formatted_time = current_time.strftime('%m%d%y%H%M%S')
         prefix = '10'
