@@ -5,7 +5,7 @@ import sqlite3
 from queue import Queue
 
 # DATABASE
-connection = sqlite3.connect("database.db")
+connection = sqlite3.connect("Software-Engineer-master/database.db")
 cursor = connection.cursor()
 
 
@@ -13,11 +13,17 @@ font1 = QFont()
 font2 = QFont()
 font3 = QFont() 
 font4 = QFont()
+font5 = QFont()
+font6 = QFont()
 
 font1.setPointSize(20)
 font2.setPointSize(18)
 font3.setPointSize(16)
 font4.setPointSize(26)
+font5.setPointSize(8)
+font6.setPointSize(12)
+
+
 
 
 
@@ -53,7 +59,7 @@ def createTime(parent, name, geometry, font, style):
     time.setStyleSheet(style)
     return time
 
-def createLabel(parent, name, geometry, text, font, style):
+def createLabel(parent, name, geometry, text, font, style = ""):
     label = QLabel(parent)
     label.setObjectName(name)
     label.setGeometry(geometry)
@@ -62,12 +68,13 @@ def createLabel(parent, name, geometry, text, font, style):
     label.setStyleSheet(style)
     return label
 
-def createLineInput(parent, name, geometry, font, style):
+def createLineInput(parent, name, geometry, font, style, placeholder = ""):
     line_input = QLineEdit(parent)
     line_input.setObjectName(name)
     line_input.setGeometry(geometry)
     line_input.setFont(font)
     line_input.setStyleSheet(style)
+    line_input.setPlaceholderText(placeholder)
     return line_input
 
 def createButton(parent, name, geometry, text, font, style):
