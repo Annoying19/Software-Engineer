@@ -249,7 +249,6 @@ class Record(QDialog):
             self.photo.setText("No image available")
             self.photo.setAlignment(Qt.AlignCenter)
             
-
         return None, False
     
     # Insert Softcopy function
