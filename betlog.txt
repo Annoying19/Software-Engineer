@@ -1,0 +1,17 @@
+betlog notes:
+
+doon sa scheduling system, ganto magiging update:
+
+in the calendar GUI, Member ID must be Member Name, and beside Member Name is Employee Name,
+in the "add employee", replace the Member ID as Member Name, instead of dropdown, use search name,
+below that, there's a table that will show the names of the Member including the member_id, 
+add Employee Name, same functionality as Member Name, but place it below the Member Table,
+
+in the database, once the schedule was add, the status will be active, and it will be shown at the table, right beside the Name in table
+
+and in the table, once the row is selected, you can cancel the schedule, the cancel schedule button
+is beside the "add appointment" button, there's a "Cancel Appointment" button, but the 
+button will be able if they click a certain row, once the row is clicked and the "cancel appointment" button is clicked,
+it will open a new window app that will ask "are you sure?", once the yes button is clicked, the status of that certain appointment is inactive,
+and the schedule that we will set in that date and time, if they want to set a new appointment in that certain date,
+will not have a conflict schedule
