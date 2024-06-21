@@ -195,7 +195,7 @@ class AddAppointmentWindow(QWidget):
 
             self.close()
         else:
-            QMessageBox.warning(self, "Conflict", "The selected time slot is already booked.")
+            QMessageBox.warning(self, "Conflict Error", "This appointment conflicts with an existing appointment.")
 
     def check_for_conflicts(self, date, start_time, end_time):
         self.scheduling_widget.cursor.execute('''
@@ -256,9 +256,9 @@ class Scheduling(QMainWindow):
             }
         """)
 
-        self.appointments_table = QTableWidget(0, 9)
+        self.appointments_table = QTableWidget(0, 8)
         self.appointments_table.setHorizontalHeaderLabels(
-            ["Schedule ID", "Member Name", "Employee Name", "Date", "Start Time", "End Time", "Type", "Name", "Status"])
+            ["Member Name", "Employee Name", "Date", "Start Time", "End Time", "Type", "Name", "Status"])
         self.appointments_table.horizontalHeader().setStretchLastSection(True)
         self.appointments_table.horizontalHeader().setSectionResizeMode(
             QHeaderView.Stretch)  # Stretch table to occupy dead space
@@ -286,12 +286,13 @@ class Scheduling(QMainWindow):
 
     def open_add_appointment_window(self):
         self.add_appointment_window = AddAppointmentWindow(self)
+        self.add_appointment_window.setWindowModality(Qt.NonModal)  # Ensure it doesn't block the main window
         self.add_appointment_window.show()
 
     def load_appointments(self):
         self.appointments_table.setRowCount(0)
         self.cursor.execute('''
-            SELECT s.schedule_id, 
+            SELECT 
                    m.first_name || ' ' || m.middle_name || ' ' || m.last_name AS member_name, 
                    e.first_name || ' ' || e.last_name AS employee_name, 
                    s.appointment_date, 
@@ -324,7 +325,7 @@ class Scheduling(QMainWindow):
         self.appointments_table.setRowCount(0)
         date_str = date.toString("yyyy-MM-dd")
         self.cursor.execute('''
-            SELECT s.schedule_id, 
+            SELECT 
                    m.first_name || ' ' || m.middle_name || ' ' || m.last_name AS member_name, 
                    e.first_name || ' ' || e.last_name AS employee_name, 
                    s.appointment_date, 
