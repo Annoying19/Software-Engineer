@@ -1484,18 +1484,25 @@ class Maintenance(QWidget):
 
 
     def generate_employee_id(self):
+        query = "SELECT COUNT(*) FROM Employees"
+        cursor.execute(query)
+        count = cursor.fetchone()[0] + 1
         current_time = datetime.now()
-        formatted_time = current_time.strftime('%m%d%y%H%M%S')
-        prefix = '20'
+        formatted_time = current_time.strftime('%m%d%y')
+        prefix = "EMP"
 
-        generated_id = f"{prefix}{formatted_time}"
+        generated_id = f"{prefix}-{formatted_time}-{count:04}"
         self.employee_id_output_label.setText(generated_id)
-    def generate_equipment_id(self):
-        current_time = datetime.now()
-        formatted_time = current_time.strftime('%m%H%M%S')
-        prefix = '80'
 
-        generated_id = f"{prefix}{formatted_time}"
+    def generate_equipment_id(self):
+        query = "SELECT COUNT(*) FROM Equipments"
+        cursor.execute(query)
+        count = cursor.fetchone()[0] + 1
+        current_time = datetime.now()
+        formatted_time = current_time.strftime('%m%d%y')
+        prefix = "MEM"
+
+        generated_id = f"{prefix}-{formatted_time}-{count:04}"
         self.equipment_id_output_label.setText(generated_id)
 
     def validate_equipment_inputs(self):
@@ -1660,14 +1667,13 @@ class Maintenance(QWidget):
         self.first_name = self.employee_first_name_input.text()
         self.middle_name = self.employee_middle_name_input.text()
         self.last_name = self.employee_last_name_input.text()
-        gender = self.employee_gender_combo_box.currentText()
+        self.gender = self.employee_gender_combo_box.currentText()
         self.address = self.employee_address_input.text()
         self.birth_date = self.employee_birth_date.date()
         self.phone_number = self.employee_phone_number_input.text()
         self.position = self.employee_position_input.text()
         self.hire_date = self.employee_hire_date.date()
         self.photo = self.employee_image_label.pixmap()
-        print(gender)
         member_image_bytes = self.pixmap_to_bytes(self.photo)
         
         cursor.execute(
@@ -1677,16 +1683,16 @@ class Maintenance(QWidget):
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
-                int(self.employee_id),
+                self.employee_id,
                 self.first_name,
                 self.middle_name,
                 self.last_name,
-                gender,
-                self.address,
                 self.birth_date.toString("yyyy-MM-dd"),
+                self.gender,
+                self.address,
                 self.phone_number,
-                self.position,
                 self.hire_date.toString("yyyy-MM-dd"),
+                self.position,
                 sqlite3.Binary(member_image_bytes)
             )
         )
@@ -1695,11 +1701,14 @@ class Maintenance(QWidget):
         QMessageBox.information(self, "Yippie", "Employee Registered")
 
     def generate_member_id(self):
+        query = "SELECT COUNT(*) FROM Members"
+        cursor.execute(query)
+        count = cursor.fetchone()[0] + 1
         current_time = datetime.now()
-        formatted_time = current_time.strftime('%m%d%y%H%M%S')
-        prefix = '10'
+        formatted_time = current_time.strftime('%m%d%y')
+        prefix = "MEM"
 
-        generated_id = f"{prefix}{formatted_time}"
+        generated_id = f"{prefix}-{formatted_time}-{count:04}"
         self.member_id_output_label.setText(generated_id)
 
     def back_button(self, page):

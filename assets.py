@@ -5,7 +5,7 @@ import sqlite3
 from queue import Queue
 
 # DATABASE
-connection = sqlite3.connect("Software-Engineer-master/database.db")
+connection = sqlite3.connect("database.db")
 cursor = connection.cursor()
 
 
