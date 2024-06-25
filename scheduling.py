@@ -2,397 +2,100 @@ from PySide2.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, Q
 from PySide2.QtCore import QRect, QMetaObject, QDate
 from assets import *  # Assuming assets contains the font and style definitions
 import sys
-import random
-class Scheduling(QMainWindow):
+from assets import *
+
+class Scheduling(QWidget):
     def __init__(self, parent=None):
         super(Scheduling, self).__init__(parent)
-        self.setObjectName("Form")
+        self.setObjectName(u"Inventory")
         self.resize(950, 800)
-        self.setStyleSheet("background-color: #FFFFFF")
-        self.open_scheduling_page()
+        self.setStyleSheet(u"background-color: #FFFFFF;")
 
-    def open_scheduling_page(self):
-        self.central_widget = QWidget()
-        self.setCentralWidget(self.central_widget)
-        self.verticalLayout = QVBoxLayout(self.central_widget)
+        self.verticalLayout = QVBoxLayout(self)
         self.verticalLayout.setSpacing(0)
-        self.verticalLayout.setContentsMargins(0, 0, 0, 0)
-        self.stackedWidget = QStackedWidget(self.central_widget)
-        self.stackedWidget.setObjectName("stackedWidget")
+        self.verticalLayout.setObjectName(u"verticalLayout")
+        self.verticalLayout.setContentsMargins(20, 20, 20, 20)  # Add margins here
 
-        
-        self.open_main_page()
-        self.open_add_appointment_page()
+        # Additional scheduling components
+        self.layout = QVBoxLayout()
+        self.verticalLayout.addLayout(self.layout)
 
-        self.verticalLayout.addWidget(self.stackedWidget)
-        self.stackedWidget.setCurrentIndex(0)
-        QMetaObject.connectSlotsByName(self)
+        self.calendar = QCalendarWidget()
+        self.calendar.clicked.connect(self.show_appointments)
+        self.layout.addWidget(self.calendar)
 
-    def show_add_appointment_page(self):
-        self.stackedWidget.setCurrentIndex(1)
-
-    def open_main_page(self):
-        self.main_page = QWidget()
-        self.main_page.setObjectName("main_page")
-        self.stackedWidget.addWidget(self.main_page)
-
-        self.calendar_widget = QCalendarWidget(self.main_page)
-        self.calendar_widget.setGeometry(QRect(0, 0, 951, 411))
-        self.calendar_widget.setVerticalHeaderFormat(QCalendarWidget.NoVerticalHeader)
-        self.calendar_widget.setStyleSheet(
-            """
-            QCalendarWidget QWidget {
-                background-color: #FFFFFF;
-                alternate-background-color: #E0E0E0;
-            }
-            QCalendarWidget QAbstractItemView:enabled {
-                background-color: #FFFFFF;
-                color: #000000;
-                selection-background-color: #0000FF;
-                selection-color: #FFFFFF;
-            }
-            QCalendarWidget QAbstractItemView:disabled {
-                color: #CCCCCC;
-            }
+        # Apply style sheet to change navigation bar and selection highlight colors
+        self.calendar.setStyleSheet("""
             QCalendarWidget QWidget#qt_calendar_navigationbar {
-                background-color: #0000FF;
-                color: #FFFFFF;
+                background-color: #0000FF; /* Blue background */
+                color: #FFFFFF; /* White text color */
             }
             QCalendarWidget QToolButton {
-                background-color: #0000FF;
-                color: #FFFFFF;
-                border: none;
-                margin: 5px;
-                padding: 5px;
+                background-color: #0000FF; /* Blue background for buttons */
+                color: #FFFFFF; /* White text color for buttons */
+                border: none; /* Remove border */
+                margin: 5px; /* Add margin */
+                padding: 5px; /* Add padding */
             }
             QCalendarWidget QToolButton::hover {
-                background-color: #0000CC;
+                background-color: #0000CC; /* Slightly darker blue for hover */
             }
             QCalendarWidget QAbstractItemView:enabled {
-                selection-background-color: #0000FF;
-                selection-color: #FFFFFF;
+                selection-background-color: #0000FF; /* Blue highlight background */
+                selection-color: #FFFFFF; /* White highlight text color */
             }
-            """
-        )
-        self.calendar_widget.clicked.connect(self.show_appointments)
+        """)
 
-        self.appointments_table = QTableWidget(self.main_page)
-        self.appointments_table.setGeometry(QRect(0, 410, 950, 310))
-        self.appointments_table.setColumnCount(6)
+        self.date_label = QLabel("Select Date:")
+        self.layout.addWidget(self.date_label)
+
+        self.date_edit = QDateEdit(QDate.currentDate())
+        self.date_edit.setCalendarPopup(True)
+        self.layout.addWidget(self.date_edit)
+
+        self.time_label = QLabel("Select Start and End Time:")
+        self.layout.addWidget(self.time_label)
+
+        time_layout = QHBoxLayout()
+
+        self.start_time_edit = QTimeEdit(QTime.currentTime())
+        self.start_time_edit.setDisplayFormat("HH:mm:ss")
+        time_layout.addWidget(self.start_time_edit)
+
+        self.end_time_edit = QTimeEdit(QTime.currentTime().addSecs(3600))
+        self.end_time_edit.setDisplayFormat("HH:mm:ss")
+        time_layout.addWidget(self.end_time_edit)
+
+        self.layout.addLayout(time_layout)
+
+        self.type_of_appointment_label = QLabel("Type of Appointment:")
+        self.layout.addWidget(self.type_of_appointment_label)
+
+        self.type_of_appointment_combo = QComboBox()
+        self.type_of_appointment_combo.addItems(["Body Treatments", "Fitness Programs", "Face & Skin Programs"])
+        self.type_of_appointment_combo.currentIndexChanged.connect(self.update_appointments)
+        self.layout.addWidget(self.type_of_appointment_combo)
+
+        self.name_of_appointment_label = QLabel("Name of Appointment:")
+        self.layout.addWidget(self.name_of_appointment_label)
+
+        self.name_of_appointment_combo = QComboBox()
+        self.layout.addWidget(self.name_of_appointment_combo)
+
+        self.update_appointments()
+
+        self.add_appointment_button = QPushButton("Add Appointment")
+        self.add_appointment_button.clicked.connect(self.add_appointment)
+        self.layout.addWidget(self.add_appointment_button)
+
+        self.appointments_table = QTableWidget(0, 6)
         self.appointments_table.setHorizontalHeaderLabels(
-            ["Member Name", "Employee Name", "Start Time", "End Time", "Name", "Status"])
-        self.appointments_table.horizontalHeader().setStretchLastSection(True)
-        self.appointments_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+            ["Schedule ID", "Member ID", "Type", "Name", "Date", "Start Time", "End Time"])
+        self.layout.addWidget(self.appointments_table)
 
-        self.add_appointment_button = createButton(
-            parent=self.main_page,
-            name="add_appointment",
-            geometry=QRect(700, 740, 240, 50),
-            text="Schedule",
-            font=font3,
-            style="background-color: #28a745; color: #FFFFFF"
-        )
-
-        self.cancel_appointment_button = createButton(
-            parent=self.main_page,
-            name="cancel_appointment",
-            geometry=QRect(520, 740, 170, 50),
-            text="Cancel",
-            font=font3,
-            style="background-color: #882400; color: #FFFFFF"
-        )
-
-        self.add_appointment_button.clicked.connect(self.show_add_appointment_page)
         self.load_appointments()
-    def show_appointments(self, date):
-        self.appointments_table.setRowCount(0)
-        date_str = date.toString("yyyy-MM-dd")
-        cursor.execute('''
-            SELECT m.first_name || ' ' || m.middle_name || ' ' || m.last_name AS member_name, 
-                   e.first_name || ' ' || e.last_name AS employee_name, 
-                   s.appointment_start_time, 
-                   s.appointment_end_time, 
-                   s.appointment_name, 
-                   s.status 
-            FROM Schedule s
-            JOIN Members m ON s.member_id = m.member_id
-            JOIN Employees e ON s.employee_id = e.employee_id
-            WHERE s.appointment_date = ?
-        ''', (date_str,))
-        for row in cursor.fetchall():
-            row_position = self.appointments_table.rowCount()
-            self.appointments_table.insertRow(row_position)
-            for column, data in enumerate(row):
-                self.appointments_table.setItem(row_position, column, QTableWidgetItem(str(data)))
 
-    def open_add_appointment_page(self):
-        self.schedule_page = QWidget()
-        self.schedule_page.setObjectName("schedule_page")
-        self.stackedWidget.addWidget(self.schedule_page)
-
-        self.schedule_text_label = createLabel(
-            parent=self.schedule_page,
-            name="schedule_appointment_text",
-            geometry=QRect(290, 60, 400, 40),
-            text="Schedule Appointment",
-            font=font4,
-            style="font: bold"
-        )
-
-        self.member_name_label = createLabel(
-            parent=self.schedule_page,
-            name="member_name",
-            geometry=QRect(50, 140, 190, 40),
-            text="Member Name:",
-            font=font1,
-            style=""
-        )
-
-        self.member_id_label = createLabel(
-            parent=self.schedule_page,
-            name="member_id",
-            geometry=QRect(50, 200, 190, 40),
-            text="Member ID",
-            font=font1,
-            style=""
-        )
-
-        self.membership_type_label = createLabel(
-            parent=self.schedule_page,
-            name="membership_type",
-            geometry=QRect(380, 200, 210, 40),
-            text="Membership Type",
-            font=font1,
-            style=""
-        )
-
-        self.employee_name_label = createLabel(
-            parent=self.schedule_page,
-            name="employee_name",
-            geometry=QRect(50, 330, 190, 40),
-            text="Employee Name",
-            font=font1,
-            style=""
-        )
-
-        self.employee_id_label = createLabel(
-            parent=self.schedule_page,
-            name="employee_id",
-            geometry=QRect(50, 390, 190, 40),
-            text="Employee ID",
-            font=font1,
-            style=""
-        )
-
-        self.employee_position_label = createLabel(
-            parent=self.schedule_page,
-            name="employee_position",
-            geometry=QRect(390, 390, 130, 40),
-            text="Position",
-            font=font1,
-            style=""
-        )
-
-        self.appointment_type_label = createLabel(
-            parent=self.schedule_page,
-            name="appointment_type",
-            geometry=QRect(50, 510, 220, 40),
-            text="Appointment Type",
-            font=font1,
-            style=""
-        )
-
-        self.appointment_name_label = createLabel(
-            parent=self.schedule_page,
-            name="appointment_name",
-            geometry=QRect(300, 510, 230, 40),
-            text="Appointment Name",
-            font=font1,
-            style=""
-        )
-
-        self.date_label = createLabel(
-            parent=self.schedule_page,
-            name="appointment_name",
-            geometry=QRect(560, 510, 230, 40),
-            text="Date",
-            font=font1,
-            style=""
-        )
-
-        self.start_time_label = createLabel(
-            parent = self.schedule_page,
-            name = "start_time",
-            geometry = QRect(50, 620, 130, 40),
-            text = "Start Time",
-            font = font1,
-            style = ""
-        )
-
-        self.end_time_label = createLabel(
-            parent = self.schedule_page,
-            name = "end_time",
-            geometry = QRect(310, 620, 130, 40),
-            text = "End Time",
-            font = font1,
-            style = ""
-        )
-
-
-        self.member_id_output = createLabel(
-            parent=self.schedule_page,
-            name="output",
-            geometry=QRect(50, 250, 330, 40),
-            text="",
-            font=font2,
-            style="background-color: #F9F7FF; border: 1px solid black"
-        )   
-
-        self.membership_type_output = createLabel(
-            parent=self.schedule_page,
-            name="output",
-            geometry=QRect(390, 250, 260, 40),
-            text="",
-            font=font2,
-            style="background-color: #F9F7FF; border: 1px solid black"
-        )
-
-        self.employee_id_output = createLabel(
-            parent=self.schedule_page,
-            name="output",
-            geometry=QRect(50, 440, 330, 40),
-            text="",
-            font=font2,
-            style="background-color: #F9F7FF; border: 1px solid black"
-        )
-
-        self.position_output = createLabel(
-            parent=self.schedule_page,
-            name="output",
-            geometry=QRect(390, 440, 330, 40),
-            text="",
-            font=font2,
-            style="background-color: #F9F7FF; border: 1px solid black"
-        )
-        
-        self.image_output = createLabel(
-            parent = self.schedule_page,
-            name = "output",
-            geometry = QRect(680, 140, 250, 250),
-            text = "",
-            font = font2,
-            style = "background-color: #F9F7FF; border: 1px solid black"
-        )
-
-        self.member_name_input = createLineInput(
-            parent = self.schedule_page,
-            name = "member_input",
-            geometry = QRect(250, 140, 410, 40),
-            font = font2,
-            style = "background-color: #F9F7FF; border: 1px solid black"
-        )
-
-
-        self.employee_name_input = createLineInput(
-            parent = self.schedule_page,
-            name = "employee_input",
-            geometry = QRect(250, 330, 410, 40),
-            font = font2,
-            style = "background-color: #F9F7FF; border: 1px solid black"
-        )
-
-        self.member_name_input.setPlaceholderText("Search Member Name")
-        self.member_name_input.textChanged.connect(self.update_member_search_results)
-
-        self.employee_name_input.setPlaceholderText("Search Employee Name")
-        self.employee_name_input.textChanged.connect(self.update_employee_search_results)
-        
-        self.member_search_results = QListWidget(self.schedule_page)
-        self.member_search_results.hide()  # Hide initially
-        self.member_search_results.setGeometry(250, 180, 410, 150)
-        self.member_search_results.setFont(font2)
-        # Connect signals
-        self.member_search_results.itemClicked.connect(self.handle_member_item_selection)
-
-        self.employee_search_results = QListWidget(self.schedule_page)
-        self.employee_search_results.hide()  # Hide initially
-        self.employee_search_results.setGeometry(250, 370, 410, 150)
-        self.employee_search_results.setFont(font2)
-        # Connect signals
-        self.employee_search_results.itemClicked.connect(self.handle_employee_item_selection)
-
-
-        self.date = createDate(
-            parent = self.schedule_page,
-            name = "date",
-            geometry = QRect(560, 550, 200, 40),
-            font = font2,
-            style= "background-color: #F9F7FF; border: 1px solid black",
-        )
-        self.appointment_type_combo_box = QComboBox(self.schedule_page)
-        self.appointment_type_combo_box.setGeometry(QRect(50, 560, 230, 40))
-        self.appointment_type_combo_box.setStyleSheet("background-color: #F9F7FF; border: 1px solid black")
-        self.appointment_type_combo_box.setFont(font2)
-
-        self.appointment_name_combo_box = QComboBox(self.schedule_page)
-        self.appointment_name_combo_box.setGeometry(QRect(300, 560, 230, 40))
-        self.appointment_name_combo_box.setStyleSheet("background-color: #F9F7FF; border: 1px solid black")
-        self.appointment_name_combo_box.setFont(font2)
-        # Example data to fill appointment_type_combo_box
-        self.appointment_type_combo_box.addItems(["Body Treatments", "Fitness Programs", "Face & Skin Programs"])
-
-        # Connect signal to slot
-        self.appointment_type_combo_box.currentIndexChanged.connect(self.update_appointments)
-
-
-        self.start_time = createTime(
-            parent = self.schedule_page,
-            name = "start_time",
-            geometry = QRect(50, 670, 200, 40),
-            font = font2,
-            style="background-color: #F9F7FF; border: 1px solid black"
-        )
-
-        self.end_time = createTime(
-            parent = self.schedule_page,
-            name = "end_time",
-            geometry = QRect(310, 670, 200, 40),
-            font = font2,
-            style="background-color: #F9F7FF; border: 1px solid black"
-        )
-
-        # BACK BUTTON
-        self.member_back_button = createButton(
-            parent = self.schedule_page,
-            name = "back_button",
-            geometry = QRect(40, 50, 70, 50),
-            text = "Back",
-            font = font3,
-            style = "background-color: #004F9A"
-        )
-
-        # CLEAR BUTTON
-        self.schedule_clear_button = createButton(
-            parent = self.schedule_page,
-            name = "clear_button",
-            geometry = QRect(510, 730, 170, 50),
-            text = "Clear",
-            font = font3,
-            style = "background-color: #882400"
-        )
-
-        # REGISTER BUTTON
-        self.schedule_register_button = createButton(
-            parent = self.schedule_page,
-            name = "register_button",
-            geometry = QRect(690, 730, 250, 50),
-            text = "Register",
-            font = font3,
-            style = "background-color: #006646"
-        )
-
-        self.schedule_register_button.clicked.connect(self.add_appointment)
-
+   
 
     def update_appointments(self):
         selected_type = self.appointment_type_combo_box.currentText()
@@ -431,30 +134,31 @@ class Scheduling(QMainWindow):
                 "Ultimate Body Whitening", "Ultralift", "V-Contour", "Vitaderm", "Volite"])
 
 
+    def handle_member_selection(self, item):
+        self.selected_member = item.data(Qt.UserRole)
+        self.member_search.setText(self.selected_member[1])
+
+    def handle_employee_selection(self, item):
+        self.selected_employee = item.data(Qt.UserRole)
+        self.employee_search.setText(self.selected_employee[1])
+
     def add_appointment(self):
-        if not self.member_name_input or not self.employee_name_input:
-            QMessageBox.warning(self, "Selection Error", "Please select both a member and an employee.")
-            return
+        member_id = 1  # Example member ID, replace with actual member ID as needed
+        appointment_type = self.type_of_appointment_combo.currentText()
+        appointment_name = self.name_of_appointment_combo.currentText()
+        appointment_date = self.date_edit.date().toString("yyyy-MM-dd")
+        appointment_start_time = self.start_time_edit.time().toString("HH:mm:ss")
+        appointment_end_time = self.end_time_edit.time().toString("HH:mm:ss")
 
-        member_id = self.member_id_output.text()
-        employee_id = self.employee_id_output.text()
-        appointment_type = self.appointment_type_combo_box.currentText()
-        appointment_name = self.appointment_name_combo_box.currentText()
-        appointment_date = self.date.date().toString("yyyy-MM-dd")
-        appointment_start_time = self.start_time.time().toString("HH:mm")
-        appointment_end_time = self.end_time.time().toString("HH:mm")
+        cursor.execute('''
+            INSERT INTO Schedule (member_id, appointment_type, appointment_name, appointment_date, appointment_start_time, appointment_end_time)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (
+        member_id, appointment_type, appointment_name, appointment_date, appointment_start_time, appointment_end_time))
+        connection.commit()
 
-        if not self.check_for_conflicts(appointment_date, appointment_start_time, appointment_end_time):
-            schedule_id = "09" + str(random.randint(100000, 999999))
-
-            cursor.execute('''
-                INSERT INTO Schedule (schedule_id, member_id, employee_id, appointment_type, appointment_name, appointment_date, appointment_start_time, appointment_end_time, status)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'ongoing')
-            ''', (schedule_id, member_id, employee_id, appointment_type, appointment_name, appointment_date, appointment_start_time, appointment_end_time))
-            connection.commit()
-
-            self.load_appointments()
-            self.update_calendar()
+        self.load_appointments()
+        self.update_calendar()
 
         else:
             QMessageBox.warning(self, "Conflict", "The selected time slot is already booked.")
@@ -471,17 +175,8 @@ class Scheduling(QMainWindow):
         return cursor.fetchone() is not None
     def load_appointments(self):
         self.appointments_table.setRowCount(0)
-        cursor.execute('''
-            SELECT m.first_name || ' ' || m.middle_name || ' ' || m.last_name AS member_name, 
-                   e.first_name || ' ' || e.last_name AS employee_name, 
-                   s.appointment_start_time, 
-                   s.appointment_end_time,  
-                   s.appointment_name, 
-                   s.status 
-            FROM Schedule s
-            JOIN Members m ON s.member_id = m.member_id
-            JOIN Employees e ON s.employee_id = e.employee_id
-        ''')
+        cursor.execute(
+            'SELECT schedule_id, member_id, appointment_type, appointment_name, appointment_date, appointment_start_time, appointment_end_time FROM Schedule')
         for row in cursor.fetchall():
             row_position = self.appointments_table.rowCount()
             self.appointments_table.insertRow(row_position)
@@ -489,8 +184,8 @@ class Scheduling(QMainWindow):
                 self.appointments_table.setItem(row_position, column, QTableWidgetItem(data))
 
     def update_calendar(self):
-        cursor.execute('SELECT appointment_date FROM Schedule')
-        dates = set(row[0] for row in cursor.fetchall())
+        self.cursor.execute('SELECT appointment_date FROM schedule')
+        dates = set(row[0] for row in self.cursor.fetchall())
         fmt = QTextCharFormat()
         fmt.setBackground(QColor("lightblue"))
         self.calendar_widget.setDateTextFormat(QDate(), QTextCharFormat())  # Clear previous highlights
@@ -498,134 +193,24 @@ class Scheduling(QMainWindow):
             qdate = QDate.fromString(date, "yyyy-MM-dd")
             self.calendar_widget.setDateTextFormat(qdate, fmt)
 
-    def update_member_search_results(self):
-        search_text = self.member_name_input.text()
-        self.member_search_results.clear()
+    def show_appointments(self, date):
+        self.appointments_table.setRowCount(0)
+        date_str = date.toString("yyyy-MM-dd")
+        cursor.execute(
+            'SELECT schedule_id, member_id, appointment_type, appointment_name, appointment_date, appointment_start_time, appointment_end_time FROM Schedule WHERE appointment_date = ?',
+            (date_str,))
+        for row in cursor.fetchall():
+            row_position = self.appointments_table.rowCount()
+            self.appointments_table.insertRow(row_position)
+            for column, data in enumerate(row):
+                self.appointments_table.setItem(row_position, column, QTableWidgetItem(data))
 
-        if search_text:
-            # Fetch members from database based on search text
-            query = "SELECT first_name, last_name FROM Members WHERE first_name || ' ' || last_name LIKE ?"
-            cursor.execute(query, ('%' + search_text + '%',))
-            results = cursor.fetchall()
-            # Add results to list widget
-            for first_name, last_name in results:
-                full_name = f"{first_name} {last_name}"
-                self.member_search_results.addItem(full_name)
-            self.member_search_results.show()  # Show list widget when there are results
-        else:
-            self.member_search_results.hide()  # Hide list widget if search text is empty
-
-
-    def update_employee_search_results(self):
-        search_text = self.employee_name_input.text()
-        self.employee_search_results.clear()
-
-        if search_text:
-            # Fetch members from database based on search text
-            query = "SELECT first_name, last_name FROM Employees WHERE first_name || ' ' || last_name LIKE ?"
-            cursor.execute(query, ('%' + search_text + '%',))
-            results = cursor.fetchall()
-            # Add results to list widget
-            for first_name, last_name in results:
-                full_name = f"{first_name} {last_name}"
-                self.employee_search_results.addItem(full_name)
-            self.employee_search_results.show()  # Show list widget when there are results
-        else:
-            self.employee_search_results.hide()  # Hide list widget if search text is empty
-
-    
-    def handle_member_item_selection(self, item):
-        selected_name = item.text()
-        # Handle item selection (e.g., perform an action with the selected name)
-        self.member_name_input.setText(selected_name)
-        self.search_member(selected_name)
-
-        self.member_search_results.hide()  # Hide list widget after selection
-
-    def handle_employee_item_selection(self, item):
-        selected_name = item.text()
-        # Handle item selection (e.g., perform an action with the selected name)
-        self.employee_name_input.setText(selected_name)
-        self.search_employee(selected_name)
-
-        self.employee_search_results.hide()  # Hide list widget after selection
+    def closeEvent(self, event):
+        self.conn.close()
+        super().closeEvent(event)
 
 
-    def search_member(self, member_input):
-        # Split the full name into first name and last name
-        name_parts = member_input.rsplit(' ', 1)
-        
-        if len(name_parts) < 2:
-            print("Please enter both first name and last name.")
-            return
-        
-        first_name = name_parts[0].strip()
-        last_name = name_parts[1].strip()
-
-        # Debug: Print the first and last name
-        print(f"Searching for: first_name = '{first_name}', last_name = '{last_name}'")
-
-        # Execute the SQL query with placeholders for the first name and last name
-        cursor.execute('''
-            SELECT member_id, membership_type, photo
-            FROM Members
-            WHERE first_name = ? AND last_name = ?
-        ''', (first_name, last_name))
-
-        # Fetch the results
-        results = cursor.fetchone()
-
-        # Check if the results are found
-        if results:
-            membership_id, membership_type, photo = results
-            pixmap = QPixmap()
-            if photo:
-                pixmap.loadFromData(photo, 'PNG')  # 'PNG' is the format of the image. Change if necessary.
-                self.image_output.setPixmap(pixmap)
-                self.image_output.show()
-            else:
-                print("No photo found.")
-
-        else:
-            print("No matching member found.")
-
-        self.member_id_output.setText(str(membership_id))
-        self.membership_type_output.setText(membership_type)
-
-    def search_employee(self, member_input):
-        # Split the full name into first name and last name
-        name_parts = member_input.rsplit(' ', 1)
-        
-        if len(name_parts) < 2:
-            print("Please enter both first name and last name.")
-            return
-        
-        first_name = name_parts[0].strip()
-        last_name = name_parts[1].strip()
-
-        # Debug: Print the first and last name
-        print(f"Searching for: first_name = '{first_name}', last_name = '{last_name}'")
-
-        # Execute the SQL query with placeholders for the first name and last name
-        cursor.execute('''
-            SELECT employee_id, position
-            FROM Employees
-            WHERE first_name = ? AND last_name = ?
-        ''', (first_name, last_name))
-
-        # Fetch the results
-        results = cursor.fetchone()
-
-        # Check if the results are found
-        if results:
-            employee_id, position = results
-
-        else:
-            print("No matching member found.")
-
-        self.employee_id_output.setText(str(employee_id))
-        self.position_output.setText(position)
-if __name__ == '__main__':
+if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = Scheduling()
     window.show()
