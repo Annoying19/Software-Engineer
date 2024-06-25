@@ -7,7 +7,8 @@ import re
 from functools import partial
 from datetime import datetime
 import uuid
-
+import hashlib
+from registration import *
 # ==============================================================================
 # ==============================================================================
 #                           MAINTENANCE    CLASS
@@ -29,12 +30,12 @@ class Maintenance(QWidget):
 
         self.stackedWidget = QStackedWidget(self)
         self.stackedWidget.setObjectName("stackedWidget")
-
-
+  
         self.open_main_page()           # MAINTENANCE MAIN PAGE
         self.open_manage_member_page()  # MAITENANCE MEMBER PAGE
         self.open_create_employee_page()
         self.open_create_equipment_page()
+        self.open_create_member_page()
         self.open_create_user_page()
         self.verticalLayout.addWidget(self.stackedWidget)
         self.stackedWidget.setCurrentIndex(0)
@@ -42,10 +43,11 @@ class Maintenance(QWidget):
 
 
 
-    def show_manage_main_page(self):
+    def show_main_page(self):
         self.stackedWidget.setCurrentIndex(0)
 
     def show_manage_member_page(self):
+        self.update_table_widget()
         self.stackedWidget.setCurrentIndex(1)
 
     def show_manage_employee_page(self):
@@ -57,7 +59,12 @@ class Maintenance(QWidget):
         self.stackedWidget.setCurrentIndex(3)
 
     def show_manage_user_page(self):
+        self.stackedWidget.setCurrentIndex(5)
+
+    def show_create_member_page(self):
+        self.generate_member_id()
         self.stackedWidget.setCurrentIndex(4)
+
     def open_main_page(self):
         self.main_page = QWidget()
         self.main_page.setObjectName("main_page")
@@ -195,25 +202,21 @@ class Maintenance(QWidget):
         self.member_table_widget = QTableWidget(self.manage_member_page)
         self.member_table_widget.setGeometry(QRect(10, 200, 930, 590))
         self.member_table_widget.setRowCount(0)
-        self.member_table_widget.setColumnCount(7)  # Limited columns
+        self.member_table_widget.setColumnCount(6)  # Limited columns
 
         # Set the horizontal header labels
         self.member_table_widget.setHorizontalHeaderLabels(
-            ["Member ID", "First Name", "Last Name", "Membership Type", "Membership Start Date", "Membership End Date", "Actions"]
+            ["Member ID", "Full Name", "Membership Type", "Membership Start Date", "Membership End Date", "Actions"]
         )
 
         self.stackedWidget.addWidget(self.manage_member_page)
 
         self.member_table_widget.resizeColumnsToContents()
         self.member_table_widget.resizeRowsToContents()
-        
-        self.member_table_widget.setColumnWidth(0, 100)  # Member ID
-        self.member_table_widget.setColumnWidth(1, 150)  # First Name
-        self.member_table_widget.setColumnWidth(2, 150)  # Last Name
-        self.member_table_widget.setColumnWidth(3, 150)  # Membership Type
-        self.member_table_widget.setColumnWidth(4, 150)  # Membership Start Date
-        self.member_table_widget.setColumnWidth(5, 150)  # Membership End Date
-        # ===========================================
+        self.member_table_widget.horizontalHeader().setStretchLastSection(True)
+        self.member_table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.update_table_widget()
+
         #         MANAGE MEMBER BUTTONS
         # ===========================================
         self.member_back_button = createButton(
@@ -224,6 +227,102 @@ class Maintenance(QWidget):
             font=font2,
             style=""
         )
+
+        self.member_add_button = createButton(
+            parent=self.manage_member_page,
+            name="add_button",
+            geometry=QRect(680, 40, 250, 50),
+            text="Add Member",
+            font=font2,
+            style="background-color: #28a745; color: #FFFFFF"
+        )
+        self.member_back_button.clicked.connect(lambda: self.back_main_button(self.manage_member_page))
+        self.member_add_button.clicked.connect(self.show_create_member_page)
+
+    def open_manage_employee_page(self): 
+        self.manage_employee_page = QWidget()
+        self.manage_employee_page.setObjectName("manage_employee_page")
+
+        # ===========================================
+        #            MANAGE MEMBER FRAMES
+        # ===========================================
+
+        # ===========================================
+        #         MANAGE MEMBER PAGE LABELS
+        # ===========================================
+        self.manage_member_text_label = createLabel(
+            parent=self.manage_employee_page,
+            name="manage_members_text",
+            geometry=QRect(120, 40, 310, 40),
+            text="Manage Members",
+            font=font4,
+            style="font: bold"
+        )
+
+        self.manage_search_text_label = createLabel(
+            parent=self.manage_employee_page,
+            name="manage_members_text",
+            geometry=QRect(30, 140, 90, 40),
+            text="Search:",
+            font=font1,
+            style=""
+        )
+
+        # ===========================================
+        #      MANAGE MEMBER PAGE LINE INPUTS
+        # ===========================================
+        self.manage_search_input = createLineInput(
+            parent=self.manage_employee_page,
+            name="search_input",
+            geometry=QRect(130, 140, 580, 40),
+            font=font2,
+            style="background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        self.manage_search_input.setPlaceholderText("Employee ID / Name")
+
+        # ===========================================
+        #         MANAGE MEMBER TABLE WIDGET
+        # ===========================================
+        self.employee_table_widget = QTableWidget(self.manage_employee_page)
+        self.employee_table_widget.setGeometry(QRect(10, 200, 930, 590))
+        self.employee_table_widget.setRowCount(0)
+        self.employee_table_widget.setColumnCount(6)  # Limited columns
+
+        # Set the horizontal header labels
+        self.employee_table_widget.setHorizontalHeaderLabels(
+            ["Employee ID", "Full Name", "Position", "Phone", "Hire Date", "Actions"]
+        )
+
+        self.stackedWidget.addWidget(self.manage_employee_page)
+
+        self.employee_table_widget.resizeColumnsToContents()
+        self.employee_table_widget.resizeRowsToContents()
+        self.employee_table_widget.horizontalHeader().setStretchLastSection(True)
+        self.employee_table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.update_employee_table_widget()
+        self.employee_table_widget.itemChanged.connect(self.item_changed)
+        #         MANAGE MEMBER BUTTONS
+        # ===========================================
+        self.member_back_button = createButton(
+            parent=self.manage_employee_page,
+            name="back_button",
+            geometry=QRect(20, 40, 70, 50),
+            text="Back",
+            font=font2,
+            style=""
+        )
+
+        self.member_add_button = createButton(
+            parent=self.manage_employee_page,
+            name="add_button",
+            geometry=QRect(680, 40, 250, 50),
+            text="Add Member",
+            font=font2,
+            style="background-color: #28a745; color: #FFFFFF"
+        )
+
+        self.member_add_button.clicked.connect(self.show_create_member_page)
 
 # =============================================================
 #                     CREATE EMPLOYEE PAGE
@@ -346,7 +445,7 @@ class Maintenance(QWidget):
         )
 
         # START DATE LABEL
-        self.employee_start_date_label = createLabel(
+        self.employee_hire_date_label = createLabel(
             parent = self.employee_page,
             name = "start_label",
             geometry = QRect(40, 630, 180, 40),
@@ -438,7 +537,7 @@ class Maintenance(QWidget):
         )
 
         # EMPLOYEE TYPE BOX
-        self.employee_position_combo_box = createLineInput(
+        self.employee_position_input = createLineInput(
             parent = self.employee_page,
             name = "position",
             geometry = QRect(380, 570, 210, 40),
@@ -460,7 +559,7 @@ class Maintenance(QWidget):
         )
 
         # START DATE
-        self.employee_start_date = createDate(
+        self.employee_hire_date = createDate(
             parent = self.employee_page,
             name = "employee_start_date",
             geometry = QRect(40, 670, 200, 40),
@@ -523,13 +622,13 @@ class Maintenance(QWidget):
         )
 
 
-
+        self.employee_register_button.clicked.connect(self.register_employee)
         self.employee_insert_image_button.clicked.connect(lambda: self.insert_image(self.employee_image_label))
         self.employee_insert_signature_button.clicked.connect(lambda: self.insert_image(self.employee_signature_label))
         self.employee_clear_button.clicked.connect(lambda : self.clear_inputs(self.employee_page))
-        self.employee_back_button.clicked.connect(self.show_manage_main_page)
+        self.employee_back_button.clicked.connect(self.show_main_page)
         self.stackedWidget.addWidget(self.employee_page)
-
+        
 
 # =============================================================
 #                     CREATE EQUIPMENTS PAGE
@@ -772,12 +871,10 @@ class Maintenance(QWidget):
             style = "background-color: #006646"
         )
 
-        self.equipment_back_button.clicked.connect(self.show_manage_main_page)
+        self.equipment_back_button.clicked.connect(self.show_main_page)
         self.equipment_clear_button.clicked.connect(lambda: self.clear_inputs(self.equipment_page))
         self.equipment_register_button.clicked.connect(self.register_equipment)
         
-    
-
     def open_create_user_page(self):
         self.user_page = QWidget()
         self.user_page.setObjectName("user_page")
@@ -1020,8 +1117,336 @@ class Maintenance(QWidget):
             font = font3,
             style = "background-color: #004F9A"
         )
-        self.user_back_button.clicked.connect(lambda: self.back_button(self.user_page))
+
+        self.user_register_button.clicked.connect(self.register_user)
+        self.user_back_button.clicked.connect(lambda: self.back_main_button(self.user_page))
         self.user_clear_button.clicked.connect(lambda: self.clear_inputs(self.user_page))
+
+    def open_create_member_page(self):
+        self.add_member_page = QWidget()
+        self.add_member_page.setObjectName("member_page")
+
+
+        # ===========================================
+        #             MEMBER PAGE LABELS
+        # ===========================================
+
+        # MEMBER REGISTRATION TEXT LABEL
+        self.member_registration_text_label = createLabel(
+            parent = self.add_member_page,
+            name = "member_registration_text_label",
+            geometry = QRect(310, 50, 380, 40),
+            text = "Member Registration",
+            font = font4,
+            style = "font: bold"
+        )
+
+        # MEMBER ID LABEL
+        self.member_id_label = createLabel(
+            parent = self.add_member_page,
+            name = "member_id_label",
+            geometry = QRect(40, 150, 191, 40),
+            text = "Membership ID:",
+            font = font1,
+            style = ""
+        )
+
+        # MEMBER ID OUTPUT LABEL
+        self.member_id_output_label = createLabel(
+            parent = self.add_member_page,
+            name = "member_id_output",
+            geometry = QRect(240, 150, 410, 40),
+            text = "",
+            font = font1,
+            style = "background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        # FIRST NAME LABEL
+        self.member_first_name_label = createLabel(
+            parent = self.add_member_page,
+            name = "first_name_label",
+            geometry = QRect(40, 210, 130, 40),
+            text = "First Name",
+            font = font1,
+            style = ""
+        )
+
+        # MIDDLE NAME LABEL
+        self.member_middle_name_label = createLabel(
+            parent = self.add_member_page,
+            name = "middle_name_label",
+            geometry = QRect(380, 210, 160, 40),
+            text = "Middle Name",
+            font = font1,
+            style = ""
+        )
+
+        # LAST NAME LABEL
+        self.member_last_name_label = createLabel(
+            parent = self.add_member_page,
+            name = "last_name_label",
+            geometry = QRect(40, 310, 130, 40),
+            text = "Last Name",
+            font = font1,
+            style = ""
+        )
+
+        # GENDER LABEL
+        self.member_gender_label = createLabel(
+            parent = self.add_member_page,
+            name = "gender_label",
+            geometry = QRect(380, 310, 130, 40),
+            text = "Gender",
+            font = font1,
+            style = ""
+        )
+
+        # ADDRESS LABEL
+        self.member_address_label = createLabel(
+            parent = self.add_member_page,
+            name = "addresslabel",
+            geometry = QRect(40, 420, 130, 40),
+            text = "Address",
+            font = font1,
+            style = ""
+        )
+
+        # BIRTHDATE LABEL
+        self.member_birthdate_label = createLabel(
+            parent = self.add_member_page,
+            name = "birthdate_label",
+            geometry = QRect(380, 420, 130, 40),
+            text = "Birthdate",
+            font = font1,
+            style = ""
+        )
+
+        # PHONE NUMBER LABEL
+        self.member_phone_number_label = createLabel(
+            parent = self.add_member_page,
+            name = "phone_number_label",
+            geometry = QRect(40, 530, 180, 40),
+            text = "Phone Number",
+            font = font1,
+            style = ""
+        )
+
+        # MEMBERSHIP TYPE LABEL
+        self.member_membership_type_label = createLabel(
+            parent = self.add_member_page,
+            name = "membership_type_label",
+            geometry = QRect(380, 530, 210, 40),
+            text = "Membership Type",
+            font = font1,
+            style = ""
+        )
+
+        # START DATE LABEL
+        self.member_start_date_label = createLabel(
+            parent = self.add_member_page,
+            name = "start_date_label",
+            geometry = QRect(40, 630, 180, 40),
+            text = "Start Date",
+            font = font1,
+            style = ""
+        )
+
+        # END DATE LABEL
+        self.member_end_date_label = createLabel(
+            parent = self.add_member_page,
+            name = "end_date_label",
+            geometry = QRect(280, 630, 180, 40),
+            text = "End Date",
+            font = font1,
+            style = ""
+        )
+
+        # IMAGE LABEL 
+        self.member_image_label = createLabel(
+            parent = self.add_member_page,
+            name = "image_label",
+            geometry = QRect(680, 140, 250, 250),
+            text = "",
+            font = font1,
+            style = "background-color: #F9F7FF; border: 1.5px solid black"
+        )
+        
+        # SIGNATURE LABEL
+        self.member_signature_label = createLabel(
+            parent = self.add_member_page,
+            name = "signature_label",
+            geometry = QRect(750, 460, 180, 90),
+            text = "",
+            font = font1,
+            style = "background-color: #F9F7FF; border: 1.5px solid black"
+        )
+        
+        # ===========================================
+        #             MEMBER PAGE INPUTS
+        # ===========================================
+
+        # FIRST NAME INPUT
+        self.member_first_name_input = createLineInput(
+            parent = self.add_member_page,
+            name = "first_name_output",
+            geometry = QRect(40, 260, 330, 40),
+            font = font2,
+            style = "background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        # MIDDLE NAME INPUT
+        self.member_middle_name_input = createLineInput(
+            parent = self.add_member_page,
+            name = "middle_name_output",
+            geometry = QRect(380, 260, 280, 40),
+            font = font2,
+            style = "background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        # LAST NAME INPUT
+        self.member_last_name_input = createLineInput(
+            parent = self.add_member_page,
+            name = "last_name_output",
+            geometry = QRect(40, 360, 330, 40),
+            font = font2,
+            style = "background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        # ADDRESS INPUT
+        self.member_address_input = createLineInput(
+            parent = self.add_member_page,
+            name = "address_output",
+            geometry = QRect(40, 470, 330, 40),
+            font = font2,
+            style = "background-color: #F9F7FF; border: 1px solid black"
+        )
+        # PHONE NUMBER INPUT
+        self.member_phone_number_input = createLineInput(
+            parent = self.add_member_page,
+            name = "phone_number_output",
+            geometry = QRect(40, 570, 330, 40),
+            font = font2,
+            style = "background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        # ===========================================
+        #            MEMBER PAGE COMBO BOX
+        # ===========================================
+
+        # GENDER BOX
+        self.member_gender_combo_box = createComboBox(
+            parent = self.add_member_page,
+            name = "gender_combo_box",
+            geometry = QRect(380, 360, 140, 40),
+            font = font2,
+            item = ['Male', 'Female'],
+            style = "background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        # MEMBERSHIP TYPE BOX
+        self.member_membership_type_combo_box = createComboBox(
+            parent = self.add_member_page,
+            name = "gender_combo_box",
+            geometry = QRect(380, 570, 210, 40),
+            font = font2,
+            item = ['Standard', 'Lifetime'],
+            style = "background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        self.member_membership_type_combo_box.currentIndexChanged.connect(self.update_end_date)
+
+        # ===========================================
+        #              MEMBER PAGE DATE
+        # ===========================================
+
+        # BIRTH DATE
+        self.member_birth_date = createDate(
+            parent = self.add_member_page,
+            name = "birthdate",
+            geometry = QRect(380, 470, 200, 40),
+            font = font2,
+            style = "background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        # START DATE
+        self.member_start_date = createDate(
+            parent = self.add_member_page,
+            name = "member_start_date",
+            geometry = QRect(40, 670, 200, 40),
+            font = font2,
+            style = "background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        # END DATE
+        self.member_end_date = createDate(
+            parent = self.add_member_page,
+            name = "member_end_date",
+            geometry = QRect(280, 670, 200, 40),
+            font = font2,
+            style = "background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        # ===========================================
+        #              MEMBER PAGE BUTTONS
+        # ===========================================
+    
+        # BACK BUTTON
+        self.member_back_button = createButton(
+            parent = self.add_member_page,
+            name = "back_button",
+            geometry = QRect(40, 50, 70, 50),
+            text = "Back",
+            font = font3,
+            style = "background-color: #004F9A"
+        )
+
+        # INSERT IMAGE BUTTON
+        self.member_insert_image_button = createButton(
+            parent = self.add_member_page,
+            name = "insert_image_button",
+            geometry = QRect(680, 400, 250, 50),
+            text = "Insert Image",
+            font = font3,
+            style = "background-color: #004F9A"
+        )
+
+        # INSERT SIGNATURE BUTTON
+        self.member_insert_signature_button = createButton(
+            parent = self.add_member_page,
+            name = "insert_signature_button",
+            geometry = QRect(680, 560, 250, 50),
+            text = "Insert Signature",
+            font = font3,
+            style = "background-color: #004F9A"
+        )
+
+        # CLEAR BUTTON
+        self.member_clear_button = createButton(
+            parent = self.add_member_page,
+            name = "clear_button",
+            geometry = QRect(510, 730, 170, 50),
+            text = "Clear",
+            font = font3,
+            style = "background-color: #882400"
+        )
+
+        # REGISTER BUTTON
+        self.member_register_button = createButton(
+            parent = self.add_member_page,
+            name = "register_button",
+            geometry = QRect(690, 730, 250, 50),
+            text = "Register",
+            font = font3,
+            style = "background-color: #006646"
+        )
+
+
+        self.member_insert_image_button.clicked.connect(lambda: self.insert_image(self.member_image_label))
+        self.member_insert_signature_button.clicked.connect(lambda: self.insert_image(self.member_signature_label))
+        self.member_register_button.clicked.connect(self.register_member)
+        self.member_clear_button.clicked.connect(lambda : self.clear_inputs(self.add_member_page))
+        self.member_back_button.clicked.connect(lambda: self.back_button(self.add_member_page))
+        self.stackedWidget.addWidget(self.add_member_page)
     # =============================================================
     #                      BACK-END FUNCTIONS
     # =============================================================
@@ -1172,8 +1597,8 @@ class Maintenance(QWidget):
 
         # Check if the results are found
         if results:
-            employee_id, gender, phone_number, hire_date, photo = results
-            print("Membership ID:", employee_id)
+            self.employee_id, gender, phone_number, hire_date, photo = results
+            print("Membership ID:", self.employee_id)
             print("Membership Type:", gender)
             print("Start Date:", phone_number)
             print("End Date:", hire_date)
@@ -1190,7 +1615,7 @@ class Maintenance(QWidget):
         else:
             print("No matching member found.")
 
-        self.user_membership_id_output_label.setText(str(employee_id))
+        self.user_membership_id_output_label.setText(str(self.employee_id))
         self.user_gender_output_label.setText(gender)
         self.user_phone_number_output_label.setText(phone_number)
         self.user_hire_date_output_label.setText(hire_date)
@@ -1203,6 +1628,265 @@ class Maintenance(QWidget):
 
         self.search_results.hide()  # Hide list widget after selection
 
+    def register_user(self):
+
+        username = self.username_input.text()
+        password = self.password_input.text()
+        retry_password = self.re_password_input.text()
+        role = self.role_combo_box.currentText()
+        if password == retry_password:
+            password_bytes = password.encode()
+            hashed_password = hashlib.sha256(password_bytes).hexdigest()
+            cursor.execute(
+                """
+                INSERT INTO Users
+                (employee_id, username, password_hash, role) VALUES
+                (?, ?, ?, ?)
+                """,
+                (
+                    self.employee_id,
+                    username,
+                    hashed_password,
+                    role
+                )
+            )
+
+            connection.commit()
+
+            QMessageBox.information(self, "Registered", "Account Sucessfully Registered")
+
+    def register_employee(self):
+        self.employee_id = self.employee_id_output_label.text()
+        self.first_name = self.employee_first_name_input.text()
+        self.middle_name = self.employee_middle_name_input.text()
+        self.last_name = self.employee_last_name_input.text()
+        gender = self.employee_gender_combo_box.currentText()
+        self.address = self.employee_address_input.text()
+        self.birth_date = self.employee_birth_date.date()
+        self.phone_number = self.employee_phone_number_input.text()
+        self.position = self.employee_position_input.text()
+        self.hire_date = self.employee_hire_date.date()
+        self.photo = self.employee_image_label.pixmap()
+        print(gender)
+        member_image_bytes = self.pixmap_to_bytes(self.photo)
+        
+        cursor.execute(
+            """
+            INSERT INTO Employees
+            (employee_id, first_name, middle_name, last_name, birthdate, gender, address, phone, hire_date, position, photo)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                int(self.employee_id),
+                self.first_name,
+                self.middle_name,
+                self.last_name,
+                gender,
+                self.address,
+                self.birth_date.toString("yyyy-MM-dd"),
+                self.phone_number,
+                self.position,
+                self.hire_date.toString("yyyy-MM-dd"),
+                sqlite3.Binary(member_image_bytes)
+            )
+        )
+
+        connection.commit()
+        QMessageBox.information(self, "Yippie", "Employee Registered")
+
+    def generate_member_id(self):
+        current_time = datetime.now()
+        formatted_time = current_time.strftime('%m%d%y%H%M%S')
+        prefix = '10'
+
+        generated_id = f"{prefix}{formatted_time}"
+        self.member_id_output_label.setText(generated_id)
+
+    def back_button(self, page):
+        self.clear_inputs(page)
+        self.show_manage_member_page()
+
+    def back_main_button(self, page):
+        self.clear_inputs(page)
+        self.show_main_page()
+
+    def register_member(self):
+        # Retrieve all inputs
+        self.member_id = int(self.member_id_output_label.text())
+        self.first_name = self.member_first_name_input.text()
+        self.middle_name = self.member_middle_name_input.text()
+        self.last_name = self.member_last_name_input.text()
+        self.address = self.member_address_input.text()
+        self.phone_number = self.member_phone_number_input.text()
+        self.gender = self.member_gender_combo_box.currentText()
+        self.membership_type = self.member_membership_type_combo_box.currentText()
+        self.birth_date = self.member_birth_date.date()
+        self.start_date = self.member_start_date.date()
+        self.end_date = self.member_end_date.date()
+        self.photo = self.member_image_label.pixmap()
+        self.signature = self.member_signature_label.pixmap()
+
+        if self.validate_member_inputs():
+            # Convert photo and signature to bytes
+            if self.photo:
+                member_image_bytes = self.pixmap_to_bytes(self.photo)
+            if self.signature:
+                signature_image_bytes = self.pixmap_to_bytes(self.signature)
+
+
+            cursor.execute(
+                '''
+                INSERT INTO Members 
+                (member_id, first_name, middle_name, last_name, address, phone_number, birthdate, membership_type,
+                gender, membership_start_date, membership_end_date, photo, signature) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ''',
+                (
+                    self.member_id,
+                    self.first_name,
+                    self.middle_name,
+                    self.last_name,
+                    self.address,
+                    self.phone_number,
+                    self.birth_date.toString("yyyy-MM-dd"),
+                    self.membership_type,
+                    self.gender,
+                    self.start_date.toString("yyyy-MM-dd"),
+                    self.end_date.toString("yyyy-MM-dd"),
+                    sqlite3.Binary(member_image_bytes),
+                    sqlite3.Binary(signature_image_bytes)
+                )
+            )
+            connection.commit()
+            QMessageBox.information(self, "Success", "Member registered successfully!")
+        else:
+            # Validation failed, do not proceed
+            pass
+
+    def update_end_date(self):
+        membership_type = self.member_membership_type_combo_box.currentText()
+        if membership_type == "Lifetime":
+            self.member_end_date.setDate(QDate(9999, 12, 31))  # Set to a far future date
+            self.member_end_date.setDisabled(True)  # Optionally disable the end date field
+        else:
+            self.member_end_date.setDisabled(False)
+            self.member_end_date.setDate(QDate.currentDate())  # Reset to the current date
+
+
+    def validate_member_inputs(self):
+
+        # Check if all required fields are filled
+        if not all([self.first_name, self.last_name, self.address, self.phone_number, self.gender, self.membership_type, self.photo, self.signature]):
+            QMessageBox.warning(self, "Input Error", "All fields must be filled")
+            return False
+
+        # Validate that specific fields contain only letters
+        if not all(re.match("^[A-Za-z ]+$", field) for field in [self.first_name, self.middle_name, self.last_name]):
+            QMessageBox.warning(self, "Input Error", "First Name, Middle Name, and Last Name must contain only letters and spaces.")
+            return False
+
+        # Validate that the address is a string
+        if not isinstance(self.address, str):
+            QMessageBox.warning(self, "Input Error", "Address must be a string.")
+            return False
+
+        # Validate that the phone number is numeric
+        if not self.phone_number.isdigit():
+            QMessageBox.warning(self, "Input Error", "Phone Number must be numeric.")
+            return False
+
+        # Ensure birth date, start date, and end date are valid
+        if not isinstance(self.birth_date, QDate) or not isinstance(self.start_date, QDate) or (self.membership_type != 'Lifetime' and not isinstance(self.end_date, QDate)):
+            QMessageBox.warning(self, "Input Error", "Birth Date, Start Date, and End Date must be valid dates.")
+            return False
+
+        return True
+    
+    def fetch_members_by_column(self):
+        query = f"""SELECT member_id, 
+                  first_name || ' ' || middle_name || ' ' || last_name AS member_name,
+                  membership_type,
+                  membership_start_date,
+                  membership_end_date 
+                  FROM Members"""
+        cursor.execute(query)
+        data = cursor.fetchall()
+        return data
+
+    def update_table_widget(self):
+        data = self.fetch_members_by_column()
+        self.member_table_widget.setRowCount(len(data))
+        for row_index, row_data in enumerate(data):
+            for col_index, col_data in enumerate(row_data):
+                self.member_table_widget.setItem(row_index, col_index, QTableWidgetItem(str(col_data)))
+
+    def fetch_employees_by_column(self):
+        query = f"""SELECT employee_id, 
+                  first_name || ' ' || middle_name || ' ' || last_name AS member_name,
+                  position,
+                  phone,
+                  hire_date
+                  FROM Employees """
+        cursor.execute(query)
+        data = cursor.fetchall()
+        return data
+
+    def update_employee_table_widget(self):
+        data = self.fetch_employees_by_column()
+        self.employee_table_widget.setRowCount(len(data))
+        for row_index, row_data in enumerate(data):
+            for col_index, col_data in enumerate(row_data):
+                self.employee_table_widget.setItem(row_index, col_index, QTableWidgetItem(str(col_data)))
+
+    def pixmap_to_bytes(self, pixmap):
+        byte_array = QByteArray()
+        buffer = QBuffer(byte_array)
+        buffer.open(QBuffer.WriteOnly)
+        pixmap.save(buffer, "PNG")
+        return byte_array.data()
+
+    def item_changed(self, item):
+        row = item.row()
+        column = item.column()
+        new_value = item.text()
+        column_name = self.employee_table_widget.horizontalHeaderItem(column).text()
+        self.confirm_change(row, column_name, new_value)
+
+    def update_database(self, row, column_name, new_value):
+        try:
+            member_id = self.employee_table_widget.item(row, 0).text()  # Assuming first column is ID
+            query = f"UPDATE Employees SET {column_name} = ? WHERE employee_id = ?"
+            cursor.execute(query, (new_value, member_id))
+            connection.commit()
+        except Exception as e:
+            print(f"An error occurred: {e}")
+
+    
+    def confirm_change(self, row, column_name, new_value):
+        member_id = self.employee_table_widget.item(row, 0).text()  # Assuming first column is ID
+        old_value = self.get_old_value(row, column_name)
+
+        if old_value == new_value:
+            return  # No actual change
+
+        confirmation = QMessageBox.question(
+            self, "Confirm Change",
+            f"Are you sure you want to change {column_name} from '{old_value}' to '{new_value}' for Member ID {member_id}?",
+            QMessageBox.Yes | QMessageBox.No
+        )       
+        
+
+        if confirmation == QMessageBox.Yes:
+            self.update_database(row, column_name, new_value)
+        else:
+            self.update_employee_table_widget()  # Revert the changes in the table
+
+    def get_old_value(self, row, column_name):
+        employee_id = self.employee_table_widget.item(row, 0).text()  # Assuming first column is ID
+        query = f"SELECT {column_name} FROM Employees WHERE employee_id = ?"
+        cursor.execute(query, (employee_id),)
+        old_value = cursor.fetchone()[0]
+        connection.close()
+        return str(old_value)
 if __name__ == "__main__":
     import sys
     app = QApplication(sys.argv)

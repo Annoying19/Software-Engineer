@@ -75,7 +75,7 @@ class Login(QMainWindow):
         self.login_button.clicked.connect(self.handle_login)
 
     def open_main_window(self, role):
-        if role == "admin":
+        if role == "Admin":
             self.main_window = Admin()
             self.main_window.show()
             self.close()
@@ -120,6 +120,7 @@ class Login(QMainWindow):
         hashed_password = hashlib.sha256(password_bytes).hexdigest()
         return hashed_password == password_hash
 
+    
 if __name__ == "__main__":
     app = QApplication([])
     window = Login()

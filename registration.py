@@ -12,6 +12,7 @@ import uuid
 #                           REGISTRATION     CLASS
 # ==============================================================================
 # ==============================================================================
+
 class Registration(QWidget):
     def __init__(self, parent=None):
         super(Registration, self).__init__(parent)
@@ -773,7 +774,7 @@ class Registration(QWidget):
                     sqlite3.Binary(signature_image_bytes)
                 )
             )
-            # Commit the transaction and close the connection
+
             connection.commit()
             QMessageBox.information(self, "Success", "Member registered successfully!")
         else:
@@ -864,11 +865,6 @@ class Registration(QWidget):
         # Check if the results are found
         if results:
             membership_id, gender, phone_number, membership_type, start_date, end_date, photo= results
-            print("Membership ID:", membership_id)
-            print("Membership Type:", membership_type)
-            print("Start Date:", start_date)
-            print("End Date:", end_date)
-            print("Image")
 
             pixmap = QPixmap()
             if photo:
@@ -909,6 +905,8 @@ class Registration(QWidget):
         self.clear_inputs(page)
         self.show_main_page()
 
+
+    
     
     def register_attendance(self):
 

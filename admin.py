@@ -10,7 +10,8 @@ from report import *
 from payment import *
 from help import *
 from about import *
-
+from maintenance import *
+from userlogs import *
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
@@ -100,9 +101,7 @@ class Ui_MainWindow(object):
         self.stacked_widget.setObjectName("stacked_widget")
 
         self.pages = {}
-        page_classes = [Inventory, Registration, Scheduling, Reports, Payment, Help, About]
-        extra_pages = ["User Logs", "Maintenance"]
-        
+        page_classes = [Inventory, Registration, Scheduling, Reports, Payment, UserLogs, Maintenance, Help, About]   
         for page_class in page_classes:
             page_instance = page_class()
             page_name = page_class.__name__.lower()
@@ -110,12 +109,7 @@ class Ui_MainWindow(object):
             self.stacked_widget.addWidget(page_instance)
             self.pages[page_name] = page_instance
 
-        for name in extra_pages:
-            page_instance = QWidget()
-            page_name = name.lower().replace(" ", "_")
-            page_instance.setObjectName(page_name)
-            self.stacked_widget.addWidget(page_instance)
-            self.pages[page_name] = page_instance
+
 
         self.side_frame_layout.addWidget(self.logo_frame)
         self.side_frame_layout.addWidget(self.taskbar_frame)
