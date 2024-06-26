@@ -90,11 +90,11 @@ class Login(QMainWindow):
 
         valid, role = self.check_credentials(username, password)
         if valid:
-            QMessageBox.information(self, "Login Successful", "You have successfully logged in.")                         
+            QMessageBox.information(self, "Login Successful", "You have successfully logged in.")
             self.open_main_window(role)
         else:
-            QMessageBox.warning(self, "Login Failed", "Invalid username or password.")
-            
+            # This part is no longer needed since check_credentials handles the dialog
+            pass
 
     def check_credentials(self, username, password):
         connection = sqlite3.connect('database.db')
@@ -104,15 +104,20 @@ class Login(QMainWindow):
         SELECT password_hash, role FROM Users WHERE username = ?
         ''', (username,))
         result = cursor.fetchone()
-        print(result)
         connection.close()
-        
+
         if result:
             password_hash, role = result
             if self.verify_password(password, password_hash):
                 print(f"Logged in as {role}")
                 return True, role
-        return False
+            else:
+                QMessageBox.warning(self, "Login Failed", "Invalid password.")
+        else:
+            QMessageBox.warning(self, "Login Failed", "Invalid username.")
+
+        return False, None
+
 
     def verify_password(self, password, password_hash):
         # Assuming password_hash is stored as SHA256 hash
