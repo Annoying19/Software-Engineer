@@ -8,6 +8,10 @@ from assets import *
 from datetime import date
 import time
 import random
+import subprocess
+import os
+
+
 
 class Payment(QWidget):  # Inherit from QWidget
     def __init__(self, parent=None):
@@ -131,17 +135,19 @@ class Payment(QWidget):  # Inherit from QWidget
                 
             if len(contract_data) > 2:
                 pdf_data = contract_data[2]
-                popup = View(pdf_data, self)  # Create an instance of View with the PDF data
-                popup.exec_()  # Show the dialog
+                print(pdf_data)
+                self.run_script(pdf_data)
             else:
                 print("No PDF data found in contract_data")
+    
+    def run_script(self, file_path):
+        if os.path.isfile(file_path):
+            os.startfile(file_path)
 
 
     def showRecord(self):
         popup = Record(self)
         popup.exec_()
-
-
 
 
 class Record(QDialog):
@@ -363,32 +369,28 @@ class View(QDialog):
         self.loading.setWindowTitle("Loading")
         self.loading.setText("Loading PDF...")
         self.loading.show()
-    
+
         try:
+            # Open the document using the file path
             document = fitz.open(item)
             self.loading.show()
-
-            for page_num in range(len(document)):
+            for page_num in range(len(document)):  # Load pages on-demand
                 page = document.load_page(page_num)
+                label = QLabel()
                 pix = page.get_pixmap(matrix=fitz.Matrix(0.5, 0.5))
-
                 if pix.width > 0 and pix.height > 0:
-                    image = QImage(pix.pixmap())
+                    image = QImage(pix.samples, pix.width, pix.height, pix.stride, QImage.Format_RGB888)
                     pixmap = QPixmap.fromImage(image)
                     label = QLabel()
                     label.setPixmap(pixmap)
                     label.setAlignment(Qt.AlignCenter)
+                    time.sleep(1)
                     containerLayout.addWidget(label)
 
-            scrollArea.setWidget(container)
-            scrollArea.setWidgetResizable(True)
 
         except Exception as e:
             error_label = QLabel(f"Error loading PDF: {e}")
             containerLayout.addWidget(error_label)
-
-        finally:
-            self.loading.close()
 
         if self.loading.isVisible():
             self.loading.close()
