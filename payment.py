@@ -2,7 +2,10 @@ from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 import sqlite3
+import fitz  
+from functools import partial
 from assets import *
+from datetime import date
 import time
 import random
 
@@ -20,9 +23,9 @@ class Payment(QWidget):  # Inherit from QWidget
             name = "payment_search_bar",
             geometry = QRect(30, 20, 400, 61),
             font = font5,
-            style = "background: white"
+            style = "background: white",
+            placeholder = "Enter Member ID / Reference Number here"
         )
-        self.search_bar.setPlaceholderText("Enter Member ID / Reference Number here")
 
         # Search Button
         self.btn_search = createButton(
@@ -50,7 +53,7 @@ class Payment(QWidget):  # Inherit from QWidget
             geometry = QRect(770, 730, 140, 45),
             text = "Record",
             font = font5,
-            style = "background: lime; color: white; border-radius: 5px"
+            style = "background: lime; color: white"
         )
 
         self.btn_search.clicked.connect(self.search)
@@ -62,7 +65,7 @@ class Payment(QWidget):  # Inherit from QWidget
         table = self.tableWidget
         table.setGeometry(QRect(30, 100, 880, 620))
         table.setRowCount(0)
-        table.setColumnCount(3)
+        table.setColumnCount(5)
         table.setObjectName("tableWidget")
         table.verticalHeader().setVisible(False)
         header = table.horizontalHeader()
@@ -70,10 +73,7 @@ class Payment(QWidget):  # Inherit from QWidget
         header.setDefaultAlignment(Qt.AlignCenter)
         table.setStyleSheet("background: white")
         self.loadData()
-        
-        
-
-       
+     
 
     # Populate Table View
     def loadData(self):
@@ -83,31 +83,22 @@ class Payment(QWidget):  # Inherit from QWidget
             columns_info = cursor.fetchall()
             column_names = [info[1] for info in columns_info]
 
+            column_names.append("")
+
             # Set column count and column names in table widget
             self.tableWidget.setHorizontalHeaderLabels(column_names)
             cursor.execute("SELECT * FROM Contracts")
             for row_number, row_data in enumerate(cursor):
                 self.tableWidget.insertRow(row_number)  
                 for column_number, data in enumerate(row_data):
-                    # Handle BLOB data
-                    if isinstance(data, bytes):
-                        image = QImage.fromData(data)
-                        if not image.isNull():
-                            pixmap = QPixmap.fromImage(image)
-                            label = QLabel()
-                            label.setPixmap(pixmap.scaled(100, 100, Qt.KeepAspectRatio, Qt.SmoothTransformation))
-                            label.setAlignment(Qt.AlignRight)
-                            self.tableWidget.setCellWidget(row_number, column_number, label)
-                        else:
-                            item = QTableWidgetItem("Invalid Image")
-                            item.setTextAlignment(Qt.AlignRight)
-                            self.tableWidget.setItem(row_number, column_number, item)
-                    else:
-                        item = QTableWidgetItem(str(data))
-                        item.setTextAlignment(Qt.AlignRight)
-                        self.tableWidget.setItem(row_number, column_number, item)
-            
+                    item = QTableWidgetItem(str(data))
+                    item.setTextAlignment(Qt.AlignRight)
+                    self.tableWidget.setItem(row_number, column_number, item)
 
+                view_button = QPushButton("View")
+                view_button.clicked.connect(partial(self.view_contract, row_number))
+                self.tableWidget.setCellWidget(row_number, len(row_data), view_button) 
+                   
 
     def search(self):
         search_term = self.search_bar.text()
@@ -122,24 +113,29 @@ class Payment(QWidget):  # Inherit from QWidget
         for row_number, row_data in enumerate(cursor):
             self.tableWidget.insertRow(row_number)  
             for column_number, data in enumerate(row_data):
-                # Handle BLOB data
-                if isinstance(data, bytes):
-                    image = QImage.fromData(data)
-                    if not image.isNull():
-                        pixmap = QPixmap.fromImage(image)
-                        label = QLabel()
-                        label.setPixmap(pixmap.scaled(100, 100, Qt.KeepAspectRatio, Qt.SmoothTransformation))
-                        label.setAlignment(Qt.AlignRight)
-                        self.tableWidget.setCellWidget(row_number, column_number, label)
-                    else:
-                        item = QTableWidgetItem("Invalid Image")
-                        item.setTextAlignment(Qt.AlignRight)
-                        self.tableWidget.setItem(row_number, column_number, item)
-                else:
-                    item = QTableWidgetItem(str(data))
-                    item.setTextAlignment(Qt.AlignRight)
-                    self.tableWidget.setItem(row_number, column_number, item)
+                item = QTableWidgetItem(str(data))
+                item.setTextAlignment(Qt.AlignRight)
+                self.tableWidget.setItem(row_number, column_number, item)
+
+            view_button = QPushButton("View")
+            view_button.clicked.connect(lambda rn=row_number: self.view_contract(rn))
+            self.tableWidget.setCellWidget(row_number, len(row_data), view_button) 
     
+    def view_contract(self, row_number):
+            if row_number is not None:
+                contract_data = []
+                for column_number in range(self.tableWidget.columnCount() - 1):  
+                    cell_item = self.tableWidget.item(row_number, column_number)
+                    if cell_item:
+                        contract_data.append(cell_item.text())
+                
+            if len(contract_data) > 2:
+                pdf_data = contract_data[2]
+                popup = View(pdf_data, self)  # Create an instance of View with the PDF data
+                popup.exec_()  # Show the dialog
+            else:
+                print("No PDF data found in contract_data")
+
 
     def showRecord(self):
         popup = Record(self)
@@ -161,9 +157,9 @@ class Record(QDialog):
             name = "record_bar_record",
             geometry = QRect(30, 20, 574, 61),
             font = font5,
-            style = "background: white"
+            style = "background: white",
+            placeholder = "Enter Member ID here"
         )
-        self.search_bar.setPlaceholderText("Enter Member ID / Name here")
 
         # Search Button 
         self.btn_search = createButton(
@@ -259,23 +255,14 @@ class Record(QDialog):
         # button clicks
         self.btn_search.clicked.connect(self.search)
         insert.clicked.connect(self.insert)
-        add.clicked.connect(self.close)
         add.clicked.connect(self.record)
         
     # Identify the member first
     def search(self):
         search_term = self.search_bar.text()
 
-        if search_term.isdigit():  # Check if the search term is a digit (assumed to be member_id)
-            query = "SELECT member_id, first_name || ' ' || middle_name || ' ' || last_name AS full_name, photo FROM Members WHERE CAST(member_id AS TEXT) LIKE ?"
-            params = ('%' + search_term + '%',)
-        else:  # Full name search (partial match allowed)
-            query = "SELECT member_id, first_name || ' ' || middle_name || ' ' || last_name AS full_name, photo FROM Members WHERE full_name LIKE ?"
-            params = ('%' + search_term + '%',)
-
-        cursor.execute(query, params)
+        cursor.execute("SELECT member_id, first_name || ' ' || middle_name || ' ' || last_name AS full_name, photo FROM Members WHERE member_id = ?", (search_term, ))
         result = cursor.fetchone()
-
         if result:
             membership_id, full_name, photo = result
             self.name_id.setText(full_name)
@@ -302,40 +289,21 @@ class Record(QDialog):
     
     # Insert Softcopy function
     def insert(self):
-        file_name, _ = QFileDialog.getOpenFileName(self, "Select Image", "", "Image Files (*.png *.jpg *.bmp *.gif)")
+        file_name, _ = QFileDialog.getOpenFileName(self, "Open PDF File", "", "PDF Files (*.pdf)")
         if file_name:
-            self.copy = file_name
-            pixmap = QPixmap(file_name)
-            self.softcopy.setPixmap(pixmap.scaled(self.softcopy.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation))
+            self.copy = file_name 
+            self.softcopy.setText("File Inserted")
+            self.softcopy.setAlignment(Qt.AlignCenter)
+        else: 
+            self.softcopy.setText("Missing File")
             self.softcopy.setAlignment(Qt.AlignCenter)
 
-    def convert_to_bytes(self):
-        if self.copy:
-            try:
-                pixmap = QPixmap(self.copy)
-                image = pixmap.toImage()
-                byte_array = QByteArray()
-                buffer = QBuffer(byte_array)
-                buffer.open(QIODevice.WriteOnly)
-                image.save(buffer, 'PNG')  # Change 'PNG' to 'JPEG' or another format if needed
-                buffer.close()
-                bytes_data = bytes(byte_array)
-                return bytes_data
-
-            except Exception as e:
-                print(f"Error converting image to bytes: {e}")
-                QMessageBox.critical(self, "Error", f"Failed to convert image to bytes: {e}")
-
-        return None
-
-     # generate ref num    
-    
-    
+  
     # Then Record When The member is Identified and Softcopy is inserted
     def record(self):
 
         def generate_reference_number():
-            timestamp = int(time.time())  # Get current timestamp in seconds
+            timestamp = int(time.time() * 10)  # Get current timestamp in seconds
             random_num = random.randint(1000, 9999)  # Generate a random 4-digit number
             reference_number = f"{timestamp}{random_num}"
             return reference_number
@@ -343,19 +311,27 @@ class Record(QDialog):
         try:
             # Get count of existing rows in Contracts table
             reference_number = int(generate_reference_number())
-        
+
+            date_recorded = date.today()
 
             # Call search to get membership_id and found
             membership_id, found = self.search()
             
 
             # Call insert to get softcopy data
-            softcopy = self.convert_to_bytes()
+            softcopy = self.copy
 
             if softcopy is not None and found:
                 # Insert new record into Contracts table
-                cursor.execute("INSERT INTO Contracts (reference_number, member_id, softcopy_contract) VALUES (?, ?, ?)",
-                            (reference_number, membership_id, softcopy))
+                cursor.execute("INSERT INTO Contracts (reference_number, member_id, softcopy_contract, date_recorded) VALUES (?, ?, ?, ?)",
+                            (
+                                reference_number,
+                                membership_id, 
+                                softcopy, 
+                                date_recorded.strftime('%Y-%m-%d')
+                            )
+                        )
+                
                 connection.commit()
                 QMessageBox.information(None, 'Success', 'Recorded')
     
@@ -368,6 +344,53 @@ class Record(QDialog):
             QMessageBox.critical(None, 'Error', 'Recording failed. Please try again.')
             print("error in sqlite3", e)
             connection.rollback()  # Rollback changes if error occurs
+
+class View(QDialog):
+    def __init__(self, item, parent=None):
+        super(View, self).__init__(parent)
+        self.setWindowTitle("Contract")
+        self.resize(600, 900)
+        self.setStyleSheet("background-color: #E0E0E0;")
+
+        layout = QVBoxLayout(self)
+        scrollArea = QScrollArea(self)
+        layout.addWidget(scrollArea)
+        
+        container = QWidget()
+        containerLayout = QVBoxLayout(container)
+        self.loading = QMessageBox()
+        self.loading.setIcon(QMessageBox.Information)
+        self.loading.setWindowTitle("Loading")
+        self.loading.setText("Loading PDF...")
+        self.loading.show()
+
+        try:
+            # Open the document using the file path
+            document = fitz.open(item)
+            self.loading.show()
+            for page_num in range(len(document)):  # Load pages on-demand
+                page = document.load_page(page_num)
+                label = QLabel()
+                pix = page.get_pixmap(matrix=fitz.Matrix(0.5, 0.5))
+                if pix.width > 0 and pix.height > 0:
+                    image = QImage(pix.samples, pix.width, pix.height, pix.stride, QImage.Format_RGB888)
+                    pixmap = QPixmap.fromImage(image)
+                    label = QLabel()
+                    label.setPixmap(pixmap)
+                    label.setAlignment(Qt.AlignCenter)
+                    time.sleep(1)
+                    containerLayout.addWidget(label)
+
+
+        except Exception as e:
+            error_label = QLabel(f"Error loading PDF: {e}")
+            containerLayout.addWidget(error_label)
+
+        if self.loading.isVisible():
+            self.loading.close()
+
+        scrollArea.setWidget(container)
+        scrollArea.setWidgetResizable(True)
 
 
 
