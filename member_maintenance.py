@@ -49,7 +49,7 @@ class Maintenance(QWidget):
         self.stackedWidget.setCurrentIndex(0)
     
     def show_add_member(self):
-        self.update_table_widget()
+        self.generate_member_id()
         self.stackedWidget.setCurrentIndex(1)
     
     def show_edit_member(self):
@@ -143,6 +143,8 @@ class Maintenance(QWidget):
             font=font2,
             style="background-color: #28a745; color: #FFFFFF"
         )
+
+        self.member_add_button.clicked.connect(self.show_add_member)
     
     def add_member(self):
         self.add_member_page = QWidget()
@@ -461,6 +463,9 @@ class Maintenance(QWidget):
             font = font3,
             style = "background-color: #006646"
         )
+        self.add_member_register_button.clicked.connect(self.register_member)
+        self.add_member_insert_image_button.clicked.connect(lambda: self.insert_image(self.add_member_image_label))
+        self.add_member_insert_signature_button.clicked.connect(lambda: self.insert_image(self.add_member_signature_label))
 
     def edit_member(self):
         self.edit_member = QWidget()
@@ -779,7 +784,8 @@ class Maintenance(QWidget):
             font = font3,
             style = "background-color: #006646"
         )
-
+        self.edit_member_insert_image_button.clicked.connect(lambda: self.insert_image(self.edit_member_image_label))
+        self.edit_member_insert_signature_button.clicked.connect(lambda: self.insert_image(self.edit_member_signature_label))
         self.edit_member_register_button.clicked.connect(self.update_member)
     
     def view_member(self):
@@ -1073,7 +1079,86 @@ class Maintenance(QWidget):
         else:
             self.add_member_end_date.setDisabled(False)
             self.add_member_end_date.setDate(QDate.currentDate())  # Reset to the current date
+    
+    def validate_member_inputs(self):
 
+        # Check if all required fields are filled
+        if not all([self.first_name, self.last_name, self.address, self.phone_number, self.gender, self.membership_type, self.photo, self.signature]):
+            QMessageBox.warning(self, "Input Error", "All fields must be filled")
+            return False
+
+        # Validate that specific fields contain only letters
+        if not all(re.match("^[A-Za-z ]+$", field) for field in [self.first_name, self.middle_name, self.last_name]):
+            QMessageBox.warning(self, "Input Error", "First Name, Middle Name, and Last Name must contain only letters and spaces.")
+            return False
+
+        # Validate that the address is a string
+        if not isinstance(self.address, str):
+            QMessageBox.warning(self, "Input Error", "Address must be a string.")
+            return False
+
+        # Validate that the phone number is numeric
+        if not self.phone_number.isdigit():
+            QMessageBox.warning(self, "Input Error", "Phone Number must be numeric.")
+            return False
+
+        # Ensure birth date, start date, and end date are valid
+        if not isinstance(self.birth_date, QDate) or not isinstance(self.start_date, QDate) or (self.membership_type != 'Lifetime' and not isinstance(self.end_date, QDate)):
+            QMessageBox.warning(self, "Input Error", "Birth Date, Start Date, and End Date must be valid dates.")
+            return False
+
+        return True
+    def register_member(self):
+        # Retrieve all inputs
+        self.member_id = self.add_member_id_output_label.text()
+        self.first_name = self.add_member_first_name_input.text()
+        self.middle_name = self.add_member_middle_name_input.text()
+        self.last_name = self.add_member_last_name_input.text()
+        self.address = self.add_member_address_input.text()
+        self.phone_number = self.add_member_phone_number_input.text()
+        self.gender = self.add_member_gender_combo_box.currentText()
+        self.membership_type = self.add_member_membership_type_combo_box.currentText()
+        self.birth_date = self.add_member_birth_date.date()
+        self.start_date = self.add_member_start_date.date()
+        self.end_date = self.add_member_end_date.date()
+        self.photo = self.add_member_image_label.pixmap()
+        self.signature = self.add_member_signature_label.pixmap()
+
+        if self.validate_member_inputs():
+            # Convert photo and signature to bytes
+            if self.photo:
+                member_image_bytes = self.pixmap_to_bytes(self.photo)
+            if self.signature:
+                signature_image_bytes = self.pixmap_to_bytes(self.signature)
+
+
+            cursor.execute(
+                '''
+                INSERT INTO Members 
+                (member_id, first_name, middle_name, last_name, address, phone_number, birthdate, membership_type,
+                gender, membership_start_date, membership_end_date, photo, signature) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ''',
+                (
+                    self.member_id,
+                    self.first_name,
+                    self.middle_name,
+                    self.last_name,
+                    self.address,
+                    self.phone_number,
+                    self.birth_date.toString("yyyy-MM-dd"),
+                    self.membership_type,
+                    self.gender,
+                    self.start_date.toString("yyyy-MM-dd"),
+                    self.end_date.toString("yyyy-MM-dd"),
+                    sqlite3.Binary(member_image_bytes),
+                    sqlite3.Binary(signature_image_bytes)
+                )
+            )
+            connection.commit()
+            QMessageBox.information(self, "Success", "Member registered successfully!")
+        else:
+            # Validation failed, do not proceed
+            pass
     def show_view_member_temp(self, row):
         member_id = self.member_table_widget.item(row, 0).text()
 
@@ -1106,8 +1191,8 @@ class Maintenance(QWidget):
 
         pixmap.loadFromData(photo)
         self.view_member_image_label.setPixmap(pixmap)
-        pixmap.loadFromData(signature)
-        self.view_member_signature_label.setPixmap(pixmap)
+        pixmap_2.loadFromData(signature)
+        self.view_member_signature_label.setPixmap(pixmap_2)
 
         self.show_view_member()
 
@@ -1181,11 +1266,11 @@ class Maintenance(QWidget):
         gender = self.edit_member_gender_combo_box.currentText()
         address =self.edit_member_address_input.text()
         phone = self.edit_member_phone_number_input.text()
-        start_date = self.add_member_start_date.date()
-        end_date = self.add_member_end_date.date()
-        membership_type = self.add_member_membership_type_combo_box.currentText()
-        photo = self.add_member_image_label.pixmap()
-        signature = self.add_member_signature_label.pixmap()
+        start_date = self.edit_member_start_date.date()
+        end_date = self.edit_member_end_date.date()
+        membership_type = self.edit_member_membership_type_combo_box.currentText()
+        photo = self.edit_member_image_label.pixmap()
+        signature = self.edit_member_signature_label.pixmap()
         member_image_bytes = self.pixmap_to_bytes(photo)
         signature_image_bytes = self.pixmap_to_bytes(signature)
 
@@ -1193,7 +1278,7 @@ class Maintenance(QWidget):
             """
             UPDATE Members
             SET member_id = ?, first_name = ?, middle_name = ?, last_name = ?, birthdate = ?, gender = ?, 
-            address = ?, phone = ?, membership_type = ?, membership_start_date =? , membership_end_date = ?, photo = ?, signature = ?
+            address = ?, phone_number = ?, membership_type = ?, membership_start_date =? , membership_end_date = ?, photo = ?, signature = ?
             """,
             (
                 member_id,
@@ -1208,7 +1293,7 @@ class Maintenance(QWidget):
                 start_date.toString("yyyy-MM-dd"),
                 end_date.toString("yyyy-MM-dd"),
                 sqlite3.Binary(member_image_bytes),
-                sqlite3.Binary(signature_image_bytes)
+                sqlite3.Binary(signature_image_bytes),
             )
         )
         connection.commit()
@@ -1253,7 +1338,7 @@ class Maintenance(QWidget):
             pixmap = QPixmap(file_name)
             image.setPixmap(pixmap.scaled(image.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation))
     
-    def generate_employee_id(self):
+    def generate_member_id(self):
         query = "SELECT COUNT(*) FROM Members"
         cursor.execute(query)
         count = cursor.fetchone()[0] + 1

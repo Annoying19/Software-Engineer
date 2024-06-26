@@ -363,28 +363,32 @@ class View(QDialog):
         self.loading.setWindowTitle("Loading")
         self.loading.setText("Loading PDF...")
         self.loading.show()
-
+    
         try:
-            # Open the document using the file path
             document = fitz.open(item)
             self.loading.show()
-            for page_num in range(len(document)):  # Load pages on-demand
+
+            for page_num in range(len(document)):
                 page = document.load_page(page_num)
-                label = QLabel()
                 pix = page.get_pixmap(matrix=fitz.Matrix(0.5, 0.5))
+
                 if pix.width > 0 and pix.height > 0:
-                    image = QImage(pix.samples, pix.width, pix.height, pix.stride, QImage.Format_RGB888)
+                    image = QImage(pix.pixmap())
                     pixmap = QPixmap.fromImage(image)
                     label = QLabel()
                     label.setPixmap(pixmap)
                     label.setAlignment(Qt.AlignCenter)
-                    time.sleep(1)
                     containerLayout.addWidget(label)
 
+            scrollArea.setWidget(container)
+            scrollArea.setWidgetResizable(True)
 
         except Exception as e:
             error_label = QLabel(f"Error loading PDF: {e}")
             containerLayout.addWidget(error_label)
+
+        finally:
+            self.loading.close()
 
         if self.loading.isVisible():
             self.loading.close()

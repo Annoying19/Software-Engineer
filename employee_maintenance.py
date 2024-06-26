@@ -1072,6 +1072,7 @@ class Maintenance(QWidget):
         QMessageBox.information(self, "Yippie", "Employee Updated")
         self.show_main_page()
 
+    
     def clear_inputs(self, page):
         for widget in page.findChildren(QWidget):
             if isinstance(widget, QLineEdit):
