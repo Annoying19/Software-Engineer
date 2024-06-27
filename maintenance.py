@@ -4,6 +4,9 @@ from PySide2.QtWidgets import *
 from assets import *
 from product_maintenance import *
 from member_maintenance import *
+import shutil
+import os
+
 # ==============================================================================
 # ==============================================================================
 #                           MAINTENANCE    CLASS
@@ -80,6 +83,7 @@ class Maintenance(QWidget):
 
     def show_view_employee(self):
         self.stackedWidget.setCurrentIndex(8)
+
 
         
     def open_main_page(self):
@@ -158,17 +162,28 @@ class Maintenance(QWidget):
             style = "background-color: #004F9A; color: #FFFFFF"
         )
 
-        self.switch_backup_page_button = createButton(
+        self.switch_backup_button = createButton(
             parent = self.main_page,
             name = "backup_page_button",
-            geometry = QRect(330, 630, 300, 100),
-            text = "Backup and Restore",
+            geometry = QRect(140, 630, 300, 100),
+            text = "Backup",
+            font = font3,
+            style = "background-color: #004F9A; color: #FFFFFF"
+        )
+
+        self.switch_restore_button = createButton(
+            parent = self.main_page,
+            name = "restore_button",
+            geometry = QRect(500, 630, 300, 100),
+            text = "Restore",
             font = font3,
             style = "background-color: #004F9A; color: #FFFFFF"
         )
 
         self.switch_member_page_button.clicked.connect(self.show_member_page)
         self.switch_employee_page_button.clicked.connect(self.show_employee_page)
+        self.switch_backup_button.clicked.connect(self.backup_path)
+        self.switch_restore_button.clicked.connect(self.restore_path)
 #========================================================================================================================
 #                                     MEMBER MAINTENANCE
 #========================================================================================================================
@@ -2472,6 +2487,7 @@ class Maintenance(QWidget):
         connection.commit()
         QMessageBox.information(None, "Yippie", "Employee Updated")
         self.show_employee_page()
+
     def search_employees(self, table_widget, input_text):
         search_term = input_text.text()
         query = """
@@ -2509,6 +2525,64 @@ class Maintenance(QWidget):
 #========================================================================================================================
 #                                     USER ACCOUNTS MAINTENANCE
 #========================================================================================================================
+
+
+
+#========================================================================================================================
+#                                     BACKUP AND RESTORE MAINTENANCE
+#========================================================================================================================
+
+    def backup_path(self):
+        options = QFileDialog.Options()
+        path = QFileDialog.getExistingDirectory(self, "Select Directory", options=options)
+        print(path)
+
+        time = datetime.now().strftime("%Y-%m-%d %H-%M")
+        source_path = "Software-Engineer-master/database.db"
+        backup_path = f"{path}/backup_{time}.db"
+        self.backup(source_path, backup_path)
+
+    def restore_path(self):
+
+
+        options = QFileDialog.Options()
+        restore_path, _ = QFileDialog.getOpenFileName(self, "Select .db File", "", "SQLite Files (*.db)", options=options)
+        print(restore_path)
+        
+        new_path = "Software-Engineer-master/database.db"
+        self.restore(restore_path, new_path)
+
+    def backup(self, source_db, backup_db):
+        # Connect to the source database
+        src_conn = sqlite3.connect(source_db)
+        # Connect to the backup database (it will be created if it doesn't exist)
+        backup_conn = sqlite3.connect(backup_db)
+
+        with backup_conn:
+            src_conn.backup(backup_conn, pages=1, progress=None)
+
+        QMessageBox.information(None, "Success", "Backup Stored")
+
+        # Close the connections
+        src_conn.close()
+        backup_conn.close()
+    
+    def restore(self, restore_db, new_db):
+        try:
+            # Ensure the directory for the new database file exists
+            new_db_dir = os.path.dirname(new_db)
+            if not os.path.exists(new_db_dir):
+                os.makedirs(new_db_dir)
+
+            # Make a copy of the backup file to the new database file
+            shutil.copyfile(restore_db, new_db)
+            QMessageBox.information(None, "Success", "Database Restored")
+        except Exception as e:
+            QMessageBox.critical(None, "Error", "Database Restoration Failed")
+
+    
+
+
 if __name__ == "__main__":
     import sys
     app = QApplication(sys.argv)
