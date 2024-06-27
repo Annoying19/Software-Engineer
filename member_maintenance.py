@@ -3,24 +3,23 @@ from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 from  assets import *
 import sqlite3
-import re
 from functools import partial
 from datetime import datetime
-import uuid
-import hashlib
-from registration import *
+
 # ==============================================================================
 # ==============================================================================
 #                           MAINTENANCE    CLASS
 # ==============================================================================
 # ==============================================================================
-class Maintenance(QWidget):
+class MemberMaintenance(QWidget):
     def __init__(self, parent=None):
-        super(Maintenance, self).__init__(parent)
+        super(MemberMaintenance, self).__init__(parent)
         self.setObjectName("Form")
         self.resize(950, 800)
         self.setStyleSheet("background-color: #FFFFFF")
         self.open_maintenance_interface()
+
+        
 
     def open_maintenance_interface(self):
 
@@ -31,33 +30,31 @@ class Maintenance(QWidget):
         self.stackedWidget = QStackedWidget(self)
         self.stackedWidget.setObjectName("stackedWidget")
 
+        
 
         self.open_member_page()
-        self.add_member() 
-        self.edit_member()
-        self.view_member()
+        self.open_create_member() 
+        self.open_edit_member()
+        self.open_view_member()
 
 
         self.verticalLayout.addWidget(self.stackedWidget)
         self.stackedWidget.setCurrentIndex(0)
         QMetaObject.connectSlotsByName(self)
 
-
-
     def show_member_page(self):
         self.update_table_widget()
         self.stackedWidget.setCurrentIndex(0)
     
     def show_add_member(self):
-        self.generate_member_id()
+        generate_id("Members", self.member_id_output_label)
+        clear_inputs(self.member_page)
         self.stackedWidget.setCurrentIndex(1)
     
     def show_edit_member(self):
-        self.update_table_widget()
         self.stackedWidget.setCurrentIndex(2)
 
     def show_view_member(self):
-        self.update_table_widget()
         self.stackedWidget.setCurrentIndex(3)
 
         
@@ -143,21 +140,20 @@ class Maintenance(QWidget):
             font=font2,
             style="background-color: #28a745; color: #FFFFFF"
         )
-
         self.member_add_button.clicked.connect(self.show_add_member)
     
-    def add_member(self):
-        self.add_member_page = QWidget()
-        self.add_member_page.setObjectName("member_page")
-        self.stackedWidget.addWidget(self.add_member_page)
+    def open_create_member(self):
+        self.member_page = QWidget()
+        self.member_page.setObjectName("member_page")
+        self.stackedWidget.addWidget(self.member_page)
 
         # ===========================================
         #             MEMBER PAGE LABELS
         # ===========================================
 
         # MEMBER REGISTRATION TEXT LABEL
-        self.add_member_registration_text_label = createLabel(
-            parent = self.add_member_page,
+        self.member_registration_text_label = createLabel(
+            parent = self.member_page,
             name = "member_registration_text_label",
             geometry = QRect(310, 50, 380, 40),
             text = "Member Registration",
@@ -166,8 +162,8 @@ class Maintenance(QWidget):
         )
 
         # MEMBER ID LABEL
-        self.add_member_id_label = createLabel(
-            parent = self.add_member_page,
+        self.member_id_label = createLabel(
+            parent = self.member_page,
             name = "member_id_label",
             geometry = QRect(40, 150, 191, 40),
             text = "Membership ID:",
@@ -176,8 +172,8 @@ class Maintenance(QWidget):
         )
 
         # MEMBER ID OUTPUT LABEL
-        self.add_member_id_output_label = createLabel(
-            parent = self.add_member_page,
+        self.member_id_output_label = createLabel(
+            parent = self.member_page,
             name = "member_id_output",
             geometry = QRect(240, 150, 410, 40),
             text = "",
@@ -186,8 +182,8 @@ class Maintenance(QWidget):
         )
 
         # FIRST NAME LABEL
-        self.add_member_first_name_label = createLabel(
-            parent = self.add_member_page,
+        self.member_first_name_label = createLabel(
+            parent = self.member_page,
             name = "first_name_label",
             geometry = QRect(40, 210, 130, 40),
             text = "First Name",
@@ -196,8 +192,8 @@ class Maintenance(QWidget):
         )
 
         # MIDDLE NAME LABEL
-        self.add_member_middle_name_label = createLabel(
-            parent = self.add_member_page,
+        self.member_middle_name_label = createLabel(
+            parent = self.member_page,
             name = "middle_name_label",
             geometry = QRect(380, 210, 160, 40),
             text = "Middle Name",
@@ -206,8 +202,8 @@ class Maintenance(QWidget):
         )
 
         # LAST NAME LABEL
-        self.add_member_last_name_label = createLabel(
-            parent = self.add_member_page,
+        self.member_last_name_label = createLabel(
+            parent = self.member_page,
             name = "last_name_label",
             geometry = QRect(40, 310, 130, 40),
             text = "Last Name",
@@ -216,8 +212,8 @@ class Maintenance(QWidget):
         )
 
         # GENDER LABEL
-        self.add_member_gender_label = createLabel(
-            parent = self.add_member_page,
+        self.member_gender_label = createLabel(
+            parent = self.member_page,
             name = "gender_label",
             geometry = QRect(380, 310, 130, 40),
             text = "Gender",
@@ -226,8 +222,8 @@ class Maintenance(QWidget):
         )
 
         # ADDRESS LABEL
-        self.add_member_address_label = createLabel(
-            parent = self.add_member_page,
+        self.member_address_label = createLabel(
+            parent = self.member_page,
             name = "addresslabel",
             geometry = QRect(40, 420, 130, 40),
             text = "Address",
@@ -236,8 +232,8 @@ class Maintenance(QWidget):
         )
 
         # BIRTHDATE LABEL
-        self.add_member_birthdate_label = createLabel(
-            parent = self.add_member_page,
+        self.member_birthdate_label = createLabel(
+            parent = self.member_page,
             name = "birthdate_label",
             geometry = QRect(380, 420, 130, 40),
             text = "Birthdate",
@@ -246,8 +242,8 @@ class Maintenance(QWidget):
         )
 
         # PHONE NUMBER LABEL
-        self.add_member_phone_number_label = createLabel(
-            parent = self.add_member_page,
+        self.member_phone_number_label = createLabel(
+            parent = self.member_page,
             name = "phone_number_label",
             geometry = QRect(40, 530, 180, 40),
             text = "Phone Number",
@@ -256,8 +252,8 @@ class Maintenance(QWidget):
         )
 
         # MEMBERSHIP TYPE LABEL
-        self.add_member_membership_type_label = createLabel(
-            parent = self.add_member_page,
+        self.member_membership_type_label = createLabel(
+            parent = self.member_page,
             name = "membership_type_label",
             geometry = QRect(380, 530, 210, 40),
             text = "Membership Type",
@@ -266,8 +262,8 @@ class Maintenance(QWidget):
         )
 
         # START DATE LABEL
-        self.add_member_start_date_label = createLabel(
-            parent = self.add_member_page,
+        self.member_start_date_label = createLabel(
+            parent = self.member_page,
             name = "start_date_label",
             geometry = QRect(40, 630, 180, 40),
             text = "Start Date",
@@ -276,8 +272,8 @@ class Maintenance(QWidget):
         )
 
         # END DATE LABEL
-        self.add_member_end_date_label = createLabel(
-            parent = self.add_member_page,
+        self.member_end_date_label = createLabel(
+            parent = self.member_page,
             name = "end_date_label",
             geometry = QRect(280, 630, 180, 40),
             text = "End Date",
@@ -286,8 +282,8 @@ class Maintenance(QWidget):
         )
 
         # IMAGE LABEL 
-        self.add_member_image_label = createLabel(
-            parent = self.add_member_page,
+        self.member_image_label = createLabel(
+            parent = self.member_page,
             name = "image_label",
             geometry = QRect(680, 140, 250, 250),
             text = "",
@@ -296,8 +292,8 @@ class Maintenance(QWidget):
         )
         
         # SIGNATURE LABEL
-        self.add_member_signature_label = createLabel(
-            parent = self.add_member_page,
+        self.member_signature_label = createLabel(
+            parent = self.member_page,
             name = "signature_label",
             geometry = QRect(750, 460, 180, 90),
             text = "",
@@ -310,8 +306,8 @@ class Maintenance(QWidget):
         # ===========================================
 
         # FIRST NAME INPUT
-        self.add_member_first_name_input = createLineInput(
-            parent = self.add_member_page,
+        self.member_first_name_input = createLineInput(
+            parent = self.member_page,
             name = "first_name_output",
             geometry = QRect(40, 260, 330, 40),
             font = font2,
@@ -319,8 +315,8 @@ class Maintenance(QWidget):
         )
 
         # MIDDLE NAME INPUT
-        self.add_member_middle_name_input = createLineInput(
-            parent = self.add_member_page,
+        self.member_middle_name_input = createLineInput(
+            parent = self.member_page,
             name = "middle_name_output",
             geometry = QRect(380, 260, 280, 40),
             font = font2,
@@ -328,8 +324,8 @@ class Maintenance(QWidget):
         )
 
         # LAST NAME INPUT
-        self.add_member_last_name_input = createLineInput(
-            parent = self.add_member_page,
+        self.member_last_name_input = createLineInput(
+            parent = self.member_page,
             name = "last_name_output",
             geometry = QRect(40, 360, 330, 40),
             font = font2,
@@ -337,16 +333,16 @@ class Maintenance(QWidget):
         )
 
         # ADDRESS INPUT
-        self.add_member_address_input = createLineInput(
-            parent = self.add_member_page,
+        self.member_address_input = createLineInput(
+            parent = self.member_page,
             name = "address_output",
             geometry = QRect(40, 470, 330, 40),
             font = font2,
             style = "background-color: #F9F7FF; border: 1px solid black"
         )
         # PHONE NUMBER INPUT
-        self.add_member_phone_number_input = createLineInput(
-            parent = self.add_member_page,
+        self.member_phone_number_input = createLineInput(
+            parent = self.member_page,
             name = "phone_number_output",
             geometry = QRect(40, 570, 330, 40),
             font = font2,
@@ -358,8 +354,8 @@ class Maintenance(QWidget):
         # ===========================================
 
         # GENDER BOX
-        self.add_member_gender_combo_box = createComboBox(
-            parent = self.add_member_page,
+        self.member_gender_combo_box = createComboBox(
+            parent = self.member_page,
             name = "gender_combo_box",
             geometry = QRect(380, 360, 140, 40),
             font = font2,
@@ -368,8 +364,8 @@ class Maintenance(QWidget):
         )
 
         # MEMBERSHIP TYPE BOX
-        self.add_member_membership_type_combo_box = createComboBox(
-            parent = self.add_member_page,
+        self.member_membership_type_combo_box = createComboBox(
+            parent = self.member_page,
             name = "gender_combo_box",
             geometry = QRect(380, 570, 210, 40),
             font = font2,
@@ -377,46 +373,50 @@ class Maintenance(QWidget):
             style = "background-color: #F9F7FF; border: 1px solid black"
         )
 
-        self.add_member_membership_type_combo_box.currentIndexChanged.connect(self.update_end_date)
+        self.member_membership_type_combo_box.currentIndexChanged.connect(self.update_end_date)
 
         # ===========================================
         #              MEMBER PAGE DATE
         # ===========================================
 
         # BIRTH DATE
-        self.add_member_birth_date = createDate(
-            parent = self.add_member_page,
+        self.member_birth_date = createDate(
+            parent = self.member_page,
             name = "birthdate",
             geometry = QRect(380, 470, 200, 40),
             font = font2,
             style = "background-color: #F9F7FF; border: 1px solid black"
         )
 
+    
         # START DATE
-        self.add_member_start_date = createDate(
-            parent = self.add_member_page,
+        self.member_start_date = createDate(
+            parent = self.member_page,
             name = "member_start_date",
             geometry = QRect(40, 670, 200, 40),
             font = font2,
             style = "background-color: #F9F7FF; border: 1px solid black"
         )
 
+        disable_past_date(self.member_start_date)
         # END DATE
-        self.add_member_end_date = createDate(
-            parent = self.add_member_page,
+        self.member_end_date = createDate(
+            parent = self.member_page,
             name = "member_end_date",
             geometry = QRect(280, 670, 200, 40),
             font = font2,
             style = "background-color: #F9F7FF; border: 1px solid black"
         )
 
+        disable_past_date(self.member_end_date)
+
         # ===========================================
         #              MEMBER PAGE BUTTONS
         # ===========================================
     
         # BACK BUTTON
-        self.add_member_back_button = createButton(
-            parent = self.add_member_page,
+        self.member_back_button = createButton(
+            parent = self.member_page,
             name = "back_button",
             geometry = QRect(40, 50, 70, 50),
             text = "Back",
@@ -425,8 +425,8 @@ class Maintenance(QWidget):
         )
 
         # INSERT IMAGE BUTTON
-        self.add_member_insert_image_button = createButton(
-            parent = self.add_member_page,
+        self.member_insert_image_button = createButton(
+            parent = self.member_page,
             name = "insert_image_button",
             geometry = QRect(680, 400, 250, 50),
             text = "Insert Image",
@@ -435,8 +435,8 @@ class Maintenance(QWidget):
         )
 
         # INSERT SIGNATURE BUTTON
-        self.add_member_insert_signature_button = createButton(
-            parent = self.add_member_page,
+        self.member_insert_signature_button = createButton(
+            parent = self.member_page,
             name = "insert_signature_button",
             geometry = QRect(680, 560, 250, 50),
             text = "Insert Signature",
@@ -445,8 +445,8 @@ class Maintenance(QWidget):
         )
 
         # CLEAR BUTTON
-        self.add_member_clear_button = createButton(
-            parent = self.add_member_page,
+        self.member_clear_button = createButton(
+            parent = self.member_page,
             name = "clear_button",
             geometry = QRect(510, 730, 170, 50),
             text = "Clear",
@@ -455,19 +455,22 @@ class Maintenance(QWidget):
         )
 
         # REGISTER BUTTON
-        self.add_member_register_button = createButton(
-            parent = self.add_member_page,
+        self.member_register_button = createButton(
+            parent = self.member_page,
             name = "register_button",
             geometry = QRect(690, 730, 250, 50),
             text = "Register",
             font = font3,
             style = "background-color: #006646"
         )
-        self.add_member_register_button.clicked.connect(self.register_member)
-        self.add_member_insert_image_button.clicked.connect(lambda: self.insert_image(self.add_member_image_label))
-        self.add_member_insert_signature_button.clicked.connect(lambda: self.insert_image(self.add_member_signature_label))
+        
+        self.member_back_button.clicked.connect(self.show_member_page)
+        self.member_clear_button.clicked.connect(lambda: clear_inputs(self.member_page))
+        self.member_register_button.clicked.connect(lambda: register_entity("Members", self.assigned_input("Members")))
+        self.member_insert_image_button.clicked.connect(lambda: insert_image(self.member_image_label))
+        self.member_insert_signature_button.clicked.connect(lambda: insert_image(self.member_signature_label))
 
-    def edit_member(self):
+    def open_edit_member(self):
         self.edit_member = QWidget()
         self.edit_member.setObjectName("member_page")
         self.stackedWidget.addWidget(self.edit_member)
@@ -766,7 +769,7 @@ class Maintenance(QWidget):
         )
 
         # CLEAR BUTTON
-        self.edit_member_clear_button = createButton(
+        self.edit_member_cancel_button = createButton(
             parent = self.edit_member,
             name = "clear_button",
             geometry = QRect(510, 730, 170, 50),
@@ -776,19 +779,21 @@ class Maintenance(QWidget):
         )
 
         # REGISTER BUTTON
-        self.edit_member_register_button = createButton(
+        self.edit_member_update_button = createButton(
             parent = self.edit_member,
             name = "register_button",
             geometry = QRect(690, 730, 250, 50),
-            text = "Register",
+            text = "Update Member",
             font = font3,
             style = "background-color: #006646"
         )
-        self.edit_member_insert_image_button.clicked.connect(lambda: self.insert_image(self.edit_member_image_label))
-        self.edit_member_insert_signature_button.clicked.connect(lambda: self.insert_image(self.edit_member_signature_label))
-        self.edit_member_register_button.clicked.connect(self.update_member)
-    
-    def view_member(self):
+
+        self.edit_member_back_button.clicked.connect(self.show_view_member)
+        self.edit_member_cancel_button.clicked.connect(self.show_view_member)
+        self.edit_member_insert_image_button.clicked.connect(lambda: insert_image(self.edit_member_image_label))
+        self.edit_member_insert_signature_button.clicked.connect(lambda: insert_image(self.edit_member_signature_label))
+        self.edit_member_update_button.clicked.connect(lambda: update_entity("Members", self.assigned_input("Update Member")))
+    def open_view_member(self):
         self.view_member = QWidget()
         self.view_member.setObjectName("member_page")
         self.stackedWidget.addWidget(self.view_member)
@@ -1070,95 +1075,60 @@ class Maintenance(QWidget):
             font=font3,
             style="background-color: #006646; color: #FFFFFF"
         )
+        self.view_member_back_button.clicked.connect(self.show_member_page)
         self.view_member_register_button.clicked.connect(self.edit_employee_button)
+
     def update_end_date(self):
-        membership_type = self.add_member_membership_type_combo_box.currentText()
+        membership_type = self.member_membership_type_combo_box.currentText()
         if membership_type == "Lifetime":
-            self.add_member_end_date.setDate(QDate(9999, 12, 31))  # Set to a far future date
-            self.add_member_end_date.setDisabled(True)  # Optionally disable the end date field
+            self.member_end_date.setDate(QDate(9999, 12, 31))  # Set to a far future date
+            self.member_end_date.setDisabled(True)  # Optionally disable the end date field
         else:
-            self.add_member_end_date.setDisabled(False)
-            self.add_member_end_date.setDate(QDate.currentDate())  # Reset to the current date
+            self.member_end_date.setDisabled(False)
+            self.member_end_date.setDate(QDate.currentDate())  # Reset to the current date
     
-    def validate_member_inputs(self):
+    def assigned_input(self, input):
+        if input == "Members":
+            image = pixmap_to_bytes(self.member_image_label.pixmap())
+            signature = pixmap_to_bytes(self.member_signature_label.pixmap())
 
-        # Check if all required fields are filled
-        if not all([self.first_name, self.last_name, self.address, self.phone_number, self.gender, self.membership_type, self.photo, self.signature]):
-            QMessageBox.warning(self, "Input Error", "All fields must be filled")
-            return False
+            INPUTS = {
+                "member_id": self.member_id_output_label.text(),
+                "first_name": self.member_first_name_input.text(),
+                "middle_name":self.member_middle_name_input.text(),
+                "last_name": self.member_last_name_input.text(),
+                "address": self.member_address_input.text(),
+                "phone": self.member_phone_number_input.text(),
+                "gender": self.member_gender_combo_box.currentText(),
+                "membership_type": self.member_membership_type_combo_box.currentText(),
+                "birthdate": self.member_birth_date.date(),
+                "start_date": self.member_start_date.date(),
+                "end_date": self.member_end_date.date(),
+                "image": sqlite3.Binary(image),
+                "signature": sqlite3.Binary(signature),
+            }
+        elif input == "Update Member":
+            image = pixmap_to_bytes(self.edit_member_image_label.pixmap())
+            signature = pixmap_to_bytes(self.edit_member_signature_label.pixmap())
 
-        # Validate that specific fields contain only letters
-        if not all(re.match("^[A-Za-z ]+$", field) for field in [self.first_name, self.middle_name, self.last_name]):
-            QMessageBox.warning(self, "Input Error", "First Name, Middle Name, and Last Name must contain only letters and spaces.")
-            return False
-
-        # Validate that the address is a string
-        if not isinstance(self.address, str):
-            QMessageBox.warning(self, "Input Error", "Address must be a string.")
-            return False
-
-        # Validate that the phone number is numeric
-        if not self.phone_number.isdigit():
-            QMessageBox.warning(self, "Input Error", "Phone Number must be numeric.")
-            return False
-
-        # Ensure birth date, start date, and end date are valid
-        if not isinstance(self.birth_date, QDate) or not isinstance(self.start_date, QDate) or (self.membership_type != 'Lifetime' and not isinstance(self.end_date, QDate)):
-            QMessageBox.warning(self, "Input Error", "Birth Date, Start Date, and End Date must be valid dates.")
-            return False
-
-        return True
-    def register_member(self):
-        # Retrieve all inputs
-        self.member_id = self.add_member_id_output_label.text()
-        self.first_name = self.add_member_first_name_input.text()
-        self.middle_name = self.add_member_middle_name_input.text()
-        self.last_name = self.add_member_last_name_input.text()
-        self.address = self.add_member_address_input.text()
-        self.phone_number = self.add_member_phone_number_input.text()
-        self.gender = self.add_member_gender_combo_box.currentText()
-        self.membership_type = self.add_member_membership_type_combo_box.currentText()
-        self.birth_date = self.add_member_birth_date.date()
-        self.start_date = self.add_member_start_date.date()
-        self.end_date = self.add_member_end_date.date()
-        self.photo = self.add_member_image_label.pixmap()
-        self.signature = self.add_member_signature_label.pixmap()
-
-        if self.validate_member_inputs():
-            # Convert photo and signature to bytes
-            if self.photo:
-                member_image_bytes = self.pixmap_to_bytes(self.photo)
-            if self.signature:
-                signature_image_bytes = self.pixmap_to_bytes(self.signature)
+            INPUTS = {
+                "first_name": self.edit_member_first_name_input.text(),
+                "middle_name":self.edit_member_middle_name_input.text(),
+                "last_name": self.edit_member_last_name_input.text(),
+                "address": self.edit_member_address_input.text(),
+                "phone": self.edit_member_phone_number_input.text(),
+                "gender": self.edit_member_gender_combo_box.currentText(),
+                "membership_type": self.edit_member_membership_type_combo_box.currentText(),
+                "birthdate": self.edit_member_birth_date.date(),
+                "start_date": self.edit_member_start_date.date(),
+                "end_date": self.edit_member_end_date.date(),
+                "image": sqlite3.Binary(image),
+                "signature": sqlite3.Binary(signature),
+            }
 
 
-            cursor.execute(
-                '''
-                INSERT INTO Members 
-                (member_id, first_name, middle_name, last_name, address, phone_number, birthdate, membership_type,
-                gender, membership_start_date, membership_end_date, photo, signature) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                ''',
-                (
-                    self.member_id,
-                    self.first_name,
-                    self.middle_name,
-                    self.last_name,
-                    self.address,
-                    self.phone_number,
-                    self.birth_date.toString("yyyy-MM-dd"),
-                    self.membership_type,
-                    self.gender,
-                    self.start_date.toString("yyyy-MM-dd"),
-                    self.end_date.toString("yyyy-MM-dd"),
-                    sqlite3.Binary(member_image_bytes),
-                    sqlite3.Binary(signature_image_bytes)
-                )
-            )
-            connection.commit()
-            QMessageBox.information(self, "Success", "Member registered successfully!")
-        else:
-            # Validation failed, do not proceed
-            pass
+        return INPUTS
+    
     def show_view_member_temp(self, row):
         member_id = self.member_table_widget.item(row, 0).text()
 
@@ -1193,8 +1163,8 @@ class Maintenance(QWidget):
         self.view_member_image_label.setPixmap(pixmap)
         pixmap_2.loadFromData(signature)
         self.view_member_signature_label.setPixmap(pixmap_2)
-
         self.show_view_member()
+
 
     def fetch_employee_by_column(self):
         query = f"""SELECT member_id, 
@@ -1256,101 +1226,10 @@ class Maintenance(QWidget):
             view_button = QPushButton("View")
             view_button.clicked.connect(partial(self.show_view_member_temp, self.row))
             self.member_table_widget.setCellWidget(self.row, 5, view_button)
-            
-    def update_member(self):
-        member_id =  self.edit_member_id_output_label.text()
-        first_name = self.edit_member_first_name_input.text()
-        middle_name = self.edit_member_middle_name_input.text()
-        last_name = self.edit_member_last_name_input.text()
-        birthdate = self.edit_member_birth_date.date()
-        gender = self.edit_member_gender_combo_box.currentText()
-        address =self.edit_member_address_input.text()
-        phone = self.edit_member_phone_number_input.text()
-        start_date = self.edit_member_start_date.date()
-        end_date = self.edit_member_end_date.date()
-        membership_type = self.edit_member_membership_type_combo_box.currentText()
-        photo = self.edit_member_image_label.pixmap()
-        signature = self.edit_member_signature_label.pixmap()
-        member_image_bytes = self.pixmap_to_bytes(photo)
-        signature_image_bytes = self.pixmap_to_bytes(signature)
-
-        cursor.execute(
-            """
-            UPDATE Members
-            SET member_id = ?, first_name = ?, middle_name = ?, last_name = ?, birthdate = ?, gender = ?, 
-            address = ?, phone_number = ?, membership_type = ?, membership_start_date =? , membership_end_date = ?, photo = ?, signature = ?
-            """,
-            (
-                member_id,
-                first_name,
-                middle_name,
-                last_name,
-                birthdate.toString("yyyy-MM-dd"),
-                gender,
-                address,
-                phone,
-                membership_type,
-                start_date.toString("yyyy-MM-dd"),
-                end_date.toString("yyyy-MM-dd"),
-                sqlite3.Binary(member_image_bytes),
-                sqlite3.Binary(signature_image_bytes),
-            )
-        )
-        connection.commit()
-        QMessageBox.information(self, "Yippie", "Employee Updated")
-        self.show_member_page()
-
-    def clear_inputs(self, page):
-        for widget in page.findChildren(QWidget):
-            if isinstance(widget, QLineEdit):
-                widget.clear()
-            elif isinstance(widget, QComboBox):
-                widget.setCurrentIndex(-1)  # Reset the selection
-            elif isinstance(widget, QDateEdit):
-                current_date = QDate.currentDate()
-                widget.setDate(current_date)
-                widget.clear()
-            elif isinstance(widget, QTimeEdit):
-                current_time = QTime.currentTime()
-                widget.setTime(current_time)
-                widget.clear()
-            elif isinstance(widget, QLabel):
-                if widget.objectName() in ["image_label", "signature_label", "output"]:
-                    widget.clear()  # Clears the label content
-                    widget.setPixmap(QPixmap())  # Clears any image or signature
-        
-    def pixmap_to_bytes(self, pixmap):
-        byte_array = QByteArray()
-        buffer = QBuffer(byte_array)
-        buffer.open(QBuffer.WriteOnly)
-        pixmap.save(buffer, "PNG")
-        return byte_array.data()
-    
-    def insert_image(self, image):
-    # Open a file dialog to select an image file
-        file_dialog = QFileDialog()
-        file_name, _ = file_dialog.getOpenFileName(
-            None, "Select Image", "", "Image Files (*.png *.jpg *.bmp *.gif)"
-        )
-
-        if file_name:
-            # Load the image and set it to the label
-            pixmap = QPixmap(file_name)
-            image.setPixmap(pixmap.scaled(image.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation))
-    
-    def generate_member_id(self):
-        query = "SELECT COUNT(*) FROM Members"
-        cursor.execute(query)
-        count = cursor.fetchone()[0] + 1
-        current_time = datetime.now()
-        formatted_time = current_time.strftime('%m%d%y')
-        prefix = "MEM"
-
-        generated_id = f"{prefix}-{formatted_time}-{count:04}"
-        self.add_member_id_output_label.setText(generated_id)
+             
 if __name__ == "__main__":
     import sys
     app = QApplication(sys.argv)
-    window = Maintenance()
+    window = MemberMaintenance()
     window.show()
     sys.exit(app.exec_())

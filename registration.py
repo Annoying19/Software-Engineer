@@ -21,19 +21,6 @@ class Registration(QWidget):
         self.setStyleSheet("background-color: #FFFFFF")
         self.open_registration_interface()
 
-
-    def insert_image(self, image):
-    # Open a file dialog to select an image file
-        file_dialog = QFileDialog()
-        file_name, _ = file_dialog.getOpenFileName(
-            None, "Select Image", "", "Image Files (*.png *.jpg *.bmp *.gif)"
-        )
-
-        if file_name:
-            # Load the image and set it to the label
-            pixmap = QPixmap(file_name)
-            image.setPixmap(pixmap.scaled(image.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation))
-
     def open_registration_interface(self):
 
         self.verticalLayout = QVBoxLayout(self)
@@ -55,18 +42,12 @@ class Registration(QWidget):
         self.stackedWidget.setCurrentIndex(0)
         
     def show_member_page(self):
-        self.generate_member_id()
-        self.clear_inputs(self.member_page)
+        generate_id("Members", self.member_id_output_label)
+        clear_inputs(self.member_page)
         self.stackedWidget.setCurrentIndex(1)
         
     def show_attendance_page(self):
-        self.clear_inputs(self.attendance_page)
-        self.stackedWidget.setCurrentIndex(2)
-        
-    def show_employee_page(self):
-        self.clear_inputs(self.employee_page)
-        self.stackedWidget.setCurrentIndex(3)
-
+        clear_inputs(self.attendance_page)
 
 
 # =============================================================
@@ -422,11 +403,11 @@ class Registration(QWidget):
         )
 
 
-        self.member_insert_image_button.clicked.connect(lambda: self.insert_image(self.member_image_label))
-        self.member_insert_signature_button.clicked.connect(lambda: self.insert_image(self.member_signature_label))
-        self.member_register_button.clicked.connect(self.register_member)
-        self.member_clear_button.clicked.connect(lambda : self.clear_inputs(self.member_page))
-        self.member_back_button.clicked.connect(lambda: self.back_button(self.member_page))
+        self.member_insert_image_button.clicked.connect(lambda: insert_image(self.member_image_label))
+        self.member_insert_signature_button.clicked.connect(lambda: insert_image(self.member_signature_label))
+        self.member_register_button.clicked.connect(lambda: register_entity("Members", self.assigned_input("Members")))
+        self.member_clear_button.clicked.connect(lambda : clear_inputs(self.member_page))
+        self.member_back_button.clicked.connect(self.show_main_page)
         self.stackedWidget.addWidget(self.member_page)
 
 
@@ -695,92 +676,45 @@ class Registration(QWidget):
             style = "background-color: #004F9A"
         )
 
-        self.attendance_register_button.clicked.connect(self.register_attendance)
-        self.attendance_back_button.clicked.connect(lambda: self.back_button(self.attendance_page))
-        self.attendance_clear_button.clicked.connect(lambda: self.clear_inputs(self.attendance_page))
+        
+
+        self.attendance_register_button.clicked.connect(lambda: register_entity("Attendance", self.assigned_input("Attendance")))
+        self.attendance_back_button.clicked.connect(self.show_main_page)
+        self.attendance_clear_button.clicked.connect(lambda: clear_inputs(self.attendance_page))
+
+    def assigned_input(self, input):
+        if input == "Attendance":
+            INPUTS = {
+                "date": self.attendance_date_input.date(),
+                "member_id": self.attendance_membership_id_output_label.text(),
+                "time": self.attendance_time_input.time(),
+                "attendance": self.attendance_type_combo_box.currentText(),
+            }
+        elif input == "Members":
+            image = pixmap_to_bytes(self.member_image_label.pixmap())
+            signature = pixmap_to_bytes(self.member_signature_label.pixmap())
+
+            INPUTS = {
+                "member_id": self.member_id_output_label.text(),
+                "first_name": self.member_first_name_input.text(),
+                "middle_name":self.member_middle_name_input.text(),
+                "last_name": self.member_last_name_input.text(),
+                "address": self.member_address_input.text(),
+                "phone": self.member_phone_number_input.text(),
+                "gender": self.member_gender_combo_box.currentText(),
+                "membership_type": self.member_membership_type_combo_box.currentText(),
+                "birthdate": self.member_birth_date.date(),
+                "start_date": self.member_start_date.date(),
+                "end_date": self.member_end_date.date(),
+                "image": sqlite3.Binary(image),
+                "signature": sqlite3.Binary(signature),
+            }
+        return INPUTS
+    
 
 # =============================================================
 #                      BACK-END FUNCTIONS
 # ============================================================= 
-    def clear_inputs(self, page):
-        for widget in page.findChildren(QWidget):
-            if isinstance(widget, QLineEdit):
-                widget.clear()
-            elif isinstance(widget, QComboBox):
-                widget.setCurrentIndex(-1)  # Reset the selection
-            elif isinstance(widget, QDateEdit):
-                current_date = QDate.currentDate()
-                widget.setDate(current_date)
-                widget.clear()
-            elif isinstance(widget, QTimeEdit):
-                current_time = QTime.currentTime()
-                widget.setTime(current_time)
-                widget.clear()
-            elif isinstance(widget, QLabel):
-                if widget.objectName() in ["image_label", "signature_label", "output"]:
-                    widget.clear()  # Clears the label content
-                    widget.setPixmap(QPixmap())  # Clears any image or signature
-    
-    def pixmap_to_bytes(self, pixmap):
-        byte_array = QByteArray()
-        buffer = QBuffer(byte_array)
-        buffer.open(QBuffer.WriteOnly)
-        pixmap.save(buffer, "PNG")
-        return byte_array.data()
-
-    def register_member(self):
-        # Retrieve all inputs
-        self.member_id = int(self.member_id_output_label.text())
-        self.first_name = self.member_first_name_input.text()
-        self.middle_name = self.member_middle_name_input.text()
-        self.last_name = self.member_last_name_input.text()
-        self.address = self.member_address_input.text()
-        self.phone_number = self.member_phone_number_input.text()
-        self.gender = self.member_gender_combo_box.currentText()
-        self.membership_type = self.member_membership_type_combo_box.currentText()
-        self.birth_date = self.member_birth_date.date()
-        self.start_date = self.member_start_date.date()
-        self.end_date = self.member_end_date.date()
-        self.photo = self.member_image_label.pixmap()
-        self.signature = self.member_signature_label.pixmap()
-
-        if self.validate_member_inputs():
-            # Convert photo and signature to bytes
-            if self.photo:
-                member_image_bytes = self.pixmap_to_bytes(self.photo)
-            if self.signature:
-                signature_image_bytes = self.pixmap_to_bytes(self.signature)
-
-
-            cursor.execute(
-                '''
-                INSERT INTO Members 
-                (member_id, first_name, middle_name, last_name, address, phone_number, birthdate, membership_type,
-                gender, membership_start_date, membership_end_date, photo, signature) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                ''',
-                (
-                    self.member_id,
-                    self.first_name,
-                    self.middle_name,
-                    self.last_name,
-                    self.address,
-                    self.phone_number,
-                    self.birth_date.toString("yyyy-MM-dd"),
-                    self.membership_type,
-                    self.gender,
-                    self.start_date.toString("yyyy-MM-dd"),
-                    self.end_date.toString("yyyy-MM-dd"),
-                    sqlite3.Binary(member_image_bytes),
-                    sqlite3.Binary(signature_image_bytes)
-                )
-            )
-
-            connection.commit()
-            QMessageBox.information(self, "Success", "Member registered successfully!")
-        else:
-            # Validation failed, do not proceed
-            pass
-
     def update_end_date(self):
         membership_type = self.member_membership_type_combo_box.currentText()
         if membership_type == "Lifetime":
@@ -790,35 +724,6 @@ class Registration(QWidget):
             self.member_end_date.setDisabled(False)
             self.member_end_date.setDate(QDate.currentDate())  # Reset to the current date
 
-
-    def validate_member_inputs(self):
-
-        # Check if all required fields are filled
-        if not all([self.first_name, self.last_name, self.address, self.phone_number, self.gender, self.membership_type, self.photo, self.signature]):
-            QMessageBox.warning(self, "Input Error", "All fields must be filled")
-            return False
-
-        # Validate that specific fields contain only letters
-        if not all(re.match("^[A-Za-z ]+$", field) for field in [self.first_name, self.middle_name, self.last_name]):
-            QMessageBox.warning(self, "Input Error", "First Name, Middle Name, and Last Name must contain only letters and spaces.")
-            return False
-
-        # Validate that the address is a string
-        if not isinstance(self.address, str):
-            QMessageBox.warning(self, "Input Error", "Address must be a string.")
-            return False
-
-        # Validate that the phone number is numeric
-        if not self.phone_number.isdigit():
-            QMessageBox.warning(self, "Input Error", "Phone Number must be numeric.")
-            return False
-
-        # Ensure birth date, start date, and end date are valid
-        if not isinstance(self.birth_date, QDate) or not isinstance(self.start_date, QDate) or (self.membership_type != 'Lifetime' and not isinstance(self.end_date, QDate)):
-            QMessageBox.warning(self, "Input Error", "Birth Date, Start Date, and End Date must be valid dates.")
-            return False
-
-        return True
 
     def update_search_results(self):
         search_text = self.attendance_member_name_input.text()
@@ -901,57 +806,6 @@ class Registration(QWidget):
         generated_id = f"{prefix}{formatted_time}"
         self.member_id_output_label.setText(generated_id)
 
-    def back_button(self, page):
-        self.clear_inputs(page)
-        self.show_main_page()
-
-
-    
-    
-    def register_attendance(self):
-
-        today = self.attendance_date_input.date()
-        member_id = int(self.attendance_membership_id_output_label.text())
-        time = self.attendance_time_input.time()
-        attendance = self.attendance_type_combo_box.currentText()
-
-        print(type(member_id))
-        print(type(time))
-        print(type(attendance))
-        print(type(today))
-        # Check the last attendance record for the member
-        cursor.execute("""
-            SELECT attendance_id, entry_time, exit_time 
-            FROM Attendance 
-            WHERE member_id = ? AND date = ? 
-            ORDER BY attendance_id DESC LIMIT 1
-        """, (member_id, today.toString("yyyy-MM-dd")))
-        
-        last_record = cursor.fetchone()
-
-
-        if attendance == "Entry":
-            if last_record and not last_record[2]:  # If there's a record with entry_time but no exit_time
-                print("Error: Member already has an entry record with no exit recorded.")
-            else:
-                cursor.execute("""
-                    INSERT INTO Attendance (member_id, entry_time, date) 
-                    VALUES (?, ?, ?)
-                    """, (member_id, time.toString(), today.toString("yyyy-MM-dd")))
-                print("Entry registered.")
-        else:
-            if last_record and not last_record[2]:  # If there's a record with entry_time but no exit_time
-                cursor.execute("""  
-                    UPDATE Attendance 
-                    SET exit_time = ? 
-                    WHERE attendance_id = ?
-                    """, (time.toString(), last_record[0]))
-                print("Exit registered.")
-            else:
-                print("Error: No entry record found or already exited.")
-
-        connection.commit()
-   
 
 if __name__ == "__main__":
     import sys

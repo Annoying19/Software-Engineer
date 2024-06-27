@@ -10,9 +10,9 @@ import uuid
 import hashlib
 from registration import *
 
-class Maintenance(QWidget):
+class ProductMaintenance(QWidget):
     def __init__(self, parent=None):
-        super(Maintenance, self).__init__(parent)
+        super(ProductMaintenance, self).__init__(parent)
         self.setObjectName("Form")
         self.resize(950, 800)
         self.setStyleSheet("background-color: #FFFFFF")

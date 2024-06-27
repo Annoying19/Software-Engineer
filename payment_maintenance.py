@@ -12,9 +12,9 @@ import hashlib
 from registration import *
 
 
-class EquipmentMaintenance(QWidget):
+class PaymentMaintenance(QWidget):
     def __init__(self, parent=None):
-        super(EquipmentMaintenance, self).__init__(parent)
+        super(PaymentMaintenance, self).__init__(parent)
         self.setObjectName("Form")
         self.resize(950, 800)
         self.setStyleSheet("background-color: #FFFFFF")
@@ -309,7 +309,6 @@ class EquipmentMaintenance(QWidget):
             font = font2,
             style = "background-color: #F9F7FF; border: 1px solid black"
         )
-
 
         self.equipment_warranty_date = createDate(
             parent = self.create_equipment_page,
@@ -838,6 +837,6 @@ class EquipmentMaintenance(QWidget):
 if __name__ == "__main__":
     import sys
     app = QApplication(sys.argv)
-    window = EquipmentMaintenance()
+    window = PaymentMaintenance()
     window.show()
     sys.exit(app.exec_())
