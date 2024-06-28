@@ -32,6 +32,7 @@ class Inventory(QWidget):
         self.page2 = QWidget(self.stacked_widget)
         self.page2.setWindowTitle("Products")
         self.setupPage2()
+        self.loadData("Products")
 
         # Add pages to stacked widget
         self.stacked_widget.addWidget(self.page1)
@@ -43,7 +44,7 @@ class Inventory(QWidget):
         self.equipment_lineEdit = createLineInput(
             parent=self.page1,
             name="lineEdit",
-            geometry=QRect(40, 60, 471, 61),
+            geometry=QRect(30, 60, 451, 61),
             font=font5,
             style="",
             placeholder=""
@@ -52,45 +53,21 @@ class Inventory(QWidget):
         self.equipment_searchButton = createButton(
             parent=self.page1,
             name="equipment_searchButton",
-            geometry=QRect(510, 60, 111, 61),
+            geometry=QRect(480, 60, 111, 61),
             text="Search",
             font=font5,
             style="background: #4681f4; color: white"
         )
 
-        self.equipment_startDateEdit = createDate(
-            parent=self.page1,
-            name="equipment_startDateEdit",
-            geometry=QRect(130, 140, 171, 41),
-            font=font5,
-            style=""
+        self.equipment_statusSelect = createComboBox(
+            parent = self.page1, 
+            name = "equipment_statusSelect", 
+            geometry = QRect(610, 60, 121, 61), 
+            font = font5, 
+            item = ("All", "Active", "Repair", "Retired"), 
+            style = ""
         )
 
-        self.equipment_endDateEdit = createDate(
-            parent=self.page1,
-            name="equipment_endDateEdit",
-            geometry=QRect(400, 140, 171, 41),
-            font=font5,
-            style=""
-        )
-
-        self.equipment_startDateLabel = createLabel(
-            parent=self.page1,
-            name="equipment_startDateLabel",
-            geometry=QRect(70, 150, 61, 21),
-            text="From :",
-            font=font5,
-            style=""
-        )
-
-        self.equipment_endDateLabel = createLabel(
-            parent=self.page1,
-            name="equipment_endDateLabel",
-            geometry=QRect(370, 150, 31, 21),
-            text="To :",
-            font=font5,
-            style=""
-        )
 
         self.equipment_stockButton = createButton(
             parent=self.page1,
@@ -105,7 +82,7 @@ class Inventory(QWidget):
         self.loadData(lambda: "Equipments")
         
         self.tableWidget = QTableWidget(self.page1)
-        self.tableWidget.setGeometry(QRect(30, 200, 891, 571))
+        self.tableWidget.setGeometry(QRect(30, 160, 891, 611))
         self.tableWidget.setRowCount(0)
         self.tableWidget.setColumnCount(10)
         self.tableWidget.setObjectName("tableWidget")
@@ -197,17 +174,17 @@ class Inventory(QWidget):
         header.setSectionResizeMode(QHeaderView.Stretch)
         header.setDefaultAlignment(Qt.AlignCenter)
         self.tableWidget2.setStyleSheet("background: white")
+        self.loadData(lambda: "Products")
 
 
 
     def switchPage(self):
         current_index = self.stacked_widget.currentIndex()
-        new_index = (current_index + 1) % 2
-
         if current_index == 0:
             self.loadData("Equipments")
         elif current_index == 1:
             self.loadData("Products")
+        new_index = (current_index + 1) % 2
         self.stacked_widget.setCurrentIndex(new_index)
 
     def loadData(self, table):
@@ -251,8 +228,16 @@ class Inventory(QWidget):
     def search(self, table):
         if table == "Equipments":
             search_term = self.equipment_lineEdit.text()
-            start = self.stock_startDateEdit.date().toString(Qt.ISODate)
-            end = self.stock_endDateEdit.date().toString(Qt.ISODate)
+            select = self.equipment_statusSelect.currentIndex()
+            
+            if select == 0:
+                status = ""
+            elif select == 1:
+                status = "Active"
+            elif select == 2:
+                status = "Repaired"
+            elif select == 3:
+                status = "Retired"
             
 
             self.tableWidget.setRowCount(0)
@@ -261,10 +246,9 @@ class Inventory(QWidget):
                 SELECT * 
                 FROM Equipments 
                 WHERE (CAST(equipment_id AS TEXT) LIKE ? OR 
-                    CAST(equipment_name AS TEXT) LIKE ? OR 
-                    CAST(equipment_status AS TEXT) LIKE ?) OR
-                 equipment_purchase_date BETWEEN ? AND ?
-                """, (search_term + '%', search_term + '%', search_term + '%', start, end))
+                    CAST(equipment_name AS TEXT) LIKE ?) AND 
+                    equipment_status LIKE ?
+                """, (search_term + '%', search_term + '%', status + '%',))
             
             for row_number, row_data in enumerate(cursor):
                 self.tableWidget.insertRow(row_number)  
@@ -275,19 +259,20 @@ class Inventory(QWidget):
 
         elif table == "Products":
             search_term = self.stock_lineEdit.text()
-            start = self.stock_startDateEdit
-            end = self.stock_endDateEdit
             self.tableWidget.setRowCount(0)
+            start = self.stock_startDateEdit.date().toString(Qt.ISODate)
+            end = self.stock_endDateEdit.date().toString(Qt.ISODate) 
 
             cursor.execute("""
                 SELECT * 
                 FROM Products 
                 WHERE (CAST(product_id AS TEXT) LIKE ? OR 
-                    CAST(product_name AS TEXT) LIKE ? OR 
+                    CAST(product_name AS TEXT) LIKE ?) AND
                     product_expiry_date BETWEEN ? AND ?
-                """, (search_term + '%', search_term + '%', search_term + '%', start, end))
+                """, (search_term + '%', search_term + '%', start, end))
             
-            
+            print(start)
+            print(end)
             for row_number, row_data in enumerate(cursor):
                 self.tableWidget.insertRow(row_number)  
                 for column_number, data in enumerate(row_data):
