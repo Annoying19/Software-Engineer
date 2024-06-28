@@ -1,3 +1,6 @@
+from PySide2.QtCore import *
+from PySide2.QtGui import *
+from PySide2.QtWidgets import *
 from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget, QMessageBox, QDateEdit, \
     QDialog, QDialogButtonBox
 from PyQt5.QtCore import QDate
@@ -13,6 +16,7 @@ from reportlab.lib.enums import TA_CENTER
 import sys
 import os
 from datetime import datetime
+from assets import *
 
 # Define the output directory for PDF reports
 OUTPUT_DIR = 'reports'
@@ -21,6 +25,8 @@ if not os.path.exists(OUTPUT_DIR):
 
 ADDRESS = "49A, Main Building SM City, North Avenue corner, Bagong Pag-asa, Quezon City"
 CONTACT = "(02) 8929 5424"
+
+
 
 # Function to generate Membership Report
 def generate_membership_report():
@@ -112,11 +118,12 @@ def generate_membership_report():
 
     timestamp = datetime.now().strftime('%B %d, %Y %I:%M %p')
     generated_time = Paragraph(f"Generated on: {timestamp}", styles['Normal'])
+    elements.append(Spacer(1, 250))
     elements.append(generated_time)
 
     doc.build(elements)
 
-    QMessageBox.information(None, 'Success', f'Membership Report generated successfully!\nSaved at: {pdf_file}')
+    QMessageBox.information(None, 'Success', f'Equipment Report generated successfully!\nSaved at: {pdf_file}')
 
 
 # Function to generate Equipment Report
@@ -205,6 +212,7 @@ def generate_equipment_report():
 
     timestamp = datetime.now().strftime('%B %d, %Y %I:%M %p')
     generated_time = Paragraph(f"Generated on: {timestamp}", styles['Normal'])
+    elements.append(Spacer(1, 250))
     elements.append(generated_time)
 
     doc.build(elements)
@@ -267,10 +275,8 @@ def generate_scheduling_report():
             elements.append(Spacer(1, 12))
 
             # Table Header
-            table_data = [
-                ["Schedule ID", "Member ID", "Employee ID", "Appointment Type", "Appointment Name",
-                 "Appointment Date", "Start Time", "End Time", "Status"]
-            ]
+            table_data = [["Schedule ID", "Member ID", "Employee ID", "Appointment Type", "Appointment Name",
+                           "Appointment Date", "Appointment Start Time", "Appointment End Time", "Status"]]
 
             # Adding data to table
             for row in rows:
@@ -290,9 +296,7 @@ def generate_scheduling_report():
                 ('FONTSIZE', (0, 1), (-1, -1), 8),
                 ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
                 ('BACKGROUND', (0, 1), (-1, -1), '#f0f0f0'),
-                ('GRID', (0, 0), (-1, -1), 1, 'black'),
-                ('WORDWRAP', (0, 0), (-1, -1), 'ON'),
-                ('VALIGN', (0, 0), (-1, -1), 'TOP')
+                ('GRID', (0, 0), (-1, -1), 1, 'black')
             ]))
 
             elements.append(table)
@@ -300,6 +304,7 @@ def generate_scheduling_report():
 
             timestamp = datetime.now().strftime('%B %d, %Y %I:%M %p')
             generated_time = Paragraph(f"Generated on: {timestamp}", styles['Normal'])
+            elements.append(Spacer(1, 250))
             elements.append(generated_time)
 
             doc.build(elements)
@@ -316,10 +321,9 @@ def generate_stock_report():
     cursor = conn.cursor()
 
     query = """
-    SELECT stock_id, product_name, product_description, quantity, stock_date, expiry_date, supplier, 
-           purchase_price, selling_price
-    FROM Stock
-    ORDER BY product_name
+    SELECT product_id, name, quantity, price, expiry_date, purchase_date, supplier, brand, status, sku
+    FROM Products
+    ORDER BY name
     """
 
     cursor.execute(query)
@@ -362,8 +366,8 @@ def generate_stock_report():
 
     # Table Header
     table_data = [
-        ["Stock ID", "Product Name", "Description", "Quantity", "Stock Date", "Expiry Date",
-         "Supplier", "Purchase Price", "Selling Price"]
+        ["Product ID", "Name", "Quantity", "Price", "Expiry Date", "Purchase Date", "Supplier", "Brand", "Status",
+         "SKU"]
     ]
 
     # Adding data to table
@@ -371,7 +375,7 @@ def generate_stock_report():
         table_data.append(list(row))
 
     # Specifying smaller column widths to fit the table
-    col_widths = [60, 100, 120, 60, 80, 80, 100, 80, 80]
+    col_widths = [60, 100, 60, 60, 80, 80, 80, 60, 60, 80]
 
     # Creating table with smaller font size and styles
     table = Table(table_data, colWidths=col_widths)
@@ -394,6 +398,7 @@ def generate_stock_report():
 
     timestamp = datetime.now().strftime('%B %d, %Y %I:%M %p')
     generated_time = Paragraph(f"Generated on: {timestamp}", styles['Normal'])
+    elements.append(Spacer(1, 270))
     elements.append(generated_time)
 
     doc.build(elements)
@@ -401,66 +406,474 @@ def generate_stock_report():
     QMessageBox.information(None, 'Success', f'Stock Report generated successfully!\nSaved at: {pdf_file}')
 
 
+# Date selection dialog
 class DateSelectionDialog(QDialog):
     def __init__(self):
         super().__init__()
+        self.setWindowTitle("Select Date")
+        self.date_edit = QDateEdit(self)
+        self.date_edit.setCalendarPopup(True)
+        self.date_edit.setDate(QDate.currentDate())
+        self.date_edit.setDisplayFormat("yyyy-MM-dd")
 
-        self.setWindowTitle('Select Date')
-        self.setGeometry(100, 100, 300, 100)
-
-        layout = QVBoxLayout()
-
-        self.dateEdit = QDateEdit()
-        self.dateEdit.setCalendarPopup(True)
-        self.dateEdit.setDate(QDate.currentDate())
-
-        layout.addWidget(self.dateEdit)
-
-        buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, self)
         buttons.accepted.connect(self.accept)
         buttons.rejected.connect(self.reject)
 
+        layout = QVBoxLayout(self)
+        layout.addWidget(self.date_edit)
         layout.addWidget(buttons)
 
-        self.setLayout(layout)
-
     def getDate(self):
-        return self.dateEdit.date().toString('yyyy-MM-dd')
+        return self.date_edit.date().toString("yyyy-MM-dd")
 
 
-class Reports(QMainWindow):
-    def __init__(self):
-        super().__init__()
+class Reports(QWidget):  # Inherit from QWidget
+    def __init__(self, parent=None):
+        super(Reports, self).__init__(parent)
+        self.setObjectName("Form")
+        self.resize(950, 800)
+        self.setStyleSheet("background-color: #FFFFFF")
+        self.setWindowTitle('Slimmer World Reports')
+        self.open_reports_maintenance()
 
-        self.setWindowTitle('Slimmers World Report Generator')
-        self.setGeometry(100, 100, 400, 200)
+    def open_reports_maintenance(self):
+        self.verticalLayout = QVBoxLayout(self)
+        self.verticalLayout.setSpacing(0)
+        self.verticalLayout.setContentsMargins(0, 0, 0, 0)
 
-        layout = QVBoxLayout()
+        self.stackedWidget = QStackedWidget(self)
+        self.stackedWidget.setObjectName("stackedWidget")
 
-        self.btn_generate_membership = QPushButton('Generate Membership Report')
-        self.btn_generate_membership.clicked.connect(generate_membership_report)
+        self.open_main_page()
+        self.verticalLayout.addWidget(self.stackedWidget)
+        self.stackedWidget.setCurrentIndex(0)
+        QMetaObject.connectSlotsByName(self)
 
-        self.btn_generate_equipment = QPushButton('Generate Equipment Report')
-        self.btn_generate_equipment.clicked.connect(generate_equipment_report)
+    def open_main_page(self):
+        self.main_page_widget = QWidget()
+        self.main_page_layout = QVBoxLayout(self.main_page_widget)
 
-        self.btn_generate_schedule = QPushButton('Generate Scheduling Report')
-        self.btn_generate_schedule.clicked.connect(generate_scheduling_report)
+        self.membership_btn = createButton(
+            parent = self.main_page_widget,
+            name = "generate_membership_report",
+            geometry = QRect(50, 50, 200, 100),
+            text = "Membership Report",
+            font = font3,
+            style = "background-color: #004F9A; color: #FFFFFF"
+        )
 
-        self.btn_generate_stock = QPushButton('Generate Stock Report')
-        self.btn_generate_stock.clicked.connect(generate_stock_report)
+        self.scheduling_btn= createButton(
+            parent = self.main_page_widget,
+            name="generate_membership_report",
+            geometry=QRect(50, 50, 200, 100),
+            text="Schedule Report",
+            font=font3,
+            style="background-color: #004F9A; color: #FFFFFF"
+        )
 
-        layout.addWidget(self.btn_generate_membership)
-        layout.addWidget(self.btn_generate_equipment)
-        layout.addWidget(self.btn_generate_schedule)
-        layout.addWidget(self.btn_generate_stock)
+        self.equipment_btn = createButton(
+            parent = self.main_page_widget,
+            name="generate_membership_report",
+            geometry=QRect(50, 50, 200, 100),
+            text="Equipment Report",
+            font=font3,
+            style="background-color: #004F9A; color: #FFFFFF"
+        )
 
-        container = QWidget()
-        container.setLayout(layout)
-        self.setCentralWidget(container)
+        self.stock_btn = createButton(
+            parent = self.main_page_widget,
+            name="generate_membership_report",
+            geometry=QRect(50, 50, 200, 100),
+            text = "Stock Report",
+            font=font3,
+            style="background-color: #004F9A; color: #FFFFFF"
+        )
+
+        self.membership_btn.clicked.connect(self.generate_membership_report)
+        self.scheduling_btn.clicked.connect(self.generate_scheduling_report)
+        self.equipment_btn.clicked.connect(self.generate_equipment_report)
+        self.stock_btn.clicked.connect(self.generate_stock_report)
 
 
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    mainWin = Reports()
-    mainWin.show()
-    sys.exit(app.exec_())
+        self.main_page_layout.addWidget(self.membership_btn)
+        self.main_page_layout.addWidget(self.scheduling_btn)
+        self.main_page_layout.addWidget(self.equipment_btn)
+        self.main_page_layout.addWidget(self.stock_btn)
+
+        self.stackedWidget.addWidget(self.main_page_widget)
+
+    def generate_membership_report(self):
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
+
+        query = """
+        SELECT member_id, first_name, middle_name, last_name, address, gender, birthdate, phone_number, 
+               membership_type, membership_start_date, membership_end_date
+        FROM Members
+        ORDER BY
+            CASE
+                WHEN membership_type = 'Lifetime' THEN 1
+                WHEN membership_type = 'Standard' THEN 2
+                ELSE 3
+            END,
+            first_name
+        """
+
+        cursor.execute(query)
+        rows = cursor.fetchall()
+        conn.close()
+
+        pdf_file = os.path.join(OUTPUT_DIR, f'Membership_Report_{datetime.now().strftime("%Y%m%d_%H%M%S")}.pdf')
+
+        doc = SimpleDocTemplate(pdf_file, pagesize=landscape(A4))
+        elements = []
+
+        styles = getSampleStyleSheet()
+        pdfmetrics.registerFont(TTFont('TimesNewRoman', 'times.ttf'))
+
+        # Center the title
+        title_style = styles['Title']
+        title_style.alignment = TA_CENTER
+        title = Paragraph("<font name='TimesNewRoman' color='blue' size=18>Slimmer World</font>", styles['Title'])
+
+        # Center the address
+        address_style = styles['Normal']
+        address_style.alignment = TA_CENTER
+        address = Paragraph(f"<font name='TimesNewRoman' size=12>{ADDRESS}</font>", styles['Normal'])
+
+        # Center the contact
+        contact_style = styles['Normal']
+        contact_style.alignment = TA_CENTER
+        contact = Paragraph(f"<font name='TimesNewRoman' size=12>{CONTACT}</font>", styles['Normal'])
+        elements.append(title)
+        elements.append(address)
+        elements.append(contact)
+
+        # Add spacer to title
+        elements.append(Spacer(1, 12))
+        report_title = Paragraph("<font name='TimesNewRoman' size=14>Membership Report</font>", styles['Title'])
+        elements.append(report_title)
+
+        # Add space
+        elements.append(Spacer(1, 12))
+
+        # Table Header
+        table_data = [
+            ["Member ID", "First Name", "Middle Name", "Last Name", "Address", "Gender", "Birthdate", "Phone Number",
+             "Membership Type", "Start Date", "End Date"]
+        ]
+
+        # Adding data to table
+        for row in rows:
+            table_data.append(list(row))
+
+        # Specifying smaller column widths to fit the table
+        col_widths = [70, 60, 60, 60, 190, 40, 60, 70, 80, 70, 70]
+
+        # Creating table with smaller font size and styles
+        table = Table(table_data, colWidths=col_widths)
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), blue),
+            ('TEXTCOLOR', (0, 0), (-1, 0), 'white'),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'TimesNewRoman'),
+            ('FONTSIZE', (0, 0), (-1, 0), 10),
+            ('FONTSIZE', (0, 1), (-1, -1), 8),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+            ('BACKGROUND', (0, 1), (-1, -1), '#f0f0f0'),
+            ('GRID', (0, 0), (-1, -1), 1, 'black'),
+            ('WORDWRAP', (0, 0), (-1, -1), 'ON'),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP')
+        ]))
+
+        elements.append(table)
+        elements.append(Spacer(1, 12))
+
+        timestamp = datetime.now().strftime('%B %d, %Y %I:%M %p')
+        generated_time = Paragraph(f"Generated on: {timestamp}", styles['Normal'])
+        elements.append(Spacer(1, 250))
+        elements.append(generated_time)
+
+        doc.build(elements)
+
+        QMessageBox.information(None, 'Success', f'Equipment Report generated successfully!\nSaved at: {pdf_file}')
+
+    # Function to generate Equipment Report
+    def generate_equipment_report(self):
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
+
+        query = """
+        SELECT equipment_id, equipment_name, equipment_serial_number, equipment_category, 
+               equipment_purchase_date, equipment_warranty_expiry, equipment_price, equipment_manufacturer, 
+               equipment_location, equipment_status
+        FROM Equipments
+        ORDER BY equipment_name
+        """
+
+        cursor.execute(query)
+        rows = cursor.fetchall()
+        conn.close()
+
+        pdf_file = os.path.join(OUTPUT_DIR, f'Equipment_Report_{datetime.now().strftime("%Y%m%d_%H%M%S")}.pdf')
+
+        doc = SimpleDocTemplate(pdf_file, pagesize=landscape(A4))
+        elements = []
+
+        styles = getSampleStyleSheet()
+        pdfmetrics.registerFont(TTFont('TimesNewRoman', 'times.ttf'))
+
+        # Center the title
+        title_style = styles['Title']
+        title_style.alignment = TA_CENTER
+        title = Paragraph("<font name='TimesNewRoman' color='blue' size=18>Slimmer World</font>", styles['Title'])
+
+        # Center the address
+        address_style = styles['Normal']
+        address_style.alignment = TA_CENTER
+        address = Paragraph(f"<font name='TimesNewRoman' size=12>{ADDRESS}</font>", styles['Normal'])
+
+        # Center the contact
+        contact_style = styles['Normal']
+        contact_style.alignment = TA_CENTER
+        contact = Paragraph(f"<font name='TimesNewRoman' size=12>{CONTACT}</font>", styles['Normal'])
+
+        elements.append(title)
+        elements.append(address)
+        elements.append(contact)
+
+        # Add spacer to title
+        elements.append(Spacer(1, 12))
+        report_title = Paragraph("<font name='TimesNewRoman' size=14>Equipment Report</font>", styles['Title'])
+        elements.append(report_title)
+
+        # Add space
+        elements.append(Spacer(1, 12))
+
+        # Table Header
+        table_data = [
+            ["Equipment ID", "Name", "Serial Number", "Category", "Purchase Date", "Warranty Expiry",
+             "Price", "Manufacturer", "Location", "Status"]
+        ]
+
+        # Adding data to table
+        for row in rows:
+            table_data.append(list(row))
+
+        # Specifying smaller column widths to fit the table
+        col_widths = [60, 100, 100, 80, 80, 80, 60, 100, 80, 60]
+
+        # Creating table with smaller font size and styles
+        table = Table(table_data, colWidths=col_widths)
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), blue),
+            ('TEXTCOLOR', (0, 0), (-1, 0), 'white'),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'TimesNewRoman'),
+            ('FONTSIZE', (0, 0), (-1, 0), 10),
+            ('FONTSIZE', (0, 1), (-1, -1), 8),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+            ('BACKGROUND', (0, 1), (-1, -1), '#f0f0f0'),
+            ('GRID', (0, 0), (-1, -1), 1, 'black'),
+            ('WORDWRAP', (0, 0), (-1, -1), 'ON'),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP')
+        ]))
+
+        elements.append(table)
+        elements.append(Spacer(1, 12))
+
+        timestamp = datetime.now().strftime('%B %d, %Y %I:%M %p')
+        generated_time = Paragraph(f"Generated on: {timestamp}", styles['Normal'])
+        elements.append(Spacer(1, 250))
+        elements.append(generated_time)
+
+        doc.build(elements)
+
+        QMessageBox.information(None, 'Success', f'Equipment Report generated successfully!\nSaved at: {pdf_file}')
+
+    # Function to generate Scheduling Report
+    def generate_scheduling_report(self):
+        dialog = DateSelectionDialog()
+        if dialog.exec_() == QDialog.Accepted:
+            selected_date = dialog.getDate()
+
+            try:
+                conn = sqlite3.connect('database.db')
+                cursor = conn.cursor()
+
+                query = """
+                SELECT schedule_id, member_id, employee_id, appointment_type, appointment_name, appointment_date,
+                appointment_start_time, appointment_end_time, status 
+                FROM Schedule WHERE appointment_date = ?
+                """
+
+                cursor.execute(query, (selected_date,))
+                rows = cursor.fetchall()
+                conn.close()
+
+                pdf_file = os.path.join(OUTPUT_DIR, f'Scheduling_Report_{selected_date}.pdf')
+
+                doc = SimpleDocTemplate(pdf_file, pagesize=landscape(A4))
+                elements = []
+
+                styles = getSampleStyleSheet()
+                pdfmetrics.registerFont(TTFont('TimesNewRoman', 'times.ttf'))
+
+                # Center the title
+                title_style = styles['Title']
+                title_style.alignment = TA_CENTER
+                title = Paragraph("<font name='TimesNewRoman' color='blue' size=18>Slimmer World</font>",
+                                  styles['Title'])
+
+                # Center the address
+                address_style = styles['Normal']
+                address_style.alignment = TA_CENTER
+                address = Paragraph(f"<font name='TimesNewRoman' size=12>{ADDRESS}</font>", styles['Normal'])
+
+                # Center the contact
+                contact_style = styles['Normal']
+                contact_style.alignment = TA_CENTER
+                contact = Paragraph(f"<font name='TimesNewRoman' size=12>{CONTACT}</font>", styles['Normal'])
+                elements.append(title)
+                elements.append(address)
+                elements.append(contact)
+
+                # Add spacer to title
+                elements.append(Spacer(1, 12))
+                report_title = Paragraph("<font name='TimesNewRoman' size=14>Scheduling Report</font>", styles['Title'])
+                elements.append(report_title)
+
+                # Add space
+                elements.append(Spacer(1, 12))
+
+                # Table Header
+                table_data = [["Schedule ID", "Member ID", "Employee ID", "Appointment Type", "Appointment Name",
+                               "Appointment Date", "Appointment Start Time", "Appointment End Time", "Status"]]
+
+                # Adding data to table
+                for row in rows:
+                    table_data.append(list(row))
+
+                # Specifying smaller column widths to fit the table
+                col_widths = [60, 60, 60, 100, 100, 80, 60, 60, 60]
+
+                # Creating table with smaller font size and styles
+                table = Table(table_data, colWidths=col_widths)
+                table.setStyle(TableStyle([
+                    ('BACKGROUND', (0, 0), (-1, 0), blue),
+                    ('TEXTCOLOR', (0, 0), (-1, 0), 'white'),
+                    ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                    ('FONTNAME', (0, 0), (-1, 0), 'TimesNewRoman'),
+                    ('FONTSIZE', (0, 0), (-1, 0), 10),
+                    ('FONTSIZE', (0, 1), (-1, -1), 8),
+                    ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+                    ('BACKGROUND', (0, 1), (-1, -1), '#f0f0f0'),
+                    ('GRID', (0, 0), (-1, -1), 1, 'black')
+                ]))
+
+                elements.append(table)
+                elements.append(Spacer(1, 12))
+
+                timestamp = datetime.now().strftime('%B %d, %Y %I:%M %p')
+                generated_time = Paragraph(f"Generated on: {timestamp}", styles['Normal'])
+                elements.append(Spacer(1, 250))
+                elements.append(generated_time)
+
+                doc.build(elements)
+
+                QMessageBox.information(None, 'Success',
+                                        f'Scheduling Report generated successfully!\nSaved at: {pdf_file}')
+
+            except Exception as e:
+                QMessageBox.critical(None, 'Error', f'An error occurred: {str(e)}')
+
+    # Function to generate Stock Report
+    def generate_stock_report(self):
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
+
+        query = """
+        SELECT product_id, name, quantity, price, expiry_date, purchase_date, supplier, brand, status, sku
+        FROM Products
+        ORDER BY name
+        """
+
+        cursor.execute(query)
+        rows = cursor.fetchall()
+        conn.close()
+
+        pdf_file = os.path.join(OUTPUT_DIR, f'Stock_Report_{datetime.now().strftime("%Y%m%d_%H%M%S")}.pdf')
+
+        doc = SimpleDocTemplate(pdf_file, pagesize=landscape(A4))
+        elements = []
+
+        styles = getSampleStyleSheet()
+        pdfmetrics.registerFont(TTFont('TimesNewRoman', 'times.ttf'))
+
+        # Center the title
+        title_style = styles['Title']
+        title_style.alignment = TA_CENTER
+        title = Paragraph("<font name='TimesNewRoman' color='blue' size=18>Slimmer World</font>", styles['Title'])
+
+        # Center the address
+        address_style = styles['Normal']
+        address_style.alignment = TA_CENTER
+        address = Paragraph(f"<font name='TimesNewRoman' size=12>{ADDRESS}</font>", styles['Normal'])
+
+        # Center the contact
+        contact_style = styles['Normal']
+        contact_style.alignment = TA_CENTER
+        contact = Paragraph(f"<font name='TimesNewRoman' size=12>{CONTACT}</font>", styles['Normal'])
+        elements.append(title)
+        elements.append(address)
+        elements.append(contact)
+
+        # Add spacer to title
+        elements.append(Spacer(1, 12))
+        report_title = Paragraph("<font name='TimesNewRoman' size=14>Stock Report</font>", styles['Title'])
+        elements.append(report_title)
+
+        # Add space
+        elements.append(Spacer(1, 12))
+
+        # Table Header
+        table_data = [
+            ["Product ID", "Name", "Quantity", "Price", "Expiry Date", "Purchase Date", "Supplier", "Brand", "Status",
+             "SKU"]
+        ]
+
+        # Adding data to table
+        for row in rows:
+            table_data.append(list(row))
+
+        # Specifying smaller column widths to fit the table
+        col_widths = [60, 100, 60, 60, 80, 80, 80, 60, 60, 80]
+
+        # Creating table with smaller font size and styles
+        table = Table(table_data, colWidths=col_widths)
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), blue),
+            ('TEXTCOLOR', (0, 0), (-1, 0), 'white'),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'TimesNewRoman'),
+            ('FONTSIZE', (0, 0), (-1, 0), 10),
+            ('FONTSIZE', (0, 1), (-1, -1), 8),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+            ('BACKGROUND', (0, 1), (-1, -1), '#f0f0f0'),
+            ('GRID', (0, 0), (-1, -1), 1, 'black'),
+            ('WORDWRAP', (0, 0), (-1, -1), 'ON'),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP')
+        ]))
+
+        elements.append(table)
+        elements.append(Spacer(1, 12))
+
+        timestamp = datetime.now().strftime('%B %d, %Y %I:%M %p')
+        generated_time = Paragraph(f"Generated on: {timestamp}", styles['Normal'])
+        elements.append(Spacer(1, 270))
+        elements.append(generated_time)
+
+        doc.build(elements)
+
+        QMessageBox.information(None, 'Success', f'Stock Report generated successfully!\nSaved at: {pdf_file}')
