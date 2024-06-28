@@ -42,9 +42,33 @@ class Maintenance(QWidget):
         self.edit_employee()
         self.view_employee()
 
+        # ========================     USER MAINTENANCE
+
+        self.open_user_page()
+        self.open_create_user_page()
+        self.open_view_user_page()
+        
+
+        # ========================     PRODUCT MAINTENANCE
+
+        self.open_product()
+        self.create_product()
+        self.edit_product()
+        self.view_product()
+
+        # ========================     EQUIPMENT MAINTENANCE
+
+        self.open_equipment_page()
+        self.create_equipment()
+        self.view_equipment()
+        self.edit_equipment()
+
+
+
         self.verticalLayout.addWidget(self.stackedWidget)
         self.stackedWidget.setCurrentIndex(0)
         QMetaObject.connectSlotsByName(self)
+
 
 
 
@@ -81,12 +105,49 @@ class Maintenance(QWidget):
     def show_view_employee(self):
         self.stackedWidget.setCurrentIndex(8)
 
-        
+    def show_user_page(self):
+        self.update_usert_table_widget()
+        self.stackedWidget.setCurrentIndex(9)
+    def show_create_user(self):
+        clear_inputs(self.create_user_page)
+        self.stackedWidget.setCurrentIndex(10)
+
+    def show_edit_user(self):
+        self.stackedWidget.setCurrentIndex(11)
+
+    def show_product_page(self):
+        self.update_product_table_widget()
+        self.stackedWidget.setCurrentIndex(12)
+
+    def show_create_product(self):
+        clear_inputs(self.create_product_page)
+        self.generate_product_id()
+        self.stackedWidget.setCurrentIndex(13)
+
+    def show_edit_product(self):
+        self.stackedWidget.setCurrentIndex(14)
+
+    def show_view_product(self):
+        self.stackedWidget.setCurrentIndex(15)
+
+    def show_equipment_page(self):
+        self.update_equipment_table_widget()
+        self.stackedWidget.setCurrentIndex(16)
+    
+    def show_create_equipment_page(self):
+        generate_id("Equipments", self.create_equipment_id_output_label)
+        self.stackedWidget.setCurrentIndex(17)
+    
+    def show_view_equipment_page(self):
+        self.stackedWidget.setCurrentIndex(18)
+
+    def show_edit_equipment_page(self):
+        self.stackedWidget.setCurrentIndex(19)
+
     def open_main_page(self):
         self.main_page = QWidget()
         self.main_page.setObjectName("main_page")
         self.stackedWidget.addWidget(self.main_page)
-
         # ===========================================
         #             MAIN PAGE LABEL
         # ===========================================
@@ -169,6 +230,9 @@ class Maintenance(QWidget):
 
         self.switch_member_page_button.clicked.connect(self.show_member_page)
         self.switch_employee_page_button.clicked.connect(self.show_employee_page)
+        self.switch_user_page_button.clicked.connect(self.show_user_page)
+        self.switch_product_page_button.clicked.connect(self.show_product_page)
+        self.switch_equipment_page_button.clicked.connect(self.show_equipment_page)
 #========================================================================================================================
 #                                     MEMBER MAINTENANCE
 #========================================================================================================================
@@ -255,6 +319,7 @@ class Maintenance(QWidget):
             font=font2,
             style="background-color: #28a745; color: #FFFFFF"
         )
+
         self.member_back_button.clicked.connect(self.show_main_page)
         self.member_add_button.clicked.connect(self.show_add_member)
     
@@ -276,6 +341,8 @@ class Maintenance(QWidget):
             font = font4,
             style = "font: bold"
         )
+
+        
 
         # MEMBER ID LABEL
         self.member_id_label = createLabel(
@@ -2509,6 +2576,2652 @@ class Maintenance(QWidget):
 #========================================================================================================================
 #                                     USER ACCOUNTS MAINTENANCE
 #========================================================================================================================
+    def open_user_page(self):
+        self.user_page = QWidget()
+        self.user_page.setObjectName("user_page")
+        self.stackedWidget.addWidget(self.user_page)
+        # ===========================================
+        #         MANAGE MEMBER PAGE LABELS
+        # ===========================================
+        self.manage_employee_text_label = createLabel(
+            parent=self.user_page,
+            name="manage_members_text",
+            geometry=QRect(120, 40, 350, 40),
+            text="Manage Users",
+            font=font4,
+            style="font: bold"
+        )
+
+        self.manage_search_text_label = createLabel(
+            parent=self.user_page,
+            name="manage_members_text",
+            geometry=QRect(30, 140, 90, 40),
+            text="Search:",
+            font=font1,
+            style=""
+        )
+
+        # ===========================================
+        #      MANAGE MEMBER PAGE LINE INPUTS
+        # ===========================================
+        self.user_manage_search_input = createLineInput(
+            parent=self.user_page,
+            name="search_input",
+            geometry=QRect(130, 140, 580, 40),
+            font=font2,
+            style="background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        self.user_manage_search_input.setPlaceholderText("Equipment ID / Name")
+
+        # ===========================================
+        #         MANAGE MEMBER TABLE WIDGET
+        # ===========================================
+        self.user_table_widget = QTableWidget(self.user_page)
+        self.user_table_widget.setGeometry(QRect(10, 200, 930, 590))
+        self.user_table_widget.setRowCount(0)
+        self.user_table_widget.setColumnCount(4)  # Limited columns
+
+        # Set the horizontal header labels
+        self.user_table_widget.setHorizontalHeaderLabels(
+            ["Employee ID", "Username", "Role", "Actions"]
+        )
+
+        self.stackedWidget.addWidget(self.user_page)
+        self.user_table_widget.resizeColumnsToContents()
+        self.user_table_widget.resizeRowsToContents()
+        self.user_table_widget.horizontalHeader().setStretchLastSection(True)
+        self.user_table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+
+        self.user_manage_search_input.textChanged.connect(lambda: self.search_user(self.user_table_widget, self.user_manage_search_input))
+        #         MANAGE MEMBER BUTTONS
+        # ===========================================
+        self.user_back_button = createButton(
+            parent=self.user_page,
+            name="back_button",
+            geometry=QRect(20, 40, 70, 50),
+            text="Back",
+            font=font2,
+            style=""
+        )
+
+        self.user_add_button = createButton(
+            parent=self.user_page,
+            name="add_button",
+            geometry=QRect(680, 40, 250, 50),
+            text="Add Users",
+            font=font2,
+            style="background-color: #28a745; color: #FFFFFF"
+        )
+        self.user_back_button.clicked.connect(self.show_main_page)
+        self.user_add_button.clicked.connect(self.show_create_user)
+    def fetch_user_by_column(self):
+        query = f"""SELECT employee_id, 
+                  username,
+                  role
+                  FROM Users """
+        cursor.execute(query)
+        data = cursor.fetchall()
+        return data
+    
+    def update_usert_table_widget(self):
+        data = self.fetch_user_by_column()
+        self.user_table_widget.setRowCount(len(data))
+        for row_index, row_data in enumerate(data):
+            for col_index, col_data in enumerate(row_data):
+                self.user_table_widget.setItem(row_index, col_index, QTableWidgetItem(str(col_data)))
+            view_button = QPushButton("View")
+            view_button.clicked.connect(partial(self.show_view_user_temp, row_index))
+            self.user_table_widget.setCellWidget(row_index, 3, view_button)
+
+    
+
+    def open_create_user_page(self):
+        self.create_user_page = QWidget()
+        self.create_user_page.setObjectName("create_user_page")
+        self.stackedWidget.addWidget(self.create_user_page)
+        # ===========================================
+        #             USER ACCOUNTS LABELS
+        # ===========================================
+
+
+        self.user_registration_label = createLabel(
+            parent = self.create_user_page,
+            name = "user_registration",
+            geometry = QRect(270, 50, 430, 40),
+            text = "User Registration",
+            font = font4,
+            style = "font: bold"
+        )
+
+        self.user_member_name_label = createLabel(
+            parent = self.create_user_page,
+            name = "member_name",
+            geometry = QRect(40, 150, 190, 40),
+            text = "Employee Name:",
+            font = font1,
+            style = ""
+        )
+
+        self.user_employee_id_label = createLabel(
+            parent = self.create_user_page,
+            name = "membership_id",
+            geometry = QRect(40, 210, 190, 40),
+            text = "Employee ID",
+            font = font1,
+            style = ""
+        )
+
+        self.user_employee_id_output_label = createLabel(
+            parent = self.create_user_page,
+            name = "output",
+            geometry = QRect(40, 260, 330, 40),
+            text = "",
+            font = font2,
+            style = "background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        self.user_gender_label = createLabel(
+            parent = self.create_user_page,
+            name = "gender",
+            geometry = QRect(380, 210, 130, 40),
+            text = "Gender",
+            font = font1,
+            style = ""
+        )
+
+        self.user_gender_output_label = createLabel(
+            parent = self.create_user_page,
+            name = "output",
+            geometry = QRect(380, 260, 260, 40),
+            text = "",
+            font = font2,
+            style = "background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        self.user_phone_number_label = createLabel(
+            parent = self.create_user_page,
+            name = "phone_number",
+            geometry = QRect(40, 320, 180, 40),
+            text = "Phone Number",
+            font = font1,
+            style = ""
+        )
+
+        self.user_phone_number_output_label = createLabel(
+            parent = self.create_user_page,
+            name = "output",
+            geometry = QRect(40, 360, 330, 40),
+            text = "",
+            font = font2,
+            style = "background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        self.user_hire_date_label = createLabel(
+            parent = self.create_user_page,
+            name = "hire_date",
+            geometry = QRect(380, 320, 210, 40),
+            text = "Hire Date",
+            font = font1,
+            style = ""
+        )
+
+        self.user_hire_date_output_label = createLabel(
+            parent = self.create_user_page,
+            name = "output",
+            geometry = QRect(380, 360, 260, 40),
+            text = "",
+            font = font1,
+            style = "background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        self.user_image_output_label = createLabel(
+            parent = self.create_user_page,
+            name = "output",
+            geometry = QRect(680, 140, 250, 250),
+            text = "",
+            font = font2,
+            style = "background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        self.username_label = createLabel(
+            parent = self.create_user_page,
+            name = "username",
+            geometry = QRect(40, 480, 130, 40),
+            text = "Username",
+            font = font2,
+            style = ""
+        )
+
+        self.user_password_label = createLabel(
+            parent = self.create_user_page,
+            name = "password",
+            geometry = QRect(470, 480, 130, 40),
+            text = "Password",
+            font = font2,
+            style = ""
+        )
+
+        self.user_re_password_label = createLabel(
+            parent = self.create_user_page,
+            name = "re_password",
+            geometry = QRect(470, 580, 210, 40),
+            text = "Re-type Password",
+            font = font2,
+            style = ""
+        )
+
+        self.user_role_label = createLabel(
+            parent = self.create_user_page,
+            name = "role",
+            geometry = QRect(40, 580, 60, 40),
+            text = "Role",
+            font = font2,
+            style = ""
+        )
+
+        self.update_usert_table_widget()
+    
+
+
+        # ===========================================
+        #            USER ACCOUNT INPUTS
+        # ===========================================
+
+        self.user_member_name_input = createLineInput(
+            parent = self.create_user_page,
+            name = "member_name_input",
+            geometry = QRect(240, 150, 410, 40),
+            font = font2,
+            style = "background-color: #F9F7FF; border: 1px solid black"
+        )
+        self.user_member_name_input.setPlaceholderText("Search Employee Name")
+        self.user_member_name_input.textChanged.connect(self.update_search_results)
+        self.username_input = createLineInput(
+            parent = self.create_user_page,
+            name = "user_name_input",
+            geometry = QRect(40 ,530, 410, 40),
+            font = font2,
+            style = "background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        self.password_input = createLineInput(
+            parent = self.create_user_page,
+            name = "password_input",
+            geometry = QRect(470 ,530, 410, 40),
+            font = font2,
+            style = "background-color: #F9F7FF; border: 1px solid black"
+
+        )
+
+        self.password_input.setEchoMode(QLineEdit.Password)
+
+        self.re_password_input = createLineInput(
+            parent = self.create_user_page,
+            name = "re_password_input",
+            geometry = QRect(470 ,630, 410, 40),
+            font = font2,
+            style = "background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        self.re_password_input.setEchoMode(QLineEdit.Password)
+
+        # ===========================================
+        #         USER ACCOUNT COMBO BOX
+        # =========================================== 
+
+        self.role_combo_box = createComboBox(
+            parent = self.create_user_page,
+            name = "role",
+            geometry = QRect(40, 630, 190, 40),
+            font = font2,
+            item = ["Staff", "Admin"],
+            style = "background-color: #F9F7FF; border: 1px solid black"
+
+        )
+
+        # ===========================================
+        #         USER ACCOUNT LIST WIDGETS
+        # =========================================== 
+
+        self.search_results = QListWidget(self.create_user_page)
+        self.search_results.hide()  # Hide initially
+        self.search_results.setGeometry(240, 190, 410, 400)
+        self.search_results.setFont(font2)
+        self.search_results.itemClicked.connect(self.handle_item_selection)
+
+        # ===========================================
+        #           user_a PAGE BUTTONS
+        # ===========================================
+
+        # CLEAR BUTTON
+        self.user_clear_button = createButton(
+            parent = self.create_user_page,
+            name = "clear_button",
+            geometry = QRect(510, 730, 170, 50),
+            text = "Clear",
+            font = font3,
+            style = "background-color: #882400"
+        )
+
+        # REGISTER BUTTON
+        self.user_register_button = createButton(
+            parent = self.create_user_page,
+            name = "register_button",
+            geometry = QRect(690, 730, 250, 50),
+            text = "Register",
+            font = font3,
+            style = "background-color: #006646"
+        )
+
+        # BACK BUTTON
+        self.user_back_button = createButton(
+            parent = self.create_user_page,
+            name = "back_button",
+            geometry = QRect(40, 50, 70, 50),
+            text = "Back",
+            font = font3,
+            style = "background-color: #004F9A"
+        )
+
+        self.user_register_button.clicked.connect(lambda: register_entity("Users", self.assigned_inputs("Users")))
+        self.user_back_button.clicked.connect(self.show_user_page)
+        self.user_clear_button.clicked.connect(lambda: clear_inputs(self.create_user_page))
+
+    def open_view_user_page(self):
+        self.view_user_page = QWidget()
+        self.view_user_page.setObjectName("view_user_page")
+        self.stackedWidget.addWidget(self.view_user_page)
+        # ===========================================
+        #             USER ACCOUNTS LABELS
+        # ===========================================
+
+
+        self.view_user_registration_label = createLabel(
+            parent = self.view_user_page,
+            name = "view_user_registration",
+            geometry = QRect(270, 50, 430, 40),
+            text = "User Registration",
+            font = font4,
+            style = "font: bold"
+        )
+
+        self.view_user_member_name_label = createLabel(
+            parent = self.view_user_page,
+            name = "member_name",
+            geometry = QRect(40, 150, 190, 40),
+            text = "Employee Name:",
+            font = font1,
+            style = ""
+        )
+
+        self.view_user_employee_id_label = createLabel(
+            parent = self.view_user_page,
+            name = "membership_id",
+            geometry = QRect(40, 210, 190, 40),
+            text = "Employee ID",
+            font = font1,
+            style = ""
+        )
+
+        self.view_user_employee_id_output_label = createLabel(
+            parent = self.view_user_page,
+            name = "output",
+            geometry = QRect(40, 260, 330, 40),
+            text = "",
+            font = font2,
+            style = "background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        self.view_user_gender_label = createLabel(
+            parent = self.view_user_page,
+            name = "gender",
+            geometry = QRect(380, 210, 130, 40),
+            text = "Gender",
+            font = font1,
+            style = ""
+        )
+
+        self.view_user_gender_output_label = createLabel(
+            parent = self.view_user_page,
+            name = "output",
+            geometry = QRect(380, 260, 260, 40),
+            text = "",
+            font = font2,
+            style = "background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        self.view_user_phone_number_label = createLabel(
+            parent = self.view_user_page,
+            name = "phone_number",
+            geometry = QRect(40, 320, 180, 40),
+            text = "Phone Number",
+            font = font1,
+            style = ""
+        )
+
+        self.view_user_phone_number_output_label = createLabel(
+            parent = self.view_user_page,
+            name = "output",
+            geometry = QRect(40, 360, 330, 40),
+            text = "",
+            font = font2,
+            style = "background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        self.view_user_hire_date_label = createLabel(
+            parent = self.view_user_page,
+            name = "hire_date",
+            geometry = QRect(380, 320, 210, 40),
+            text = "Hire Date",
+            font = font1,
+            style = ""
+        )
+
+        self.view_user_hire_date_output_label = createLabel(
+            parent = self.view_user_page,
+            name = "output",
+            geometry = QRect(380, 360, 260, 40),
+            text = "",
+            font = font1,
+            style = "background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        self.view_user_image_output_label = createLabel(
+            parent = self.view_user_page,
+            name = "output",
+            geometry = QRect(680, 140, 250, 250),
+            text = "",
+            font = font2,
+            style = "background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        self.username_label = createLabel(
+            parent = self.view_user_page,
+            name = "username",
+            geometry = QRect(40, 480, 130, 40),
+            text = "Username",
+            font = font2,
+            style = ""
+        )
+
+        self.view_user_password_label = createLabel(
+            parent = self.view_user_page,
+            name = "password",
+            geometry = QRect(470, 480, 130, 40),
+            text = "Password",
+            font = font2,
+            style = ""
+        )
+
+        self.view_user_re_password_label = createLabel(
+            parent = self.view_user_page,
+            name = "re_password",
+            geometry = QRect(470, 580, 210, 40),
+            text = "Re-type Password",
+            font = font2,
+            style = ""
+        )
+
+        self.view_user_role_label = createLabel(
+            parent = self.view_user_page,
+            name = "role",
+            geometry = QRect(40, 580, 60, 40),
+            text = "Role",
+            font = font2,
+            style = ""
+        )
+
+        self.update_usert_table_widget()
+    
+
+
+        # ===========================================
+        #            USER ACCOUNT INPUTS
+        # ===========================================
+
+        self.view_user_member_name_input = createLabel(
+            parent = self.view_user_page,
+            name = "member_name_input",
+            geometry = QRect(240, 150, 410, 40),
+            font = font2,
+            text = "",
+            style = "background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        self.edit_username_input = createLineInput(
+            parent = self.view_user_page,
+            name = "view_user_name_input",
+            geometry = QRect(40 ,530, 410, 40),
+            font = font2,
+            style = "background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        self.edit_password_input = createLineInput(
+            parent = self.view_user_page,
+            name = "password_input",
+            geometry = QRect(470 ,530, 410, 40),
+            font = font2,
+            style = "background-color: #F9F7FF; border: 1px solid black"
+
+        )   
+
+        self.re_edit_password_input  = createLineInput(
+            parent = self.view_user_page,
+            name = "password_input",
+            geometry = QRect(470 ,630, 410, 40),
+            font = font2,
+            style = "background-color: #F9F7FF; border: 1px solid black"
+
+        )   
+
+        self.edit_password_input.setEchoMode(QLineEdit.Password)
+        self.re_edit_password_input.setEchoMode(QLineEdit.Password)
+        # ===========================================
+        #         USER ACCOUNT COMBO BOX
+        # =========================================== 
+
+        self.edit_role_combo_box_output = createComboBox(
+            parent = self.view_user_page,
+            name = "role",
+            geometry = QRect(40, 630, 190, 40),
+            font = font2,
+            item = ["Staff", "Admin"],
+            style = "background-color: #F9F7FF; border: 1px solid black"
+
+        )
+
+        # ===========================================
+        #           view_user_a PAGE BUTTONS
+        # ===========================================
+
+        # REGISTER BUTTON
+        self.view_user_edit_button = createButton(
+            parent = self.view_user_page,
+            name = "register_button",
+            geometry = QRect(690, 730, 250, 50),
+            text = "Change",
+            font = font3,
+            style = "background-color: #006646"
+        )
+
+        # BACK BUTTON
+        self.view_user_back_button = createButton(
+            parent = self.view_user_page,
+            name = "back_button",
+            geometry = QRect(40, 50, 70, 50),
+            text = "Back",
+            font = font3,
+            style = "background-color: #004F9A"
+        )
+
+
+        self.view_user_edit_button.clicked.connect(lambda: update_entity("Users", self.assigned_inputs("Update Users")))
+        self.view_user_back_button.clicked.connect(self.show_user_page)
+
+
+    def assigned_inputs(self, entity_type):
+        if entity_type == "Users":
+            INPUTS = {
+                "employee_id": self.user_employee_id_output_label.text(),
+                "username": self.username_input.text(),
+                "password": self.password_input.text(),
+                "retry_password": self.re_password_input.text(),
+                "role": self.role_combo_box.currentText()
+            }
+
+        elif entity_type == "Update Users":
+            INPUTS = {
+                "employee_id": self.view_user_employee_id_output_label.text(),
+                "username": self.edit_username_input.text(),
+                "password": self.edit_password_input.text(),
+                "retry_password": self.re_edit_password_input.text(),
+                "role": self.edit_role_combo_box_output.currentText()
+            }
+
+        return INPUTS
+
+    def search_member(self, member_input):
+        # Split the full name into first name and last name
+        name_parts = member_input.rsplit(' ', 1)
+        
+        if len(name_parts) < 2:
+            print("Please enter both first name and last name.")
+            return
+        
+        first_name = name_parts[0].strip()
+        last_name = name_parts[1].strip()
+
+        # Debug: Print the first and last name
+        print(f"Searching for: first_name = '{first_name}', last_name = '{last_name}'")
+
+        # Execute the SQL query with placeholders for the first name and last name
+        cursor.execute('''
+            SELECT employee_id, gender, phone, hire_date, photo
+            FROM Employees
+            WHERE first_name = ? AND last_name = ?
+        ''', (first_name, last_name))
+
+        # Fetch the results
+        results = cursor.fetchone()
+
+        # Check if the results are found
+        if results:
+            self.employee_id, gender, phone_number, hire_date, photo = results
+            print("Membership ID:", self.employee_id)
+            print("Membership Type:", gender)
+            print("Start Date:", phone_number)
+            print("End Date:", hire_date)
+            print("Image")
+
+            pixmap = QPixmap()
+            if photo:
+                pixmap.loadFromData(photo, 'PNG')  # 'PNG' is the format of the image. Change if necessary.
+                self.user_image_output_label.setPixmap(pixmap)
+                self.user_image_output_label.show()
+            else:
+                print("No photo found.")
+
+        else:
+            print("No matching member found.")
+
+        self.user_employee_id_output_label.setText(self.employee_id)
+        self.user_gender_output_label.setText(gender)
+        self.user_phone_number_output_label.setText(phone_number)
+        self.user_hire_date_output_label.setText(hire_date)
+    def handle_item_selection(self, item):
+        selected_name = item.text()
+        # Handle item selection (e.g., perform an action with the selected name)
+        self.user_member_name_input.setText(selected_name)
+        self.search_member(selected_name)
+
+        self.search_results.hide()  # Hide list widget after selection
+
+    def update_search_results(self):
+        search_text = self.user_member_name_input.text()
+        self.search_results.clear()
+        if search_text:
+            # Fetch members from database based on search text
+            query = "SELECT first_name, last_name FROM Employees WHERE first_name || ' ' || last_name LIKE ?"
+            cursor.execute(query, ('%' + search_text + '%',))
+            results = cursor.fetchall()
+            # Add results to list widget
+            for first_name, last_name in results:
+                full_name = f"{first_name} {last_name}"
+                self.search_results.addItem(full_name)
+            self.search_results.show()  # Show list widget when there are results
+        else:
+            self.search_results.hide()  # Hide list widget if search text is empty
+    
+    def show_view_user_temp(self, row):
+        # Get the employee_id from the selected row
+        member_id = self.user_table_widget.item(row, 0).text()
+
+        try:
+            # Fetch the user details from the Users table
+            cursor.execute(
+                """
+                SELECT employee_id, username, password_hash, role 
+                FROM Users
+                WHERE employee_id = ?
+                """,
+                (member_id,)
+            )
+            results = cursor.fetchone()
+
+            if results:
+                employee_id, username, password, role = results
+
+                # Fetch the employee details from the Employees table
+                cursor.execute(
+                    '''
+                    SELECT first_name || " " || last_name as full_name,
+                    gender, phone, hire_date, photo
+                    FROM Employees
+                    WHERE employee_id = ?
+                    ''',
+                    (member_id,)
+                )
+                employee_results = cursor.fetchone()
+
+                if employee_results:
+                    name, gender, phone, hire_date, photo= employee_results
+                    pixmap = QPixmap()
+                    picture = pixmap.loadFromData(photo)
+                    # Update the UI elements with the fetched data
+                    self.view_user_member_name_input.setText(name)
+                    self.view_user_employee_id_output_label.setText(employee_id)
+                    self.view_user_gender_output_label.setText(gender)
+                    self.view_user_phone_number_output_label.setText(phone)
+                    self.view_user_hire_date_output_label.setText(hire_date)
+                    self.username_input.setText(username)
+                    self.password_input.setText(password)
+                    self.view_user_image_output_label.setPixmap(pixmap)
+                    self.edit_role_combo_box_output.setCurrentText(role)
+                    self.re_password_input.setText(password)
+                    self.edit_username_input.setText(self.username_input.text())
+                    self.edit_password_input.setText(self.password_input.text())
+                    self.re_edit_password_input.setText(self.re_password_input.text())
+
+                    # Call the function to display the edit user page
+                    self.show_edit_user()
+                else:
+                    print("No employee details found for the given employee_id")
+            else:
+                print("No user details found for the given employee_id")
+        except sqlite3.Error as e:
+            print(f"An error occurred: {e}")
+
+    def search_user(self, table_widget, input_text):
+        search_term = input_text.text()
+        query = """
+            SELECT employee_id,
+               username,
+               role
+            FROM Users
+            WHERE employee_id LIKE ? OR username LIKE ?;
+        """
+        try:
+            cursor.execute(query, (f'%{search_term}%', f'%{search_term}%'))
+            results = cursor.fetchall()
+
+            table_widget.setRowCount(len(results))
+            for row_idx, row_data in enumerate(results):
+                for col_idx, col_data in enumerate(row_data):
+                    table_widget.setItem(row_idx, col_idx, QTableWidgetItem(str(col_data)))
+                view_button = QPushButton("View")
+                view_button.clicked.connect(partial(self.show_view_user_temp, row_idx))
+                table_widget.setCellWidget(row_idx, len(row_data), view_button)
+
+            self.add_user_view_button(table_widget)  # Call the function to add view buttons
+
+        except Exception as e:
+            print(f"Error executing query for Employees: {e}")
+
+
+    def add_user_view_button(self, table_widget):
+        for row_idx in range(table_widget.rowCount()):
+            view_button = QPushButton("View")
+            view_button.clicked.connect(partial(self.show_view_user_temp, row_idx))
+            table_widget.setCellWidget(row_idx, 5, view_button)
+
+#========================================================================================================================
+#                                           PRODUCTS MAINTENANCE
+#========================================================================================================================
+    def open_product(self):
+        self.product_page = QWidget()
+        self.product_page.setObjectName("product_page")
+
+        # ===========================================
+        #         MANAGE MEMBER PAGE LABELS
+        # ===========================================
+        self.manage_employee_text_label = createLabel(
+            parent=self.product_page,
+            name="manage_members_text",
+            geometry=QRect(120, 40, 350, 40),
+            text="Manage products",
+            font=font4,
+            style="font: bold"
+        )
+
+        self.manage_search_text_label = createLabel(
+            parent=self.product_page,
+            name="manage_members_text",
+            geometry=QRect(30, 140, 90, 40),
+            text="Search:",
+            font=font1,
+            style=""
+        )
+
+        # ===========================================
+        #      MANAGE MEMBER PAGE LINE INPUTS
+        # ===========================================
+        self.manage_product_search_input = createLineInput(
+            parent=self.product_page,
+            name="search_input",
+            geometry=QRect(130, 140, 580, 40),
+            font=font2,
+            style="background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        self.manage_product_search_input.setPlaceholderText("product ID / Name")
+
+        # ===========================================
+        #         MANAGE MEMBER TABLE WIDGET
+        # ===========================================
+        self.product_table_widget = QTableWidget(self.product_page)
+        self.product_table_widget.setGeometry(QRect(10, 200, 930, 590))
+        self.product_table_widget.setRowCount(0)
+        self.product_table_widget.setColumnCount(6)  # Limited columns
+
+        # Set the horizontal header labels
+        self.product_table_widget.setHorizontalHeaderLabels(
+            ["Product ID", "Name", " Quantity", "Expiry Date", "Status", "Actions"]
+        )
+        self.stackedWidget.addWidget(self.product_page)
+        self.product_table_widget.resizeColumnsToContents()
+        self.product_table_widget.resizeRowsToContents()
+        self.product_table_widget.horizontalHeader().setStretchLastSection(True)
+        self.product_table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+
+
+        #         MANAGE MEMBER BUTTONS
+        # ===========================================
+        self.product_back_button = createButton(
+            parent=self.product_page,
+            name="back_button",
+            geometry=QRect(20, 40, 70, 50),
+            text="Back",
+            font=font2,
+            style=""
+        )
+
+        self.product_add_button = createButton(
+            parent=self.product_page,
+            name="add_button",
+            geometry=QRect(680, 40, 250, 50),
+            text="Add products",
+            font=font2,
+            style="background-color: #28a745; color: #FFFFFF"
+        )
+
+        self.product_back_button.clicked.connect(self.show_main_page)
+        self.product_add_button.clicked.connect(self.show_create_product)
+        self.manage_product_search_input.textChanged.connect(lambda: self.search_product(self.product_table_widget, self.manage_product_search_input))
+        self.update_product_table_widget()
+
+    def create_product(self):
+        self.create_product_page = QWidget()
+        self.create_product_page.setObjectName("main_page")
+        self.stackedWidget.addWidget(self.create_product_page)
+       
+        # ===========================================
+        #            product PAGE LABELS
+        # ===========================================
+
+        self.create_product_text_label = createLabel(
+            parent = self.create_product_page,
+            name = "product_text",
+            geometry = QRect(280, 50, 430, 40),
+            text = "Register Product",
+            font = font4,
+            style = "font: bold"
+        )
+
+        self.create_product_id_label = createLabel(
+            parent = self.create_product_page,
+            name = "product_text",
+            geometry = QRect(40, 150, 160, 40),
+            text = "Product ID:",
+            font = font1,
+            style = ""
+        )
+
+        self.product_name_label = createLabel(
+            parent = self.create_product_page,
+            name = "product_text",
+            geometry = QRect(40, 210, 170, 40),
+            text = "Product Name",
+            font = font1,
+            style = ""
+        )
+
+        self.create_product_brand_label = createLabel(
+            parent = self.create_product_page,
+            name = "product_text",
+            geometry = QRect(380, 210, 170, 40),
+            text = "Brand",
+            font = font1,
+            style = ""
+        )
+
+        self.create_product_sku_label = createLabel(
+            parent = self.create_product_page,
+            name = "product_text",
+            geometry = QRect(40, 310, 130, 40),
+            text = "SKU",
+            font = font1,
+            style = ""
+        )
+
+        self.create_product_quantity_label = createLabel(
+            parent = self.create_product_page,
+            name = "product_text",
+            geometry = QRect(380, 310, 170, 40),
+            text = "Quantity",
+            font = font1,
+            style = ""
+        )
+
+        self.create_product_supplier_label = createLabel(
+            parent = self.create_product_page,
+            name = "product_text",
+            geometry = QRect(40, 420, 130, 40),
+            text = "Supplier",
+            font = font1,
+            style = ""
+        )
+
+        self.create_product_price_label = createLabel(
+            parent = self.create_product_page,
+            name = "product_text",
+            geometry = QRect(380, 420, 160, 40),
+            text = "Price",
+            font = font1,
+            style = ""
+        )
+
+        self.create_product_purchase_label = createLabel(
+            parent = self.create_product_page,
+            name = "product_text",
+            geometry = QRect(40, 530, 180, 40),
+            text = "Purchase Date",
+            font = font1,
+            style = ""
+        )
+
+        self.create_product_price_label = createLabel(
+            parent = self.create_product_page,
+            name = "product_text",
+            geometry = QRect(380, 530, 160, 40),
+            text = "Expiry Date",
+            font = font1,
+            style = ""
+        )
+
+        self.create_product_id_output_label = createLabel(
+            parent = self.create_product_page,
+            name = "product_text",
+            geometry = QRect(210, 150, 360, 40),
+            text = "",
+            font = font1,
+            style = "background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        # =================================================================
+
+        self.create_product_name_input = createLineInput(
+            parent = self.create_product_page,
+            name = "name_input",
+            geometry = QRect(40, 260, 330, 40),
+            font = font2,
+            style = "background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        self.create_product_brand_input = createLineInput(
+            parent = self.create_product_page,
+            name = "name_input",
+            geometry = QRect(380, 260, 330, 40),
+            font = font2,
+            style = "background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        self.create_product_sku_input = createLineInput(
+            parent = self.create_product_page,
+            name = "name_input",
+            geometry = QRect(40, 360, 330, 40),
+            font = font2,
+            style = "background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        self.create_product_quantity_input = createLineInput(
+            parent = self.create_product_page,
+            name = "name_input",
+            geometry = QRect(380, 360, 200, 40),
+            font = font2,
+            style = "background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        self.create_product_supplier_input = createLineInput(
+            parent = self.create_product_page,
+            name = "name_input",
+            geometry = QRect(40, 470, 330, 40),
+            font = font2,
+            style = "background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        self.create_product_price_input = createLineInput(
+            parent = self.create_product_page,
+            name = "name_input",
+            geometry = QRect(380, 470, 200, 40),
+            font = font2,
+            style = "background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        # ===================================================
+
+        self.create_product_purchase_date = createDate(
+            parent = self.create_product_page,
+            name = "purchase_date",
+            geometry = QRect(40, 580, 230, 40),
+            font = font2,
+            style = "background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        self.create_product_expiry_date = createDate(
+            parent = self.create_product_page,
+            name = "purchase_date",
+            geometry = QRect(380, 580, 230, 40),
+            font = font2,
+            style = "background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        # ====================================================
+        self.create_product_back_button = createButton(
+            parent = self.create_product_page,
+            name = "back_button",
+            geometry = QRect(40, 50, 70, 50),
+            text = "Back",
+            font = font3,
+            style = "background-color: #004F9A"
+        )
+
+        self.create_product_clear_button = createButton(
+            parent = self.create_product_page,
+            name = "clear_button",
+            geometry = QRect(510, 730, 170, 50),
+            text = "Clear",
+            font = font3,
+            style = "background-color: #882400"
+        )
+
+        # REGISTER BUTTON
+        self.create_product_register_button = createButton(
+            parent = self.create_product_page,
+            name = "register_button",
+            geometry = QRect(690, 730, 250, 50),
+            text = "Register Product",
+            font = font3,
+            style = "background-color: #006646"
+        )
+        self.create_product_back_button.clicked.connect(self.show_product_page)
+        self.create_product_clear_button.clicked.connect(lambda: clear_inputs(self.create_product_page))
+        self.create_product_register_button.clicked.connect(self.register_product)
+
+    def view_product(self):
+
+        self.view_product_page = QWidget()
+        self.view_product_page.setObjectName("main_page")
+        self.stackedWidget.addWidget(self.view_product_page)
+        
+        # ===========================================
+        #            product PAGE LABELS
+        # ===========================================
+
+        self.view_product_text_label = createLabel(
+            parent=self.view_product_page,
+            name="product_text",
+            geometry=QRect(280, 50, 430, 40),
+            text="View Product Details",
+            font=font4,
+            style="font: bold"
+        )
+
+        self.view_product_id_label = createLabel(
+            parent=self.view_product_page,
+            name="product_text",
+            geometry=QRect(40, 150, 160, 40),
+            text="Product ID:",
+            font=font1,
+            style=""
+        )
+
+        self.view_product_name_label = createLabel(
+            parent=self.view_product_page,
+            name="product_text",
+            geometry=QRect(40, 210, 170, 40),
+            text="Product Name",
+            font=font1,
+            style=""
+        )
+
+        self.view_product_brand_label = createLabel(
+            parent=self.view_product_page,
+            name="product_text",
+            geometry=QRect(380, 210, 170, 40),
+            text="Brand",
+            font=font1,
+            style=""
+        )
+
+        self.view_product_sku_label = createLabel(
+            parent=self.view_product_page,
+            name="product_text",
+            geometry=QRect(40, 310, 130, 40),
+            text="SKU",
+            font=font1,
+            style=""
+        )
+
+        self.view_product_quantity_label = createLabel(
+            parent=self.view_product_page,
+            name="product_text",
+            geometry=QRect(380, 310, 170, 40),
+            text="Quantity",
+            font=font1,
+            style=""
+        )
+
+        self.view_product_supplier_label = createLabel(
+            parent=self.view_product_page,
+            name="product_text",
+            geometry=QRect(40, 420, 130, 40),
+            text="Supplier",
+            font=font1,
+            style=""
+        )
+
+        self.view_product_price_label = createLabel(
+            parent=self.view_product_page,
+            name="product_text",
+            geometry=QRect(380, 420, 160, 40),
+            text="Price",
+            font=font1,
+            style=""
+        )
+
+        self.product_purchase_label = createLabel(
+            parent=self.view_product_page,
+            name="product_text",
+            geometry=QRect(40, 530, 180, 40),
+            text="Purchase Date",
+            font=font1,
+            style=""
+        )
+
+        self.view_product_expiry_label = createLabel(
+            parent=self.view_product_page,
+            name="product_text",
+            geometry=QRect(380, 530, 160, 40),
+            text="Expiry Date",
+            font=font1,
+            style=""
+        )
+
+        self.view_product_id_output_label = createLabel(
+            parent=self.view_product_page,
+            name="product_text",
+            geometry=QRect(210, 150, 360, 40),
+            text="",
+            font=font1,
+            style="background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        # =================================================================
+
+        self.view_product_name_input_label = createLabel(
+            parent=self.view_product_page,
+            name="name_input",
+            geometry=QRect(40, 260, 330, 40),
+            text="",
+            font=font2,
+            style="background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        self.view_product_brand_input_label = createLabel(
+            parent=self.view_product_page,
+            name="brand_input",
+            geometry=QRect(380, 260, 330, 40),
+            text="",
+            font=font2,
+            style="background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        self.view_product_sku_input_label = createLabel(
+            parent=self.view_product_page,
+            name="sku_input",
+            geometry=QRect(40, 360, 330, 40),
+            text="",
+            font=font2,
+            style="background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        self.view_product_quantity_input_label = createLabel(
+            parent=self.view_product_page,
+            name="quantity_input",
+            geometry=QRect(380, 360, 200, 40),
+            text="",
+            font=font2,
+            style="background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        self.view_product_supplier_input_label = createLabel(
+            parent=self.view_product_page,
+            name="supplier_input",
+            geometry=QRect(40, 470, 330, 40),
+            text="",
+            font=font2,
+            style="background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        self.view_product_price_input_label = createLabel(
+            parent=self.view_product_page,
+            name="price_input",
+            geometry=QRect(380, 470, 200, 40),
+            text="",
+            font=font2,
+            style="background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        # ===================================================
+
+        self.view_product_purchase_date_label = createLabel(
+            parent=self.view_product_page,
+            name="purchase_date",
+            geometry=QRect(40, 580, 230, 40),
+            text="",
+            font=font2,
+            style="background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        self.view_product_expiry_date_label = createLabel(
+            parent=self.view_product_page,
+            name="expiry_date",
+            geometry=QRect(380, 580, 230, 40),
+            text="",
+            font=font2,
+            style="background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        # ====================================================
+        self.view_product_back_button = createButton(
+            parent=self.view_product_page,
+            name="back_button",
+            geometry=QRect(40, 50, 70, 50),
+            text="Back",
+            font=font3,
+            style="background-color: #004F9A"
+        )
+
+        # REGISTER BUTTON
+        self.view_product_edit_button = createButton(
+            parent=self.view_product_page,
+            name="register_button",
+            geometry=QRect(690, 730, 250, 50),
+            text="Edit",
+            font=font3,
+            style="background-color: #006646"
+        )
+
+        self.view_product_edit_button.clicked.connect(self.edit_product_button)
+        self.view_product_back_button.clicked.connect(self.show_product_page)
+   
+    def edit_product(self):
+        self.edit_product_page = QWidget()
+        self.edit_product_page.setObjectName("main_page")
+        self.stackedWidget.addWidget(self.edit_product_page)
+       
+        # ===========================================
+        #            product PAGE LABELS
+        # ===========================================
+
+        self.edit_product_text_label = createLabel(
+            parent = self.edit_product_page,
+            name = "product_text",
+            geometry = QRect(280, 50, 430, 40),
+            text = "Edit Product Details",
+            font = font4,
+            style = "font: bold"
+        )
+
+        self.edit_product_id_label = createLabel(
+            parent = self.edit_product_page,
+            name = "product_text",
+            geometry = QRect(40, 150, 160, 40),
+            text = "Product ID:",
+            font = font1,
+            style = ""
+        )
+
+        self.edit_product_name_label = createLabel(
+            parent = self.edit_product_page,
+            name = "product_text",
+            geometry = QRect(40, 210, 170, 40),
+            text = "Product Name",
+            font = font1,
+            style = ""
+        )
+
+        self.edit_product_brand_label = createLabel(
+            parent = self.edit_product_page,
+            name = "product_text",
+            geometry = QRect(380, 210, 170, 40),
+            text = "Brand",
+            font = font1,
+            style = ""
+        )
+
+        self.edit_product_sku_label = createLabel(
+            parent = self.edit_product_page,
+            name = "product_text",
+            geometry = QRect(40, 310, 130, 40),
+            text = "SKU",
+            font = font1,
+            style = ""
+        )
+
+        self.edit_product_quantity_label = createLabel(
+            parent = self.edit_product_page,
+            name = "product_text",
+            geometry = QRect(380, 310, 170, 40),
+            text = "Quantity",
+            font = font1,
+            style = ""
+        )
+
+        self.edit_product_supplier_label = createLabel(
+            parent = self.edit_product_page,
+            name = "product_text",
+            geometry = QRect(40, 420, 130, 40),
+            text = "Supplier",
+            font = font1,
+            style = ""
+        )
+
+        self.edit_product_price_label = createLabel(
+            parent = self.edit_product_page,
+            name = "product_text",
+            geometry = QRect(380, 420, 160, 40),
+            text = "Price",
+            font = font1,
+            style = ""
+        )
+
+        self.edit_product_purchase_label = createLabel(
+            parent = self.edit_product_page,
+            name = "product_text",
+            geometry = QRect(40, 530, 180, 40),
+            text = "Purchase Date",
+            font = font1,
+            style = ""
+        )
+
+        self.edit_product_price_label = createLabel(
+            parent = self.edit_product_page,
+            name = "product_text",
+            geometry = QRect(380, 530, 160, 40),
+            text = "Expiry Date",
+            font = font1,
+            style = ""
+        )
+
+        self.edit_product_id_output_label = createLabel(
+            parent = self.edit_product_page,
+            name = "product_text",
+            geometry = QRect(210, 150, 360, 40),
+            text = "",
+            font = font1,
+            style = "background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        # =================================================================
+
+        self.edit_product_name_input = createLineInput(
+            parent = self.edit_product_page,
+            name = "name_input",
+            geometry = QRect(40, 260, 330, 40),
+            font = font2,
+            style = "background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        self.edit_product_brand_input = createLineInput(
+            parent = self.edit_product_page,
+            name = "name_input",
+            geometry = QRect(380, 260, 330, 40),
+            font = font2,
+            style = "background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        self.edit_product_sku_input = createLineInput(
+            parent = self.edit_product_page,
+            name = "name_input",
+            geometry = QRect(40, 360, 330, 40),
+            font = font2,
+            style = "background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        self.edit_product_quantity_input = createLineInput(
+            parent = self.edit_product_page,
+            name = "name_input",
+            geometry = QRect(380, 360, 200, 40),
+            font = font2,
+            style = "background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        self.edit_product_supplier_input = createLineInput(
+            parent = self.edit_product_page,
+            name = "name_input",
+            geometry = QRect(40, 470, 330, 40),
+            font = font2,
+            style = "background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        self.edit_product_price_input = createLineInput(
+            parent = self.edit_product_page,
+            name = "name_input",
+            geometry = QRect(380, 470, 200, 40),
+            font = font2,
+            style = "background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        # ===================================================
+
+        self.edit_product_purchase_date = createDate(
+            parent = self.edit_product_page,
+            name = "purchase_date",
+            geometry = QRect(40, 580, 230, 40),
+            font = font2,
+            style = "background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        self.edit_product_expiry_date = createDate(
+            parent = self.edit_product_page,
+            name = "purchase_date",
+            geometry = QRect(380, 580, 230, 40),
+            font = font2,
+            style = "background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        # ====================================================
+        self.edit_product_back_button = createButton(
+            parent = self.edit_product_page,
+            name = "back_button",
+            geometry = QRect(40, 50, 70, 50),
+            text = "Back",
+            font = font3,
+            style = "background-color: #004F9A"
+        )
+
+        self.edit_product_cancel_button = createButton(
+            parent = self.edit_product_page,
+            name = "clear_button",
+            geometry = QRect(510, 730, 170, 50),
+            text = "Cancel",
+            font = font3,
+            style = "background-color: #882400"
+        )
+
+        # REGISTER BUTTON
+        self.edit_product_change_button = createButton(
+            parent = self.edit_product_page,
+            name = "register_button",
+            geometry = QRect(690, 730, 250, 50),
+            text = "Confirm Changes",
+            font = font3,
+            style = "background-color: #006646"
+        )
+        self.edit_product_back_button.clicked.connect(self.show_view_product)
+        self.edit_product_cancel_button.clicked.connect(self.show_view_product)
+        self.edit_product_change_button.clicked.connect(self.update_product)
+    # =========================================================
+    # ========================================================
+    def register_product(self):
+        print("hello")
+        product_id = self.create_product_id_output_label.text()
+        name = self.create_product_name_input.text()
+        brand = self.create_product_brand_input.text()
+        sku = self.create_product_sku_input.text()
+        quantity = self.create_product_quantity_input.text()
+        supplier = self.create_product_supplier_input.text()
+        price = self.create_product_price_input.text()
+        purchase_date = self.create_product_purchase_date.date()
+        expiry_date = self.create_product_expiry_date.date()
+
+        cursor.execute(
+            """
+            INSERT INTO Products
+            (
+            product_id, name, brand, sku, quantity, supplier, price, purchase_date, expiry_date, status
+            ) VALUES
+            (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active')
+            """,
+            (
+                product_id,
+                name,
+                brand,
+                sku,
+                quantity,
+                supplier,
+                price,
+                purchase_date.toString("yyyy-MM-dd"),
+                expiry_date.toString("yyyy-MM-dd")
+            )
+        )
+
+        connection.commit()
+    
+    def generate_product_id(self):
+        
+        query = "SELECT COUNT(*) FROM Products"
+        cursor.execute(query)
+        count = cursor.fetchone()[0] + 1
+        identifier = "PD"
+        current_time = datetime.now()
+        formatted_time = current_time.strftime('%m%d%y')
+
+        generated_id = f"{identifier}-{formatted_time}-{count:04}"
+        self.create_product_id_output_label.setText(generated_id)
+
+    def update_product_table_widget(self):
+        data = self.fetch_product_by_column()
+        self.product_table_widget.setRowCount(len(data))
+        for row_index, row_data in enumerate(data):
+            for col_index, col_data in enumerate(row_data):
+                self.product_table_widget.setItem(row_index, col_index, QTableWidgetItem(str(col_data)))
+            
+        for self.row in range(self.product_table_widget.rowCount()):
+            view_button = QPushButton("View")
+            view_button.clicked.connect(partial(self.show_view_product_temp, self.row))
+            self.product_table_widget.setCellWidget(self.row, 5, view_button)
+    
+    def search_product(self, table_widget, input_text):
+        search_term = input_text.text()
+        query = """
+            SELECT product_id, name, quantity, expiry_date, status
+            FROM Products
+            WHERE product_id LIKE ? OR name LIKE ?;
+        """
+        try:
+            cursor.execute(query, (f'%{search_term}%', f'%{search_term}%'))
+            results = cursor.fetchall()
+
+            table_widget.setRowCount(len(results))
+            for row_idx, row_data in enumerate(results):
+                for col_idx, col_data in enumerate(row_data):
+                    table_widget.setItem(row_idx, col_idx, QTableWidgetItem(str(col_data)))
+                view_button = QPushButton("View")
+                view_button.clicked.connect(partial(self.show_view_product_temp, row_idx))
+                table_widget.setCellWidget(row_idx, len(row_data), view_button)
+
+            self.add_product_view_button(table_widget)  # Call the function to add view buttons
+
+        except Exception as e:
+            print(f"Error executing query for Employees: {e}")
+
+    def add_product_view_button(self, table_widget):
+        for row_idx in range(table_widget.rowCount()):
+            view_button = QPushButton("View")
+            view_button.clicked.connect(partial(self.show_view_product_temp, row_idx))
+            table_widget.setCellWidget(row_idx, 5, view_button)
+            
+    def show_view_product_temp(self, row):
+        product_id = self.product_table_widget.item(row, 0).text()
+
+        cursor.execute(
+            """
+            SELECT * 
+            FROM Products
+            WHERE product_id = ?
+            """,
+            (product_id,)
+        )
+
+        results = cursor.fetchone()
+
+        product_id, name, quantity, price, expiry_date, purchase_date, supplier, brand, status, sku = results
+
+
+        self.view_product_id_output_label.setText(product_id)
+        self.view_product_name_input_label.setText(name)
+        self.view_product_quantity_input_label.setText(str(quantity))
+        self.view_product_price_input_label.setText(str(price))
+        self.view_product_purchase_date_label.setText(purchase_date)
+        self.view_product_expiry_date_label.setText(expiry_date)
+        self.view_product_supplier_input_label.setText(supplier)
+        self.view_product_brand_input_label.setText(brand)
+        self.view_product_sku_input_label.setText(sku)
+        self.show_view_product()
+  
+
+    def fetch_product_by_column(self):
+        query = f"""SELECT product_id, 
+                  name,
+                  quantity,
+                  expiry_date,
+                  status
+                  FROM Products """
+        cursor.execute(query)
+        data = cursor.fetchall()
+        return data
+    
+    def edit_product_button(self):
+        product_id = self.view_product_id_output_label.text()
+        name = self.view_product_name_input_label.text()
+        quantity = self.view_product_quantity_input_label.text()
+        price = self.view_product_price_input_label.text()
+        purchase_date = self.view_product_purchase_date_label.text()
+        expiry_date = self.view_product_expiry_date_label.text()
+        supplier = self.view_product_supplier_input_label.text()
+        brand = self.view_product_brand_input_label.text()
+        sku = self.view_product_sku_input_label.text()
+
+        expiry_date = datetime.strptime(expiry_date, '%Y-%m-%d')
+        purchase_date = datetime.strptime(purchase_date, '%Y-%m-%d')
+
+        self.edit_product_id_output_label.setText(product_id)
+        self.edit_product_name_input.setText(name)
+        self.edit_product_quantity_input.setText(quantity)
+        self.edit_product_price_input.setText(price)
+        self.edit_product_purchase_date.setDate(purchase_date)
+        self.edit_product_expiry_date.setDate(expiry_date)
+        self.edit_product_supplier_input.setText(supplier)
+        self.edit_product_brand_input.setText(brand)
+        self.edit_product_sku_input.setText(sku)
+
+        self.update_product_table_widget()
+        self.show_edit_product()
+
+    def update_product(self):
+
+        product_id = self.edit_product_id_output_label.text()
+        name = self.edit_product_name_input.text()
+        quantity = self.edit_product_quantity_input.text()
+        price = self.edit_product_price_input.text()
+        purchase_date = self.edit_product_purchase_date.date()
+        expiry_date = self.edit_product_expiry_date.date()
+        supplier = self.edit_product_supplier_input.text()
+        brand = self.edit_product_brand_input.text()
+        sku = self.edit_product_sku_input.text()
+
+        cursor.execute(
+            """
+            UPDATE Products
+            SET name = ?,
+                quantity = ?,
+                price = ?,
+                purchase_date = ?,
+                expiry_date = ?,
+                supplier = ?,
+                brand = ?,
+                sku = ?
+            WHERE product_id = ?
+            """,
+            (name, quantity, price, purchase_date.toString("yyyy-MM-dd"), expiry_date.toString("yyyy-MM-dd"),supplier, brand, sku, product_id)
+        )
+
+        connection.commit()
+
+        self.show_main_page()
+
+
+# ======================================================================================================================================================
+#                                                  EQUIPMENT PAGE
+# ======================================================================================================================================================
+
+    def open_equipment_page(self):
+        self.equipment_page = QWidget()
+        self.equipment_page.setObjectName("equipment_page")
+
+        # ===========================================
+        #         MANAGE MEMBER PAGE LABELS
+        # ===========================================
+        self.manage_employee_text_label = createLabel(
+            parent=self.equipment_page,
+            name="manage_members_text",
+            geometry=QRect(120, 40, 350, 40),
+            text="Manage Equipments",
+            font=font4,
+            style="font: bold"
+        )
+
+        self.manage_search_text_label = createLabel(
+            parent=self.equipment_page,
+            name="manage_members_text",
+            geometry=QRect(30, 140, 90, 40),
+            text="Search:",
+            font=font1,
+            style=""
+        )
+
+        # ===========================================
+        #      MANAGE MEMBER PAGE LINE INPUTS
+        # ===========================================
+        self.equipment_manage_input = createLineInput(
+            parent=self.equipment_page,
+            name="search_input",
+            geometry=QRect(130, 140, 580, 40),
+            font=font2,
+            style="background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        self.equipment_manage_input.setPlaceholderText("Equipment ID / Name")
+        self.equipment_manage_input.textChanged.connect(lambda: self.search_equipment(self.equipment_table_widget, self.equipment_manage_input))
+        # ===========================================
+        #         MANAGE MEMBER TABLE WIDGET
+        # ===========================================
+        self.equipment_table_widget = QTableWidget(self.equipment_page)
+        self.equipment_table_widget.setGeometry(QRect(10, 200, 930, 590))
+        self.equipment_table_widget.setRowCount(0)
+        self.equipment_table_widget.setColumnCount(6)  # Limited columns
+
+        # Set the horizontal header labels
+        self.equipment_table_widget.setHorizontalHeaderLabels(
+            ["Equipment ID", "Name", "Serial Number", "Category", "Status", "Actions"]
+        )
+
+        self.stackedWidget.addWidget(self.equipment_page)
+        self.equipment_table_widget.resizeColumnsToContents()
+        self.equipment_table_widget.resizeRowsToContents()
+        self.equipment_table_widget.horizontalHeader().setStretchLastSection(True)
+        self.equipment_table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+
+
+        #         MANAGE MEMBER BUTTONS
+        # ===========================================
+        self.equipment_back_button = createButton(
+            parent=self.equipment_page,
+            name="back_button",
+            geometry=QRect(20, 40, 70, 50),
+            text="Back",
+            font=font2,
+            style=""
+        )
+
+        self.equipment_add_button = createButton(
+            parent=self.equipment_page,
+            name="add_button",
+            geometry=QRect(680, 40, 250, 50),
+            text="Add Equipments",
+            font=font2,
+            style="background-color: #28a745; color: #FFFFFF"
+        )
+        self.equipment_add_button.clicked.connect(self.show_create_equipment_page)
+
+    def create_equipment(self):
+        self.create_equipment_page = QWidget()
+        self.create_equipment_page.setObjectName("main_page")
+        self.stackedWidget.addWidget(self.create_equipment_page)
+       
+        # ===========================================
+        #            EQUIPMENT PAGE LABELS
+        # ===========================================
+
+        self.create_equipment_text_label = createLabel(
+            parent = self.create_equipment_page,
+            name = "create_equipment_text",
+            geometry = QRect(280, 50, 430, 40),
+            text = "Register Equipment",
+            font = font4,
+            style = "font: bold"
+        )
+
+        self.create_equipment_id_label = createLabel(
+            parent = self.create_equipment_page,
+            name = "create_equipment_id",
+            geometry = QRect(40, 150, 165, 40),
+            text = "Equipment ID:",
+            font = font1,
+            style = ""
+        )
+
+        self.create_equipment_name_label = createLabel(
+            parent = self.create_equipment_page,
+            name = "create_equipment_name",
+            geometry = QRect(40, 230, 210, 40),
+            text = "Equipment Name",
+            font = font1,
+            style = ""
+        )
+
+        self.create_equipment_serial_number_label = createLabel(
+            parent = self.create_equipment_page,
+            name = "serial_number",
+            geometry = QRect(40, 350, 170, 40),
+            text = "Serial Number",
+            font = font1,
+            style = ""
+        )
+
+        self.create_equipment_category_label = createLabel(
+            parent = self.create_equipment_page,
+            name = "create_equipment_category",
+            geometry = QRect(490, 350, 110, 40),
+            text = "Category",
+            font = font1,
+            style = ""
+        )
+
+        self.create_equipment_status_label = createLabel(
+            parent = self.create_equipment_page,
+            name = "create_equipment_status",
+            geometry = QRect(750, 350, 110, 40),
+            text = "Status",
+            font = font1,
+            style = ""
+        )
+
+        self.create_equipment_purchase_date_label = createLabel(
+            parent = self.create_equipment_page,
+            name = "purchase_date",
+            geometry = QRect(40, 470, 170, 40),
+            text = "Purchase Date",
+            font = font1,
+            style = ""
+        )
+
+        self.create_equipment_warranty_date_label = createLabel(
+            parent = self.create_equipment_page,
+            name = "warranty_date",
+            geometry = QRect(260, 470, 190, 40),
+            text = "Warranty Expiry",
+            font = font1,
+            style = ""
+        )
+
+        self.create_equipment_price_label = createLabel(
+            parent = self.create_equipment_page,
+            name = "price",
+            geometry = QRect(480, 470, 190, 40),
+            text = "Equipment Price",
+            font = font1,
+            style = ""
+        )
+
+        self.create_equipment_manufacturer_label = createLabel(
+            parent = self.create_equipment_page,
+            name = "manufacturer",
+            geometry = QRect(40, 590, 160, 40),
+            text = "Manufacturer",
+            font = font1,
+            style = ""
+        )
+
+        self.create_equipment_location_label = createLabel(
+            parent = self.create_equipment_page,
+            name = "location",
+            geometry = QRect(490, 590, 130, 40),
+            text = "Location",
+            font = font1,
+            style = ""
+        )
+
+
+        self.create_equipment_id_output_label = createLabel(
+            parent = self.create_equipment_page,
+            name = "id_output",
+            geometry = QRect(220, 150, 300, 40),
+            text = "",
+            font = font1,
+            style = "background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        # ===========================================
+        #            EQUIPMENT PAGE INPUTS
+        # ===========================================
+
+        self.create_equipment_name_input = createLineInput(
+            parent = self.create_equipment_page,
+            name = "name_input",
+            geometry = QRect(40, 280, 430, 40),
+            font = font2,
+            style = "background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        self.create_equipment_serial_number_input = createLineInput(
+            parent = self.create_equipment_page,
+            name = "serial_number_input ",
+            geometry = QRect(40, 400, 430, 40),
+            font = font2,
+            style = "background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        self.create_equipment_price_input = createLineInput(
+            parent = self.create_equipment_page,
+            name = "price_input",
+            geometry = QRect(480, 520, 250, 40),
+            font = font2,
+            style = "background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        self.create_equipment_manufacturer_input = createLineInput(
+            parent = self.create_equipment_page,
+            name = "manufacturer_input",
+            geometry = QRect(40, 630, 430, 40),
+            font = font2,
+            style = "background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        self.create_equipment_location_input = createLineInput(
+            parent = self.create_equipment_page,
+            name = "location_input",
+            geometry = QRect(490, 630, 430, 40),
+            font = font2,
+            style = "background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        # ===========================================
+        #            EQUIPMENT COMBO BOX
+        # ===========================================
+
+
+        self.create_equipment_category_combo_box = createComboBox(
+            parent = self.create_equipment_page,
+            name = "category",
+            geometry = QRect(490, 400, 250, 40),
+            font = font2,
+            item = ["Cardio", "Strength", "Flexibility", "Functional Training", "Bodyweight", "Core and Stability", "Others"],
+            style = "background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        self.create_equipment_status_combo_box = createComboBox(
+            parent = self.create_equipment_page,
+            name = "status",
+            geometry = QRect(750, 400, 180, 40),
+            font = font2,
+            item = ["Active", "Repair", "Retired"],
+            style = "background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        # ===========================================
+        #               EQUIPMENT DATE
+        # ===========================================
+
+        self.create_equipment_purchase_date = createDate(
+            parent = self.create_equipment_page,
+            name = "purchase_date",
+            geometry = QRect(40, 520, 200, 40),
+            font = font2,
+            style = "background-color: #F9F7FF; border: 1px solid black"
+        )
+
+
+        self.create_equipment_warranty_date = createDate(
+            parent = self.create_equipment_page,
+            name = "warranty_expiry",
+            geometry = QRect(260, 520, 200, 40),
+            font = font2,
+            style = "background-color: #F9F7FF; border: 1px solid black"
+
+        )
+
+        # ===========================================
+        #               EQUIPMENT BUTTONS
+        # ===========================================
+
+        self.create_equipment_back_button = createButton(
+            parent = self.create_equipment_page,
+            name = "back_button",
+            geometry = QRect(40, 50, 70, 50),
+            text = "Back",
+            font = font3,
+            style = "background-color: #004F9A"
+        )
+
+        self.create_equipment_clear_button = createButton(
+            parent = self.create_equipment_page,
+            name = "clear_button",
+            geometry = QRect(510, 730, 170, 50),
+            text = "Clear",
+            font = font3,
+            style = "background-color: #882400"
+        )
+
+        # REGISTER BUTTON
+        self.create_equipment_register_button = createButton(
+            parent = self.create_equipment_page,
+            name = "register_button",
+            geometry = QRect(690, 730, 250, 50),
+            text = "Register Equipment",
+            font = font3,
+            style = "background-color: #006646"
+        )
+        self.update_equipment_table_widget()
+        self.create_equipment_back_button.clicked.connect(self.show_equipment_page)
+        self.create_equipment_register_button.clicked.connect(lambda: register_entity("Equipments", self.assigned_inputs("Equipments")))
+
+    def edit_equipment(self):
+        self.edit_equipment_page = QWidget()
+        self.edit_equipment_page.setObjectName("main_page")
+        self.stackedWidget.addWidget(self.edit_equipment_page)
+       
+        # ===========================================
+        #            EQUIPMENT PAGE LABELS
+        # ===========================================
+
+        self.edit_equipment_text_label = createLabel(
+            parent = self.edit_equipment_page,
+            name = "edit_equipment_text",
+            geometry = QRect(280, 50, 430, 40),
+            text = "Register Equipment",
+            font = font4,
+            style = "font: bold"
+        )
+
+        self.edit_equipment_id_label = createLabel(
+            parent = self.edit_equipment_page,
+            name = "edit_equipment_id",
+            geometry = QRect(40, 150, 165, 40),
+            text = "Equipment ID:",
+            font = font1,
+            style = ""
+        )
+
+        self.edit_equipment_name_label = createLabel(
+            parent = self.edit_equipment_page,
+            name = "edit_equipment_name",
+            geometry = QRect(40, 230, 210, 40),
+            text = "Equipment Name",
+            font = font1,
+            style = ""
+        )
+
+        self.edit_equipment_serial_number_label = createLabel(
+            parent = self.edit_equipment_page,
+            name = "serial_number",
+            geometry = QRect(40, 350, 170, 40),
+            text = "Serial Number",
+            font = font1,
+            style = ""
+        )
+
+        self.edit_equipment_category_label = createLabel(
+            parent = self.edit_equipment_page,
+            name = "edit_equipment_category",
+            geometry = QRect(490, 350, 110, 40),
+            text = "Category",
+            font = font1,
+            style = ""
+        )
+
+        self.edit_equipment_status_label = createLabel(
+            parent = self.edit_equipment_page,
+            name = "edit_equipment_status",
+            geometry = QRect(750, 350, 110, 40),
+            text = "Status",
+            font = font1,
+            style = ""
+        )
+
+        self.edit_equipment_purchase_date_label = createLabel(
+            parent = self.edit_equipment_page,
+            name = "purchase_date",
+            geometry = QRect(40, 470, 170, 40),
+            text = "Purchase Date",
+            font = font1,
+            style = ""
+        )
+
+        self.edit_equipment_warranty_date_label = createLabel(
+            parent = self.edit_equipment_page,
+            name = "warranty_date",
+            geometry = QRect(260, 470, 190, 40),
+            text = "Warranty Expiry",
+            font = font1,
+            style = ""
+        )
+
+        self.edit_equipment_price_label = createLabel(
+            parent = self.edit_equipment_page,
+            name = "price",
+            geometry = QRect(480, 470, 190, 40),
+            text = "Equipment Price",
+            font = font1,
+            style = ""
+        )
+
+        self.edit_equipment_manufacturer_label = createLabel(
+            parent = self.edit_equipment_page,
+            name = "manufacturer",
+            geometry = QRect(40, 590, 160, 40),
+            text = "Manufacturer",
+            font = font1,
+            style = ""
+        )
+
+        self.edit_equipment_location_label = createLabel(
+            parent = self.edit_equipment_page,
+            name = "location",
+            geometry = QRect(490, 590, 130, 40),
+            text = "Location",
+            font = font1,
+            style = ""
+        )
+
+
+        self.edit_equipment_id_output_label = createLabel(
+            parent = self.edit_equipment_page,
+            name = "id_output",
+            geometry = QRect(220, 150, 300, 40),
+            text = "",
+            font = font1,
+            style = "background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        # ===========================================
+        #            EQUIPMENT PAGE INPUTS
+        # ===========================================
+
+        self.edit_equipment_name_input = createLineInput(
+            parent = self.edit_equipment_page,
+            name = "name_input",
+            geometry = QRect(40, 280, 430, 40),
+            font = font2,
+            style = "background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        self.edit_equipment_serial_number_input = createLineInput(
+            parent = self.edit_equipment_page,
+            name = "serial_number_input ",
+            geometry = QRect(40, 400, 430, 40),
+            font = font2,
+            style = "background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        self.edit_equipment_price_input = createLineInput(
+            parent = self.edit_equipment_page,
+            name = "price_input",
+            geometry = QRect(480, 520, 250, 40),
+            font = font2,
+            style = "background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        self.edit_equipment_manufacturer_input = createLineInput(
+            parent = self.edit_equipment_page,
+            name = "manufacturer_input",
+            geometry = QRect(40, 630, 430, 40),
+            font = font2,
+            style = "background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        self.edit_equipment_location_input = createLineInput(
+            parent = self.edit_equipment_page,
+            name = "location_input",
+            geometry = QRect(490, 630, 430, 40),
+            font = font2,
+            style = "background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        # ===========================================
+        #            EQUIPMENT COMBO BOX
+        # ===========================================
+
+
+        self.edit_equipment_category_combo_box = createComboBox(
+            parent = self.edit_equipment_page,
+            name = "category",
+            geometry = QRect(490, 400, 250, 40),
+            font = font2,
+            item = ["Cardio", "Strength", "Flexibility", "Functional Training", "Bodyweight", "Core and Stability", "Others"],
+            style = "background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        self.edit_equipment_status_combo_box = createComboBox(
+            parent = self.edit_equipment_page,
+            name = "status",
+            geometry = QRect(750, 400, 180, 40),
+            font = font2,
+            item = ["Active", "Repair", "Retired"],
+            style = "background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        # ===========================================
+        #               EQUIPMENT DATE
+        # ===========================================
+
+        self.edit_equipment_purchase_date = createDate(
+            parent = self.edit_equipment_page,
+            name = "purchase_date",
+            geometry = QRect(40, 520, 200, 40),
+            font = font2,
+            style = "background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        self.edit_equipment_warranty_date = createDate(
+            parent = self.edit_equipment_page,
+            name = "warranty_expiry",
+            geometry = QRect(260, 520, 200, 40),
+            font = font2,
+            style = "background-color: #F9F7FF; border: 1px solid black"
+
+        )
+
+        # ===========================================
+        #               EQUIPMENT BUTTONS
+        # ===========================================
+
+        self.edit_equipment_back_button = createButton(
+            parent = self.edit_equipment_page,
+            name = "back_button",
+            geometry = QRect(40, 50, 70, 50),
+            text = "Back",
+            font = font3,
+            style = "background-color: #004F9A"
+        )
+
+        self.edit_equipment_clear_button = createButton(
+            parent = self.edit_equipment_page,
+            name = "clear_button",
+            geometry = QRect(510, 730, 170, 50),
+            text = "Cance;",
+            font = font3,
+            style = "background-color: #882400"
+        )
+
+        # REGISTER BUTTON
+        self.edit_equipment_register_button = createButton(
+            parent = self.edit_equipment_page,
+            name = "register_button",
+            geometry = QRect(690, 730, 250, 50),
+            text = "Edit",
+            font = font3,
+            style = "background-color: #006646"
+        )
+
+        self.edit_equipment_back_button.clicked.connect(self.show_view_equipment_page)
+        self.edit_equipment_register_button.clicked.connect(lambda: update_entity("Equipments", self.assigned_inputs('Update Equipments')))
+
+    def view_equipment(self):
+        self.view_equipment_page = QWidget()
+        self.view_equipment_page.setObjectName("main_page")
+        self.stackedWidget.addWidget(self.view_equipment_page)
+
+        # ===========================================
+        #            EQUIPMENT PAGE LABELS
+        # ===========================================
+
+        self.view_equipment_text_label = createLabel(
+            parent=self.view_equipment_page,
+            name="view_equipment_text",
+            geometry=QRect(280, 50, 430, 40),
+            text="Register Equipment",
+            font=font4,
+            style="font: bold"
+        )
+
+        self.view_equipment_id_label = createLabel(
+            parent=self.view_equipment_page,
+            name="view_equipment_id",
+            geometry=QRect(40, 150, 165, 40),
+            text="Equipment ID:",
+            font=font1,
+            style=""
+        )
+
+        self.view_equipment_name_label = createLabel(
+            parent=self.view_equipment_page,
+            name="view_equipment_name",
+            geometry=QRect(40, 230, 210, 40),
+            text="Equipment Name",
+            font=font1,
+            style=""
+        )
+
+        self.view_equipment_serial_number_label = createLabel(
+            parent=self.view_equipment_page,
+            name="serial_number",
+            geometry=QRect(40, 350, 170, 40),
+            text="Serial Number",
+            font=font1,
+            style=""
+        )
+
+        self.view_equipment_category_label = createLabel(
+            parent=self.view_equipment_page,
+            name="view_equipment_category",
+            geometry=QRect(490, 350, 110, 40),
+            text="Category",
+            font=font1,
+            style=""
+        )
+
+        self.view_equipment_status_label = createLabel(
+            parent=self.view_equipment_page,
+            name="view_equipment_status",
+            geometry=QRect(750, 350, 110, 40),
+            text="Status",
+            font=font1,
+            style=""
+        )
+
+        self.view_equipment_purchase_date_label = createLabel(
+            parent=self.view_equipment_page,
+            name="purchase_date",
+            geometry=QRect(40, 470, 170, 40),
+            text="Purchase Date",
+            font=font1,
+            style=""
+        )
+
+        self.view_equipment_warranty_date_label = createLabel(
+            parent=self.view_equipment_page,
+            name="warranty_date",
+            geometry=QRect(260, 470, 190, 40),
+            text="Warranty Expiry",
+            font=font1,
+            style=""
+        )
+
+        self.view_equipment_price_label = createLabel(
+            parent=self.view_equipment_page,
+            name="price",
+            geometry=QRect(480, 470, 190, 40),
+            text="Equipment Price",
+            font=font1,
+            style=""
+        )
+
+        self.view_equipment_manufacturer_label = createLabel(
+            parent=self.view_equipment_page,
+            name="manufacturer",
+            geometry=QRect(40, 590, 160, 40),
+            text="Manufacturer",
+            font=font1,
+            style=""
+        )
+
+        self.view_equipment_location_label = createLabel(
+            parent=self.view_equipment_page,
+            name="location",
+            geometry=QRect(490, 590, 130, 40),
+            text="Location",
+            font=font1,
+            style=""
+        )
+
+        self.view_equipment_id_output_label = createLabel(
+            parent=self.view_equipment_page,
+            name="id_output",
+            geometry=QRect(220, 150, 300, 40),
+            text="",
+            font=font1,
+            style="background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        # ===========================================
+        #            EQUIPMENT PAGE INPUTS
+        # ===========================================
+
+        self.view_equipment_name_input = createLabel(
+            parent=self.view_equipment_page,
+            name="name_input",
+            geometry=QRect(40, 280, 430, 40),
+            text="",
+            font=font2,
+            style="background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        self.view_equipment_serial_number_input = createLabel(
+            parent=self.view_equipment_page,
+            name="serial_number_input",
+            geometry=QRect(40, 400, 430, 40),
+            text="",
+            font=font2,
+            style="background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        self.view_equipment_price_input = createLabel(
+            parent=self.view_equipment_page,
+            name="price_input",
+            geometry=QRect(480, 520, 250, 40),
+            text="",
+            font=font2,
+            style="background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        self.view_equipment_manufacturer_input = createLabel(
+            parent=self.view_equipment_page,
+            name="manufacturer_input",
+            geometry=QRect(40, 630, 430, 40),
+            text="",
+            font=font2,
+            style="background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        self.view_equipment_location_input = createLabel(
+            parent=self.view_equipment_page,
+            name="location_input",
+            geometry=QRect(490, 630, 430, 40),
+            text="",
+            font=font2,
+            style="background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        # ===========================================
+        #            EQUIPMENT COMBO BOX
+        # ===========================================
+
+        self.view_equipment_category_combo_box = createLabel(
+            parent=self.view_equipment_page,
+            name="category",
+            geometry=QRect(490, 400, 250, 40),
+            text="",
+            font=font2,
+            style="background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        self.view_equipment_status_combo_box = createLabel(
+            parent=self.view_equipment_page,
+            name="status",
+            geometry=QRect(750, 400, 180, 40),
+            text="",
+            font=font2,
+            style="background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        # ===========================================
+        #               EQUIPMENT DATE
+        # ===========================================
+
+        self.view_equipment_purchase_date = createLabel(
+            parent=self.view_equipment_page,
+            name="purchase_date",
+            geometry=QRect(40, 520, 200, 40),
+            text="",
+            font=font2,
+            style="background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        self.view_equipment_warranty_date = createLabel(
+            parent=self.view_equipment_page,
+            name="warranty_expiry",
+            geometry=QRect(260, 520, 200, 40),
+            text="",
+            font=font2,
+            style="background-color: #F9F7FF; border: 1px solid black"
+        )
+
+        # ===========================================
+        #               EQUIPMENT BUTTONS
+        # ===========================================
+
+        self.view_equipment_back_button = createButton(
+            parent=self.view_equipment_page,
+            name="back_button",
+            geometry=QRect(40, 50, 70, 50),
+            text="Back",
+            font=font3,
+            style="background-color: #004F9A"
+        )
+
+        self.view_equipment_edit_button = createButton(
+            parent=self.view_equipment_page,
+            name="register_button",
+            geometry=QRect(690, 730, 250, 50),
+            text="Register Equipment",
+            font=font3,
+            style="background-color: #006646"
+        )
+        self.view_equipment_back_button.clicked.connect(self.show_equipment_page)
+        self.view_equipment_edit_button.clicked.connect(lambda: self.edit_equipment_button())
+
+    def edit_equipment_button(self):
+        # Get the equipment details from the UI labels
+        equipment_id = self.view_equipment_id_output_label.text()
+        equipment_name = self.view_equipment_name_input.text()
+        equipment_serial_number = self.view_equipment_serial_number_input.text()
+        equipment_category = self.view_equipment_category_combo_box.text()
+        equipment_purchase_date = self.view_equipment_purchase_date.text()
+        equipment_warranty_expiry = self.view_equipment_warranty_date.text()
+        equipment_price = self.view_equipment_price_input.text()
+        equipment_manufacturer = self.view_equipment_manufacturer_input.text()
+        equipment_location = self.view_equipment_location_input.text()
+        equipment_status = self.view_equipment_status_combo_box.text()
+
+        # Convert string dates to datetime objects
+        equipment_purchase_date = datetime.strptime(equipment_purchase_date, '%Y-%m-%d')
+        equipment_warranty_expiry = datetime.strptime(equipment_warranty_expiry, '%Y-%m-%d')
+
+        # Set the fetched data into the corresponding input fields for editing
+        self.edit_equipment_id_output_label.setText(equipment_id)
+        self.edit_equipment_name_input.setText(equipment_name)
+        self.edit_equipment_serial_number_input.setText(equipment_serial_number)
+        self.edit_equipment_category_combo_box.setCurrentText(equipment_category)
+        self.edit_equipment_purchase_date.setDate(equipment_purchase_date)
+        self.edit_equipment_warranty_date.setDate(equipment_warranty_expiry)
+        self.edit_equipment_price_input.setText(equipment_price)
+        self.edit_equipment_manufacturer_input.setText(equipment_manufacturer)
+        self.edit_equipment_location_input.setText(equipment_location)
+        self.edit_equipment_status_combo_box.setCurrentText(equipment_status)
+
+        # Update the table widget if necessary
+        self.update_equipment_table_widget()
+
+        # Show the edit equipment page
+        self.show_edit_equipment_page()
+
+
+    def show_view_equipment_temp(self, row):
+        # Get the equipment_id from the table widget
+        equipment_id = self.equipment_table_widget.item(row, 0).text()
+
+        # Execute SQL query to fetch equipment details
+        cursor.execute(
+            """
+            SELECT * 
+            FROM Equipments
+            WHERE equipment_id = ?
+            """,
+            (equipment_id,)
+        )
+
+        results = cursor.fetchone()
+
+        # Unpack the results into corresponding variables
+        (
+            equipment_id, 
+            equipment_name, 
+            equipment_serial_number, 
+            equipment_category, 
+            equipment_purchase_date, 
+            equipment_warranty_expiry, 
+            equipment_price, 
+            equipment_manufacturer, 
+            equipment_location, 
+            equipment_status
+        ) = results
+
+        # Update the UI elements with the fetched data
+        self.view_equipment_id_output_label.setText(equipment_id)
+        self.view_equipment_name_input.setText(equipment_name)
+        self.view_equipment_serial_number_input.setText(equipment_serial_number)
+        self.view_equipment_category_combo_box.setText(equipment_category)
+        self.view_equipment_purchase_date.setText(equipment_purchase_date)
+        self.view_equipment_warranty_date.setText(equipment_warranty_expiry)
+        self.view_equipment_price_input.setText(str(equipment_price))
+        self.view_equipment_manufacturer_input.setText(equipment_manufacturer)
+        self.view_equipment_location_input.setText(equipment_location)
+        self.view_equipment_status_combo_box.setText(equipment_status)
+
+        # Show the equipment details view
+        self.show_view_equipment_page()
+        
+    def assigned_inputs(self, entity_type):
+        if entity_type == 'Equipments':
+            INPUTS = {
+            'equipment_id': self.create_equipment_id_output_label.text(), 
+            'equipment_name': self.create_equipment_name_input.text(), 
+            'equipment_serial_number': self.create_equipment_serial_number_input.text(), 
+            'equipment_category': self.create_equipment_category_combo_box.currentText(), 
+            'equipment_purchase_date': self.create_equipment_purchase_date.date().toString('yyyy-MM-dd'),
+            'equipment_warranty_expiry': self.create_equipment_warranty_date.date().toString('yyyy-MM-dd'),
+            'equipment_price': self.create_equipment_price_input.text(),
+            'equipment_manufacturer': self.create_equipment_manufacturer_input.text(),
+            'equipment_location': self.create_equipment_location_input.text(),
+            'equipment_status': self.create_equipment_status_combo_box.currentText(),
+        }
+            
+        elif entity_type == 'Update Equipments':
+            INPUTS = {
+            'equipment_id': self.edit_equipment_id_output_label.text(),
+            'equipment_name': self.edit_equipment_name_input.text(),
+            'equipment_serial_number': self.edit_equipment_serial_number_input.text(),
+            'equipment_category': self.edit_equipment_category_combo_box.currentText(),
+            'equipment_purchase_date': self.edit_equipment_purchase_date.date(),
+            'equipment_warranty_expiry': self.edit_equipment_warranty_date.date(),
+            'equipment_price': self.edit_equipment_price_input.text(),
+            'equipment_manufacturer': self.edit_equipment_manufacturer_input.text(),
+            'equipment_location': self.edit_equipment_location_input.text(),
+            'equipment_status': self.edit_equipment_status_combo_box.currentText(),
+        }
+            
+
+        return INPUTS
+
+    def update_equipment_table_widget(self):
+        data = self.fetch_equipment_by_column()
+        self.equipment_table_widget.setRowCount(len(data))
+        for row_index, row_data in enumerate(data):
+            for col_index, col_data in enumerate(row_data):
+                self.equipment_table_widget.setItem(row_index, col_index, QTableWidgetItem(str(col_data)))
+            
+        for self.row in range(self.equipment_table_widget.rowCount()):
+            view_button = QPushButton("View")
+            view_button.clicked.connect(partial(self.show_view_equipment_temp, self.row))
+            self.equipment_table_widget.setCellWidget(self.row, 5, view_button)
+
+    def fetch_equipment_by_column(self):
+        # Define your SQL query to select columns from the Equipments table
+        query = """SELECT 
+                    equipment_id, 
+                    equipment_name,
+                    equipment_serial_number,
+                    equipment_category,
+                    equipment_status
+                FROM Equipments"""
+        # Execute the query
+        cursor.execute(query)
+        # Fetch all results from the query
+        data = cursor.fetchall()
+        # Return the fetched data
+        return data
+    
+    def search_equipment(self, table_widget, input_text):
+        search_term = input_text.text()
+        query = """
+            SELECT equipment_id,
+                equipment_name,
+                equipment_serial_number,
+                equipment_category,
+                equipment_status,
+                equipment_purchase_date
+            FROM Equipments
+            WHERE equipment_id LIKE ? 
+            OR equipment_name LIKE ? 
+            OR equipment_serial_number LIKE ?;
+        """
+        try:
+            cursor.execute(query, (f'%{search_term}%', f'%{search_term}%', f'%{search_term}%'))
+            results = cursor.fetchall()
+
+            table_widget.setRowCount(len(results))
+            for row_idx, row_data in enumerate(results):
+                for col_idx, col_data in enumerate(row_data):
+                    table_widget.setItem(row_idx, col_idx, QTableWidgetItem(str(col_data)))
+                view_button = QPushButton("View")
+                view_button.clicked.connect(partial(self.show_view_equipment_temp, row_idx))
+                table_widget.setCellWidget(row_idx, len(row_data), view_button)
+
+            self.add_equipment_view_button(table_widget)  # Call the function to add view buttons
+
+        except Exception as e:
+            print(f"Error executing query for Equipment: {e}")
+
+    def add_equipment_view_button(self, table_widget):
+        for row_idx in range(table_widget.rowCount()):
+            view_button = QPushButton("View")
+            view_button.clicked.connect(partial(self.show_view_equipment_temp, row_idx))
+            table_widget.setCellWidget(row_idx, 5, view_button)  # Adjusted for the number of columns
+
 if __name__ == "__main__":
     import sys
     app = QApplication(sys.argv)

@@ -37,7 +37,7 @@ class ProductMaintenance(QWidget):
 
 
     def show_main_page(self):
-        self.update_table_widget()
+        self.update_product_table_widget()
         self.stackedWidget.setCurrentIndex(0)
 
     def show_create_product(self):
@@ -79,7 +79,7 @@ class ProductMaintenance(QWidget):
         # ===========================================
         #      MANAGE MEMBER PAGE LINE INPUTS
         # ===========================================
-        self.manage_search_input = createLineInput(
+        self.manage_product_search_input = createLineInput(
             parent=self.product_page,
             name="search_input",
             geometry=QRect(130, 140, 580, 40),
@@ -87,25 +87,25 @@ class ProductMaintenance(QWidget):
             style="background-color: #F9F7FF; border: 1px solid black"
         )
 
-        self.manage_search_input.setPlaceholderText("product ID / Name")
+        self.manage_product_search_input.setPlaceholderText("product ID / Name")
 
         # ===========================================
         #         MANAGE MEMBER TABLE WIDGET
         # ===========================================
-        self.table_widget = QTableWidget(self.product_page)
-        self.table_widget.setGeometry(QRect(10, 200, 930, 590))
-        self.table_widget.setRowCount(0)
-        self.table_widget.setColumnCount(6)  # Limited columns
+        self.product_table_widget = QTableWidget(self.product_page)
+        self.product_table_widget.setGeometry(QRect(10, 200, 930, 590))
+        self.product_table_widget.setRowCount(0)
+        self.product_table_widget.setColumnCount(6)  # Limited columns
 
         # Set the horizontal header labels
-        self.table_widget.setHorizontalHeaderLabels(
+        self.product_table_widget.setHorizontalHeaderLabels(
             ["Product ID", "Name", " Quantity", "Expiry Date", "Status", "Actions"]
         )
         self.stackedWidget.addWidget(self.product_page)
-        self.table_widget.resizeColumnsToContents()
-        self.table_widget.resizeRowsToContents()
-        self.table_widget.horizontalHeader().setStretchLastSection(True)
-        self.table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.product_table_widget.resizeColumnsToContents()
+        self.product_table_widget.resizeRowsToContents()
+        self.product_table_widget.horizontalHeader().setStretchLastSection(True)
+        self.product_table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
 
 
         #         MANAGE MEMBER BUTTONS
@@ -129,7 +129,8 @@ class ProductMaintenance(QWidget):
         )
 
         self.product_add_button.clicked.connect(self.show_create_product)
-        self.update_table_widget()
+        self.manage_product_search_input.textChanged.connect(lambda: self.search_product(self.product_table_widget, self.manage_product_search_input))
+        self.update_product_table_widget()
 
     def create_product(self):
         self.create_product_page = QWidget()
@@ -803,20 +804,50 @@ class ProductMaintenance(QWidget):
         generated_id = f"{identifier}-{formatted_time}-{count:04}"
         self.create_product_id_output_label.setText(generated_id)
 
-    def update_table_widget(self):
+    def update_product_table_widget(self):
         data = self.fetch_product_by_column()
-        self.table_widget.setRowCount(len(data))
+        self.product_table_widget.setRowCount(len(data))
         for row_index, row_data in enumerate(data):
             for col_index, col_data in enumerate(row_data):
-                self.table_widget.setItem(row_index, col_index, QTableWidgetItem(str(col_data)))
+                self.product_table_widget.setItem(row_index, col_index, QTableWidgetItem(str(col_data)))
             
-        for self.row in range(self.table_widget.rowCount()):
+        for self.row in range(self.product_table_widget.rowCount()):
             view_button = QPushButton("View")
             view_button.clicked.connect(partial(self.show_view_product_temp, self.row))
-            self.table_widget.setCellWidget(self.row, 5, view_button)
+            self.product_table_widget.setCellWidget(self.row, 5, view_button)
+    
+    def search_product(self, table_widget, input_text):
+        search_term = input_text.text()
+        query = """
+            SELECT product_id, name, quantity, expiry_date, status
+            FROM Products
+            WHERE product_id LIKE ? OR name LIKE ?;
+        """
+        try:
+            cursor.execute(query, (f'%{search_term}%', f'%{search_term}%'))
+            results = cursor.fetchall()
 
+            table_widget.setRowCount(len(results))
+            for row_idx, row_data in enumerate(results):
+                for col_idx, col_data in enumerate(row_data):
+                    table_widget.setItem(row_idx, col_idx, QTableWidgetItem(str(col_data)))
+                view_button = QPushButton("View")
+                view_button.clicked.connect(partial(self.show_view_product_temp, row_idx))
+                table_widget.setCellWidget(row_idx, len(row_data), view_button)
+
+            self.add_product_view_button(table_widget)  # Call the function to add view buttons
+
+        except Exception as e:
+            print(f"Error executing query for Employees: {e}")
+
+    def add_product_view_button(self, table_widget):
+        for row_idx in range(table_widget.rowCount()):
+            view_button = QPushButton("View")
+            view_button.clicked.connect(partial(self.show_view_product_temp, row_idx))
+            table_widget.setCellWidget(row_idx, 5, view_button)
+            
     def show_view_product_temp(self, row):
-        product_id = self.table_widget.item(row, 0).text()
+        product_id = self.product_table_widget.item(row, 0).text()
 
         cursor.execute(
             """
@@ -879,7 +910,7 @@ class ProductMaintenance(QWidget):
         self.edit_product_brand_input.setText(brand)
         self.edit_product_sku_input.setText(sku)
 
-        self.update_table_widget()
+        self.update_product_table_widget()
         self.show_edit_product()
 
     def update_product(self):
@@ -937,7 +968,7 @@ class ProductMaintenance(QWidget):
 if __name__ == "__main__":
     import sys
     app = QApplication(sys.argv)
-    window = Maintenance()
+    window = ProductMaintenance()
     window.show()
     sys.exit(app.exec_())
 

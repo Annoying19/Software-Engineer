@@ -58,7 +58,7 @@ class Ui_MainWindow(object):
         self.buttons = {}
         button_names = [
             "Inventory", "Registration", "Scheduling", "Reports", "Payment",
-            "User Logs", "Maintenance", "Help", "About"
+            "UserLogs", "Maintenance", "Help", "About"
         ]
 
         FONT = QFont()
@@ -101,7 +101,7 @@ class Ui_MainWindow(object):
         self.stacked_widget.setObjectName("stacked_widget")
 
         self.pages = {}
-        page_classes = [Inventory, Registration, Scheduling, Reports, Payment, UserLogs, Maintenance, Help, About]   
+        page_classes = [Inventory, Registration, Scheduling, Payment, UserLogs, Maintenance, Help, About]   
         for page_class in page_classes:
             page_instance = page_class()
             page_name = page_class.__name__.lower()

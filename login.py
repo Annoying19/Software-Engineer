@@ -5,8 +5,13 @@ from PySide2.QtGui import QPixmap, QFont
 from PySide2.QtWidgets import QApplication, QMainWindow, QWidget, QLabel, QLineEdit, QPushButton, QMessageBox
 from staff import *
 from admin import * 
+from assets import *
+
 
 class Login(QMainWindow):
+
+    global current_username
+
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Login Window")
@@ -15,7 +20,7 @@ class Login(QMainWindow):
         self.setStyleSheet("background-color: #002877")
         self.central_widget = QWidget()
         self.setCentralWidget(self.central_widget)
-
+    
         self.user_interfaec()
 
     def user_interfaec(self):
@@ -90,11 +95,14 @@ class Login(QMainWindow):
 
         valid, role = self.check_credentials(username, password)
         if valid:
-            QMessageBox.information(self, "Login Successful", "You have successfully logged in.")
+            current_username = username  # Set the global variable
+            print(current_username)
+            QMessageBox.information(None, "Login Successful", "You have successfully logged in.")
+            get_user_log(f"Logged in as {role}", username)
             self.open_main_window(role)
         else:
-            # This part is no longer needed since check_credentials handles the dialog
-            pass
+            # Handle invalid login
+            QMessageBox.warning(self, "Login Failed", "Invalid username or password.")
 
     def check_credentials(self, username, password):
         connection = sqlite3.connect('database.db')

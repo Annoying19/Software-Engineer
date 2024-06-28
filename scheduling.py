@@ -28,6 +28,9 @@ class Scheduling(QMainWindow):
         self.stackedWidget.setCurrentIndex(0)
         QMetaObject.connectSlotsByName(self)
 
+    
+    def show_main_appointment_page(self):
+        self.stackedWidget.setCurrentIndex(0)
     def show_add_appointment_page(self):
         self.stackedWidget.setCurrentIndex(1)
 
@@ -78,9 +81,9 @@ class Scheduling(QMainWindow):
 
         self.appointments_table = QTableWidget(self.main_page)
         self.appointments_table.setGeometry(QRect(0, 410, 950, 310))
-        self.appointments_table.setColumnCount(6)
+        self.appointments_table.setColumnCount(7)
         self.appointments_table.setHorizontalHeaderLabels(
-            ["Member Name", "Employee Name", "Start Time", "End Time", "Name", "Status"])
+            ["Schedule ID","Member Name", "Employee Name", "Start Time", "End Time", "Name", "Status"])
         self.appointments_table.horizontalHeader().setStretchLastSection(True)
         self.appointments_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
 
@@ -102,13 +105,15 @@ class Scheduling(QMainWindow):
             style="background-color: #882400; color: #FFFFFF"
         )
 
+        self.cancel_appointment_button.clicked.connect(self.cancel_appointment)
         self.add_appointment_button.clicked.connect(self.show_add_appointment_page)
         self.load_appointments()
     def show_appointments(self, date):
         self.appointments_table.setRowCount(0)
         date_str = date.toString("yyyy-MM-dd")
         cursor.execute('''
-            SELECT m.first_name || ' ' || m.middle_name || ' ' || m.last_name AS member_name, 
+            SELECT s.schedule_id,
+                    m.first_name || ' ' || m.middle_name || ' ' || m.last_name AS member_name, 
                    e.first_name || ' ' || e.last_name AS employee_name, 
                    s.appointment_start_time, 
                    s.appointment_end_time, 
@@ -117,7 +122,7 @@ class Scheduling(QMainWindow):
             FROM Schedule s
             JOIN Members m ON s.member_id = m.member_id
             JOIN Employees e ON s.employee_id = e.employee_id
-            WHERE s.appointment_date = ?
+            WHERE s.appointment_date = ? AND s.status != "Cancelled"
         ''', (date_str,))
         for row in cursor.fetchall():
             row_position = self.appointments_table.rowCount()
@@ -392,7 +397,7 @@ class Scheduling(QMainWindow):
         )
 
         self.schedule_register_button.clicked.connect(self.add_appointment)
-
+        self.member_back_button.clicked.connect(self.show_main_appointment_page)
 
     def update_appointments(self):
         selected_type = self.appointment_type_combo_box.currentText()
@@ -433,7 +438,7 @@ class Scheduling(QMainWindow):
 
     def add_appointment(self):
         if not self.member_name_input or not self.employee_name_input:
-            QMessageBox.warning(self, "Selection Error", "Please select both a member and an employee.")
+            QMessageBox.warning(None, "Selection Error", "Please select both a member and an employee.")
             return
 
         member_id = self.member_id_output.text()
@@ -453,40 +458,60 @@ class Scheduling(QMainWindow):
             ''', (schedule_id, member_id, employee_id, appointment_type, appointment_name, appointment_date, appointment_start_time, appointment_end_time))
             connection.commit()
 
+            QMessageBox.information(None, "Yippie", "Schedule booked.")
             self.load_appointments()
             self.update_calendar()
 
         else:
-            QMessageBox.warning(self, "Conflict", "The selected time slot is already booked.")
+            QMessageBox.warning(None, "Conflict", "The selected time slot is already booked.")
     
 
     def check_for_conflicts(self, date, start_time, end_time):
         cursor.execute('''
             SELECT * FROM schedule
-            WHERE appointment_date = ? AND 
-                  ((appointment_start_time <= ? AND appointment_end_time > ?) OR
-                   (appointment_start_time < ? AND appointment_end_time >= ?))
-        ''', (date, start_time, start_time, end_time, end_time))
+            WHERE appointment_date = ? 
+            AND (
+                (
+                    appointment_start_time < ? AND appointment_end_time > ?
+                )
+                OR
+                (
+                    appointment_start_time < ? AND appointment_end_time > ?
+                )
+                OR
+                (
+                    appointment_start_time >= ? AND appointment_end_time <= ?
+                )
+            )
+            AND status != "Cancelled";
+
+        ''', (date, end_time, start_time, end_time, start_time, start_time, end_time))
+        
 
         return cursor.fetchone() is not None
+
     def load_appointments(self):
-        self.appointments_table.setRowCount(0)
+        self.appointments_table.setRowCount(0)  # Clear existing rows
+
         cursor.execute('''
-            SELECT m.first_name || ' ' || m.middle_name || ' ' || m.last_name AS member_name, 
+            SELECT s.schedule_id,
+                    m.first_name || ' ' || m.middle_name || ' ' || m.last_name AS member_name, 
                    e.first_name || ' ' || e.last_name AS employee_name, 
                    s.appointment_start_time, 
-                   s.appointment_end_time,  
+                   s.appointment_end_time, 
                    s.appointment_name, 
                    s.status 
             FROM Schedule s
             JOIN Members m ON s.member_id = m.member_id
             JOIN Employees e ON s.employee_id = e.employee_id
+            WHERE s.status != "Cancelled"
         ''')
-        for row in cursor.fetchall():
-            row_position = self.appointments_table.rowCount()
-            self.appointments_table.insertRow(row_position)
-            for column, data in enumerate(row):
-                self.appointments_table.setItem(row_position, column, QTableWidgetItem(data))
+
+        for row_number, row_data in enumerate(cursor.fetchall()):
+            self.appointments_table.insertRow(row_number)
+            for column_number, data in enumerate(row_data):
+                item = QTableWidgetItem(str(data))  # Convert data to string for QTableWidgetItem
+                self.appointments_table.setItem(row_number, column_number, item)
 
     def update_calendar(self):
         cursor.execute('SELECT appointment_date FROM Schedule')
@@ -625,6 +650,25 @@ class Scheduling(QMainWindow):
 
         self.employee_id_output.setText(str(employee_id))
         self.position_output.setText(position)
+
+
+    def cancel_appointment(self):
+        selected_row = self.appointments_table.currentRow()
+        if selected_row < 0:
+            QMessageBox.warning(None, "No Selection", "Please select an appointment to cancel.")
+            return
+
+        appointment_id = self.appointments_table.item(selected_row, 0).text()
+
+        cursor.execute('''
+            UPDATE Schedule
+            SET status = 'Cancelled'
+            WHERE schedule_id = ?
+        ''', (appointment_id,))
+        connection.commit()
+            
+        QMessageBox.information(None, "Success", "Appointment canceled successfully.")
+        self.load_appointments()
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     window = Scheduling()

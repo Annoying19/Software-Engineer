@@ -1177,6 +1177,8 @@ class MemberMaintenance(QWidget):
         data = cursor.fetchall()
         return data
     
+
+    
     def edit_employee_button(self):
         employee_id =  self.view_member_id_output_label.text()
         first_name = self.view_member_first_name_output_label.text()

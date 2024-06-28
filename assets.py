@@ -34,7 +34,10 @@ font6.setPointSize(12)
 # ===============================================
 #          DYNAMIC REGISTRATION FUNCTION
 # ===============================================
-
+# Example of declaring global variable inside a function
+def set_username_global(username):
+    global current_username
+    current_username = username
 def validate_input(field_name, value, rules):
     """Validate a field against given rules."""
     for rule in rules:
@@ -145,6 +148,19 @@ def validate_all_inputs(entity_type, inputs):
             return False
     return True
 
+username = None
+# Assuming current_username is a global variable that needs to be accessed and updated
+def get_user_log(action, usertext):
+    global username
+    username = usertext
+    if username:
+        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        cursor.execute("INSERT INTO UserLog (username, action, timestamp) VALUES (?, ?, ?)",
+                       (username, action, timestamp))
+        connection.commit()
+    else:
+        print("Current username is not set.")  # Optional: Handle case where current_username is not set
+
 def get_table_name(entity_type):
     return {
         'Attendance': 'Attendance', # ATTENDANCE TABLE
@@ -244,7 +260,6 @@ def register_entity(entity_type, inputs):
                 )
             )
         elif entity_type == "Users":
-            cursor.execute
             if inputs["password"] == inputs["retry_password"]:
                 password_bytes = inputs["password"].encode()
                 hashed_password = hashlib.sha256(password_bytes).hexdigest()
@@ -267,9 +282,39 @@ def register_entity(entity_type, inputs):
                 QMessageBox.information(None, "Registered", "Account Sucessfully Registered")
             else: 
                 QMessageBox.warning(None, "Error", "Password Unidentical")
-
-
-
+        
+        elif entity_type == "Equipments":
+            cursor.execute(
+                '''
+                INSERT INTO Equipments (
+                    equipment_id, 
+                    equipment_name, 
+                    equipment_serial_number, 
+                    equipment_category, 
+                    equipment_purchase_date, 
+                    equipment_warranty_expiry, 
+                    equipment_price, 
+                    equipment_manufacturer, 
+                    equipment_location, 
+                    equipment_status
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ''',
+                (
+                    inputs['equipment_id'], 
+                    inputs['equipment_name'], 
+                    inputs['equipment_serial_number'], 
+                    inputs['equipment_category'], 
+                    inputs['equipment_purchase_date'], 
+                    inputs['equipment_warranty_expiry'], 
+                    inputs['equipment_price'], 
+                    inputs['equipment_manufacturer'], 
+                    inputs['equipment_location'], 
+                    inputs['equipment_status']
+                )
+            )
+            connection.commit()
+            QMessageBox.information(None, "Registered", "Equipment Sucessfully Registered")
+    get_user_log(f"(Registered a {entity_type})", username)
 
 
 def update_entity(entity_type, inputs):
@@ -315,6 +360,39 @@ def update_entity(entity_type, inputs):
             )
             connection.commit()
             QMessageBox.information(None, "Success", "User Information Update")
+
+        elif entity_type == "Equipments":
+            cursor.execute(
+                ''' 
+                UPDATE Equipments
+                SET equipment_name = ?, 
+                    equipment_serial_number = ?, 
+                    equipment_category = ?, 
+                    equipment_purchase_date = ?, 
+                    equipment_warranty_expiry = ?, 
+                    equipment_price = ?, 
+                    equipment_manufacturer = ?, 
+                    equipment_location = ?, 
+                    equipment_status = ?
+                WHERE equipment_id = ?
+                ''',
+                (
+                inputs['equipment_name'], 
+                inputs['equipment_serial_number'], 
+                inputs['equipment_category'], 
+                inputs['equipment_purchase_date'].toString("yyyy-MM-dd"), 
+                inputs['equipment_warranty_expiry'].toString("yyyy-MM-dd"), 
+                inputs['equipment_price'], 
+                inputs['equipment_manufacturer'], 
+                inputs['equipment_location'], 
+                inputs['equipment_status'],
+                inputs['equipment_id']
+                )
+            )
+
+            connection.commit()
+            QMessageBox.information(None, "Success", "Equipment Information Update")
+            get_user_log({f"Updated a {entity_type}"}, username)
     else:
         QMessageBox.warning(None, "Validation Error", "Please correct the highlighted errors.")
 
@@ -352,10 +430,10 @@ def generate_id(entity_type, label):
         prefix = "EMP"
     elif entity_type == "Equipments":
         query = f"SELECT COUNT(*) FROM {entity_type}"
-        prefix = "EMP"
+        prefix = "EQP"
     elif entity_type == "Products":
         query = f"SELECT COUNT(*) FROM {entity_type}"
-        prefix = "EMP"
+        prefix = "PRD"
 
     cursor.execute(query)
     count = cursor.fetchone()[0] + 1

@@ -63,7 +63,7 @@ class PaymentMaintenance(QWidget):
         # ===========================================
         #      MANAGE MEMBER PAGE LINE INPUTS
         # ===========================================
-        self.manage_search_input = createLineInput(
+        self.equipment_manage_input = createLineInput(
             parent=self.equipment_page,
             name="search_input",
             geometry=QRect(130, 140, 580, 40),
@@ -71,26 +71,26 @@ class PaymentMaintenance(QWidget):
             style="background-color: #F9F7FF; border: 1px solid black"
         )
 
-        self.manage_search_input.setPlaceholderText("Equipment ID / Name")
-
+        self.equipment_manage_input.setPlaceholderText("Equipment ID / Name")
+        self.equipment_manage_input.textChanged.connect(lambda: self.search_equipment(self.equipment_table_widget, self.equipment_manage_input))
         # ===========================================
         #         MANAGE MEMBER TABLE WIDGET
         # ===========================================
-        self.table_widget = QTableWidget(self.equipment_page)
-        self.table_widget.setGeometry(QRect(10, 200, 930, 590))
-        self.table_widget.setRowCount(0)
-        self.table_widget.setColumnCount(6)  # Limited columns
+        self.equipment_table_widget = QTableWidget(self.equipment_page)
+        self.equipment_table_widget.setGeometry(QRect(10, 200, 930, 590))
+        self.equipment_table_widget.setRowCount(0)
+        self.equipment_table_widget.setColumnCount(6)  # Limited columns
 
         # Set the horizontal header labels
-        self.table_widget.setHorizontalHeaderLabels(
+        self.equipment_table_widget.setHorizontalHeaderLabels(
             ["Equipment ID", "Name", "Serial Number", "Category", "Status", "Actions"]
         )
 
         self.stackedWidget.addWidget(self.equipment_page)
-        self.table_widget.resizeColumnsToContents()
-        self.table_widget.resizeRowsToContents()
-        self.table_widget.horizontalHeader().setStretchLastSection(True)
-        self.table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.equipment_table_widget.resizeColumnsToContents()
+        self.equipment_table_widget.resizeRowsToContents()
+        self.equipment_table_widget.horizontalHeader().setStretchLastSection(True)
+        self.equipment_table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
 
 
         #         MANAGE MEMBER BUTTONS
@@ -112,6 +112,8 @@ class PaymentMaintenance(QWidget):
             font=font2,
             style="background-color: #28a745; color: #FFFFFF"
         )
+        self.equipment_add_button.clicked.connect(self.show_create_equipment_page)
+
 
     def create_equipment(self):
         self.create_equipment_page = QWidget()

@@ -38,7 +38,7 @@ class UserMaintenance(QWidget):
 
 
     def show_user_page(self):
-        self.update_table_widget()
+        self.update_usert_table_widget()
         self.stackedWidget.setCurrentIndex(0)
     def show_create_user(self):
         clear_inputs(self.create_user_page)
@@ -75,7 +75,7 @@ class UserMaintenance(QWidget):
         # ===========================================
         #      MANAGE MEMBER PAGE LINE INPUTS
         # ===========================================
-        self.manage_search_input = createLineInput(
+        self.user_manage_search_input = createLineInput(
             parent=self.user_page,
             name="search_input",
             geometry=QRect(130, 140, 580, 40),
@@ -83,28 +83,28 @@ class UserMaintenance(QWidget):
             style="background-color: #F9F7FF; border: 1px solid black"
         )
 
-        self.manage_search_input.setPlaceholderText("Equipment ID / Name")
+        self.user_manage_search_input.setPlaceholderText("Equipment ID / Name")
 
         # ===========================================
         #         MANAGE MEMBER TABLE WIDGET
         # ===========================================
-        self.table_widget = QTableWidget(self.user_page)
-        self.table_widget.setGeometry(QRect(10, 200, 930, 590))
-        self.table_widget.setRowCount(0)
-        self.table_widget.setColumnCount(5)  # Limited columns
+        self.user_table_widget = QTableWidget(self.user_page)
+        self.user_table_widget.setGeometry(QRect(10, 200, 930, 590))
+        self.user_table_widget.setRowCount(0)
+        self.user_table_widget.setColumnCount(4)  # Limited columns
 
         # Set the horizontal header labels
-        self.table_widget.setHorizontalHeaderLabels(
-            ["Employee ID", "Username", "Password", "Role", "Actions"]
+        self.user_table_widget.setHorizontalHeaderLabels(
+            ["Employee ID", "Username", "Role", "Actions"]
         )
 
         self.stackedWidget.addWidget(self.user_page)
-        self.table_widget.resizeColumnsToContents()
-        self.table_widget.resizeRowsToContents()
-        self.table_widget.horizontalHeader().setStretchLastSection(True)
-        self.table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.user_table_widget.resizeColumnsToContents()
+        self.user_table_widget.resizeRowsToContents()
+        self.user_table_widget.horizontalHeader().setStretchLastSection(True)
+        self.user_table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
 
-
+        self.user_manage_search_input.textChanged.connect(lambda: self.search_user(self.user_table_widget, self.user_manage_search_input))
         #         MANAGE MEMBER BUTTONS
         # ===========================================
         self.user_equipment_back_button = createButton(
@@ -120,7 +120,7 @@ class UserMaintenance(QWidget):
             parent=self.user_page,
             name="add_button",
             geometry=QRect(680, 40, 250, 50),
-            text="Add Equipments",
+            text="Add Users",
             font=font2,
             style="background-color: #28a745; color: #FFFFFF"
         )
@@ -129,22 +129,21 @@ class UserMaintenance(QWidget):
     def fetch_user_by_column(self):
         query = f"""SELECT employee_id, 
                   username,
-                  password_hash,
                   role
                   FROM Users """
         cursor.execute(query)
         data = cursor.fetchall()
         return data
     
-    def update_table_widget(self):
+    def update_usert_table_widget(self):
         data = self.fetch_user_by_column()
-        self.table_widget.setRowCount(len(data))
+        self.user_table_widget.setRowCount(len(data))
         for row_index, row_data in enumerate(data):
             for col_index, col_data in enumerate(row_data):
-                self.table_widget.setItem(row_index, col_index, QTableWidgetItem(str(col_data)))
+                self.user_table_widget.setItem(row_index, col_index, QTableWidgetItem(str(col_data)))
             view_button = QPushButton("View")
             view_button.clicked.connect(partial(self.show_view_user_temp, row_index))
-            self.table_widget.setCellWidget(row_index, 4, view_button)
+            self.user_table_widget.setCellWidget(row_index, 3, view_button)
 
     
 
@@ -292,7 +291,7 @@ class UserMaintenance(QWidget):
             style = ""
         )
 
-        self.update_table_widget()
+        self.update_usert_table_widget()
     
 
 
@@ -544,7 +543,7 @@ class UserMaintenance(QWidget):
             style = ""
         )
 
-        self.update_table_widget()
+        self.update_usert_table_widget()
     
 
 
@@ -727,7 +726,7 @@ class UserMaintenance(QWidget):
     
     def show_view_user_temp(self, row):
         # Get the employee_id from the selected row
-        member_id = self.table_widget.item(row, 0).text()
+        member_id = self.user_table_widget.item(row, 0).text()
 
         try:
             # Fetch the user details from the Users table
@@ -784,8 +783,38 @@ class UserMaintenance(QWidget):
         except sqlite3.Error as e:
             print(f"An error occurred: {e}")
 
+    def search_user(self, table_widget, input_text):
+        search_term = input_text.text()
+        query = """
+            SELECT employee_id,
+               username,
+               role
+            FROM Users
+            WHERE employee_id LIKE ? OR username LIKE ?;
+        """
+        try:
+            cursor.execute(query, (f'%{search_term}%', f'%{search_term}%'))
+            results = cursor.fetchall()
+
+            table_widget.setRowCount(len(results))
+            for row_idx, row_data in enumerate(results):
+                for col_idx, col_data in enumerate(row_data):
+                    table_widget.setItem(row_idx, col_idx, QTableWidgetItem(str(col_data)))
+                view_button = QPushButton("View")
+                view_button.clicked.connect(partial(self.show_view_user_temp, row_idx))
+                table_widget.setCellWidget(row_idx, len(row_data), view_button)
+
+            self.add_user_view_button(table_widget)  # Call the function to add view buttons
+
+        except Exception as e:
+            print(f"Error executing query for Employees: {e}")
 
 
+    def add_user_view_button(self, table_widget):
+        for row_idx in range(table_widget.rowCount()):
+            view_button = QPushButton("View")
+            view_button.clicked.connect(partial(self.show_view_user_temp, row_idx))
+            table_widget.setCellWidget(row_idx, 5, view_button)
 if __name__ == "__main__":
     import sys
     app = QApplication(sys.argv)
