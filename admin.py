@@ -12,6 +12,7 @@ from help import *
 from about import *
 from maintenance import *
 from userlogs import *
+from session_manager import *
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
@@ -101,7 +102,7 @@ class Ui_MainWindow(object):
         self.stacked_widget.setObjectName("stacked_widget")
 
         self.pages = {}
-        page_classes = [Inventory, Registration, Scheduling, Payment, UserLogs, Maintenance, Help, About]   
+        page_classes = [Inventory, Registration, Scheduling, Reports, Payment, UserLogs, Maintenance, Help, About]
         for page_class in page_classes:
             page_instance = page_class()
             page_name = page_class.__name__.lower()
@@ -141,7 +142,7 @@ class Admin(QMainWindow):
         self.ui.logout_button.clicked.connect(self.switch_login_window)
 
         self.update_button_styles("inventory")
-
+        self.full_name = session_manager.get_full_name()
     def switch_login_window(self):
         self.login_window = Login()
         self.login_window.show()

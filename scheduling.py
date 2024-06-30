@@ -32,6 +32,7 @@ class Scheduling(QMainWindow):
     def show_main_appointment_page(self):
         self.stackedWidget.setCurrentIndex(0)
     def show_add_appointment_page(self):
+        clear_inputs(self.schedule_page)
         self.stackedWidget.setCurrentIndex(1)
 
     def open_main_page(self):
@@ -396,6 +397,7 @@ class Scheduling(QMainWindow):
             style = "background-color: #006646"
         )
 
+        self.schedule_clear_button.clicked.connect(clear_inputs(self.schedule_page))
         self.schedule_register_button.clicked.connect(self.add_appointment)
         self.member_back_button.clicked.connect(self.show_main_appointment_page)
 

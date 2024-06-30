@@ -58,7 +58,7 @@ class UserLogs(QMainWindow):  # Inherit from QWidget
             font=font3,
             style="background-color: #28a745; color: #FFFFFF"
         )
-
+        self.refresh_button.clicked.connect(self.load_logs)
         self.load_logs()
 
     
