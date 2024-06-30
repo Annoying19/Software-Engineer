@@ -10,7 +10,7 @@ from report import *
 from payment import *
 from help import *
 from about import *
-from session_manager import *
+
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
