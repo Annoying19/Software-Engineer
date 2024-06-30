@@ -10,6 +10,7 @@ from report import *
 from payment import *
 from help import *
 from about import *
+from session_manager import *
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -147,6 +148,7 @@ class Staff(QMainWindow):
         self.ui.logout_button.clicked.connect(self.switch_login_window)
 
         self.update_button_styles("inventory")
+        self.full_name = session_manager.get_full_name()
 
     def switch_login_window(self):
         self.login_window = Login()
