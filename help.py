@@ -186,7 +186,7 @@ class Help(QWidget):  # Inherit from QWidget
         self.label_21.setText(_translate("self", "contents of our system"))
 
     def display(self, option):
-        file_path = (f"C:/Users/maver/OneDrive/Desktop/MyModule/Software-Engineer-master/ui/{option}")
+        file_path = (f"/Software-Engineer-master/manuals/{option}")
         print(file_path)
         if os.path.isfile(file_path):
             os.startfile(file_path)
