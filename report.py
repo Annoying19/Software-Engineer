@@ -6,13 +6,14 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout,
 from PyQt5.QtCore import QDate
 import sqlite3
 from reportlab.lib.pagesizes import A4, landscape
-from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.colors import blue
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle
 from reportlab.platypus.flowables import Spacer
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfbase import pdfmetrics
 from reportlab.lib.enums import TA_CENTER
+from reportlab.lib.enums import TA_RIGHT
 import sys
 import os
 from datetime import datetime
@@ -228,9 +229,12 @@ class Reports(QWidget):  # Inherit from QWidget
         elements.append(table)
         elements.append(Spacer(1, 12))
 
+        styles = getSampleStyleSheet()
+        right_aligned_style = ParagraphStyle(name='RightAligned', parent=styles['Normal'], alignment=TA_RIGHT)
+
         timestamp = datetime.now().strftime('%B %d, %Y %I:%M %p')
-        generated_time = Paragraph(f"Generated on: {timestamp} by {full_name}", styles['Normal'])
-        elements.append(Spacer(1, 250))
+        generated_time = Paragraph(f"Generated on: {timestamp} by {full_name}", right_aligned_style)
+        elements.append(Spacer(1, 1))
         elements.append(generated_time)
 
         doc.build(elements)
@@ -303,7 +307,7 @@ class Reports(QWidget):  # Inherit from QWidget
             table_data.append(list(row))
 
         # Specifying smaller column widths to fit the table
-        col_widths = [60, 100, 100, 80, 80, 80, 60, 100, 80, 60]
+        col_widths = [80, 100, 100, 80, 80, 80, 60, 100, 80, 60]
 
         # Creating table with smaller font size and styles
         table = Table(table_data, colWidths=col_widths)
@@ -324,9 +328,12 @@ class Reports(QWidget):  # Inherit from QWidget
         elements.append(table)
         elements.append(Spacer(1, 12))
 
+        styles = getSampleStyleSheet()
+        right_aligned_style = ParagraphStyle(name='RightAligned', parent=styles['Normal'], alignment=TA_RIGHT)
+
         timestamp = datetime.now().strftime('%B %d, %Y %I:%M %p')
-        generated_time = Paragraph(f"Generated on: {timestamp} by {full_name}", styles['Normal'])
-        elements.append(Spacer(1, 250))
+        generated_time = Paragraph(f"Generated on: {timestamp} by {full_name}", right_aligned_style)
+        elements.append(Spacer(1, 1))
         elements.append(generated_time)
 
         doc.build(elements)
@@ -399,7 +406,7 @@ class Reports(QWidget):  # Inherit from QWidget
                     table_data.append(list(row))
 
                 # Specifying smaller column widths to fit the table
-                col_widths = [60, 60, 60, 100, 100, 80, 60, 60, 60]
+                col_widths = [60, 100, 100, 100, 100, 100, 100, 100, 80]
 
                 # Creating table with smaller font size and styles
                 table = Table(table_data, colWidths=col_widths)
@@ -410,6 +417,8 @@ class Reports(QWidget):  # Inherit from QWidget
                     ('FONTNAME', (0, 0), (-1, 0), 'TimesNewRoman'),
                     ('FONTSIZE', (0, 0), (-1, 0), 10),
                     ('FONTSIZE', (0, 1), (-1, -1), 8),
+                    ('LEFTPADDING', (0, 0), (-1, -1), 6),
+                    ('RIGHTPADDING', (0, 0), (-1, -1), 6),
                     ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
                     ('BACKGROUND', (0, 1), (-1, -1), '#f0f0f0'),
                     ('GRID', (0, 0), (-1, -1), 1, 'black')
@@ -418,9 +427,12 @@ class Reports(QWidget):  # Inherit from QWidget
                 elements.append(table)
                 elements.append(Spacer(1, 12))
 
+                styles = getSampleStyleSheet()
+                right_aligned_style = ParagraphStyle(name='RightAligned', parent=styles['Normal'], alignment=TA_RIGHT)
+
                 timestamp = datetime.now().strftime('%B %d, %Y %I:%M %p')
-                generated_time = Paragraph(f"Generated on: {timestamp} by {full_name}", styles['Normal'])
-                elements.append(Spacer(1, 250))
+                generated_time = Paragraph(f"Generated on: {timestamp} by {full_name}", right_aligned_style)
+                elements.append(Spacer(1, 1))
                 elements.append(generated_time)
 
                 doc.build(elements)
@@ -514,9 +526,12 @@ class Reports(QWidget):  # Inherit from QWidget
         elements.append(table)
         elements.append(Spacer(1, 12))
 
+        styles = getSampleStyleSheet()
+        right_aligned_style = ParagraphStyle(name='RightAligned', parent=styles['Normal'], alignment=TA_RIGHT)
+
         timestamp = datetime.now().strftime('%B %d, %Y %I:%M %p')
-        generated_time = Paragraph(f"Generated on: {timestamp} by {full_name}", styles['Normal'])
-        elements.append(Spacer(1, 240))
+        generated_time = Paragraph(f"Generated on: {timestamp} by {full_name}", right_aligned_style)
+        elements.append(Spacer(1, 1))
         elements.append(generated_time)
 
         doc.build(elements)
@@ -583,7 +598,7 @@ class Reports(QWidget):  # Inherit from QWidget
             table_data.append(list(row))
 
         # Specifying smaller column widths to fit the table
-        col_widths = [60, 100, 60, 60, 80, 80, 80, 60, 60, 80]
+        col_widths = [80, 100, 60, 60, 80, 80, 80, 60, 60, 80]
 
         # Creating table with smaller font size and styles
         table = Table(table_data, colWidths=col_widths)
@@ -603,101 +618,13 @@ class Reports(QWidget):  # Inherit from QWidget
 
         elements.append(table)
         elements.append(Spacer(1, 12))
-
-        timestamp = datetime.now().strftime('%B %d, %Y %I:%M %p')
-        generated_time = Paragraph(f"Generated on: {timestamp} by {full_name}", styles['Normal'])
-        elements.append(Spacer(1, 220))
-        elements.append(generated_time)
-
-        doc.build(elements)
-
-        QMessageBox.information(None, 'Success', f'Attendance Report generated successfully!\nSaved at: {pdf_file}')
-
-    def generate_attendance_report(self):
-        conn = sqlite3.connect('database.db')
-        cursor = conn.cursor()
-
-        query = """
-        SELECT attendance_id, member_id, entry_time, exit_time, date
-        FROM Attendance
-        ORDER BY attendance_id
-        """
-
-        cursor.execute(query)
-        rows = cursor.fetchall()
-        conn.close()
-
-        full_name = session_manager.get_full_name()
-
-        pdf_file = os.path.join(OUTPUT_DIR, f'Attendance_Report_{datetime.now().strftime("%Y%m%d_%H%M%S")}.pdf')
-
-        doc = SimpleDocTemplate(pdf_file, pagesize=landscape(A4))
-        elements = []
 
         styles = getSampleStyleSheet()
-        pdfmetrics.registerFont(TTFont('TimesNewRoman', 'times.ttf'))
-
-        # Center the title
-        title_style = styles['Title']
-        title_style.alignment = TA_CENTER
-        title = Paragraph("<font name='TimesNewRoman' color='blue' size=18>Slimmer World</font>", styles['Title'])
-
-        # Center the address
-        address_style = styles['Normal']
-        address_style.alignment = TA_CENTER
-        address = Paragraph(f"<font name='TimesNewRoman' size=12>{ADDRESS}</font>", styles['Normal'])
-
-        # Center the contact
-        contact_style = styles['Normal']
-        contact_style.alignment = TA_CENTER
-        contact = Paragraph(f"<font name='TimesNewRoman' size=12>{CONTACT}</font>", styles['Normal'])
-        elements.append(title)
-        elements.append(address)
-        elements.append(contact)
-
-        # Add spacer to title
-        elements.append(Spacer(1, 12))
-        report_title = Paragraph("<font name='TimesNewRoman' size=14>Attendance Report</font>", styles['Title'])
-        elements.append(report_title)
-
-        # Add space
-        elements.append(Spacer(1, 12))
-
-        # Table Header
-        table_data = [
-            ["Attendance ID", "Member ID", "Entry Time", "Exit Time", "Date"]
-        ]
-
-        # Adding data to table
-        for row in rows:
-            table_data.append(list(row))
-
-        # Specifying smaller column widths to fit the table
-        col_widths = [60, 100, 60, 60, 80, 80, 80, 60, 60, 80]
-
-        # Creating table with smaller font size and styles
-        table = Table(table_data, colWidths=col_widths)
-        table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), blue),
-            ('TEXTCOLOR', (0, 0), (-1, 0), 'white'),
-            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-            ('FONTNAME', (0, 0), (-1, 0), 'TimesNewRoman'),
-            ('FONTSIZE', (0, 0), (-1, 0), 10),
-            ('FONTSIZE', (0, 1), (-1, -1), 8),
-            ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
-            ('BACKGROUND', (0, 1), (-1, -1), '#f0f0f0'),
-            ('GRID', (0, 0), (-1, -1), 1, 'black'),
-            ('WORDWRAP', (0, 0), (-1, -1), 'ON'),
-            ('VALIGN', (0, 0), (-1, -1), 'TOP')
-        ]))
-
-        elements.append(table)
-        elements.append(Spacer(1, 12))
+        right_aligned_style = ParagraphStyle(name='RightAligned', parent=styles['Normal'], alignment=TA_RIGHT)
 
         timestamp = datetime.now().strftime('%B %d, %Y %I:%M %p')
-        generated_time = Paragraph(f"Generated on: {timestamp} by {full_name}", styles['Normal'])
-
-        generated_time.drawOn(doc, 1, 50)
+        generated_time = Paragraph(f"Generated on: {timestamp} by {full_name}", right_aligned_style)
+        elements.append(Spacer(1, 1))
         elements.append(generated_time)
 
         doc.build(elements)
