@@ -235,7 +235,7 @@ class Inventory(QWidget):
             elif select == 1:
                 status = "Active"
             elif select == 2:
-                status = "Repaired"
+                status = "Repair"
             elif select == 3:
                 status = "Retired"
             
@@ -267,14 +267,14 @@ class Inventory(QWidget):
                 SELECT * 
                 FROM Products 
                 WHERE (CAST(product_id AS TEXT) LIKE ? OR 
-                    CAST(product_name AS TEXT) LIKE ?) AND
-                    product_expiry_date BETWEEN ? AND ?
+                    CAST(name AS TEXT) LIKE ?) AND
+                    expiry_date BETWEEN ? AND ?
                 """, (search_term + '%', search_term + '%', start, end))
             
             print(start)
             print(end)
             for row_number, row_data in enumerate(cursor):
-                self.tableWidget.insertRow(row_number)  
+                self.tableWidget2.insertRow(row_number)  
                 for column_number, data in enumerate(row_data):
                     item = QTableWidgetItem(str(data))
                     item.setTextAlignment(Qt.AlignRight)

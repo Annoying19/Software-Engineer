@@ -100,10 +100,13 @@ class Login(QMainWindow):
         valid, role, employee_id = self.check_credentials(username, password)
         if valid:
             current_username = username  # Set the global variable
-            print(current_username)
-            QMessageBox.information(None, "Login Successful", "You have successfully logged in.")
-            get_user_log(f"Logged in as {role}", username)
-            self.open_main_window(role)
+            full_name = self.get_full_name(employee_id)  # Get full name based on employee_id
+            session_manager.set_full_name(full_name)  # Store full_name in singleton
+            print(f"Logged in as: {full_name} ({current_username})")
+            QMessageBox.information(None, "Login Successful", f"Welcome {full_name}")
+            get_user_log("Login", username)
+            self.open_main_window(role, full_name)
+            set_username_global(current_username)
         else:
             # Handle invalid login
             QMessageBox.warning(self, "Login Failed", "Invalid username or password.")
@@ -136,7 +139,56 @@ class Login(QMainWindow):
         hashed_password = hashlib.sha256(password_bytes).hexdigest()
         return hashed_password == password_hash
 
-    
+    def get_full_name(self, employee_id):
+        connection = sqlite3.connect('database.db')
+        cursor = connection.cursor()
+
+        cursor.execute('''
+        SELECT first_name, middle_name, last_name FROM Employees WHERE employee_id = ?
+        ''', (employee_id,))
+        result = cursor.fetchone()
+        connection.close()
+
+        if result:
+            first_name, middle_name, last_name = result
+            full_name = f"{first_name} {middle_name} {last_name}".strip()
+            return full_name
+        return None
+
+    def handle_logout(self):
+        # Example of handling logout
+        if 'current_username' in globals():
+            username = current_username
+            record_log(username, "Logout")
+        else:
+            # Handle case where no user is logged in
+            QMessageBox.warning(self, "Logout Failed", "No user is currently logged in.")
+
+        # Close current window and possibly return to the login screen
+        self.close()
+
+    def get_employee_id(self, username):
+        connection = sqlite3.connect('database.db')
+        cursor = connection.cursor()
+
+        cursor.execute('''
+        SELECT employee_id FROM Users WHERE username = ?
+        ''', (username,))
+        result = cursor.fetchone()
+        connection.close()
+
+        if result:
+            return result[0]
+        return None
+
+def record_log(username, action):
+        cursor.execute('''
+        INSERT INTO UserLog (username, action) VALUES (?, ?)
+        ''', (username, action))
+
+        connection.commit()
+        connection.close()
+
 if __name__ == "__main__":
     app = QApplication([])
     window = Login()

@@ -143,6 +143,7 @@ class Maintenance(QWidget):
             INPUTS = {
                 'product_id': self.create_product_id_output_label.text(),
                 'product_name': self.create_product_name_input.text(),
+                'brand': self.create_product_brand_input.text(),
                 'sku': self.create_product_brand_input.text(),
                 'quantity':  self.create_product_quantity_input.text(),
                 'supplier': self.create_product_supplier_input.text(),
@@ -3408,7 +3409,7 @@ class Maintenance(QWidget):
         path = QFileDialog.getExistingDirectory(self, "Select Directory", options=options)
         print(path)
 
-        time = datetime.now().strftime("%Y-%m-%d %H-%M")
+        time = datetime.now().strftime("%Y-%m-%d _ %H-%M")
         source_path = "Software-Engineer-master/database.db"
         backup_path = f"{path}/backup_{time}.db"
         self.backup(source_path, backup_path)
@@ -3575,7 +3576,7 @@ class Maintenance(QWidget):
         self.view_payment_edit_button.clicked.connect(self.edit_payment_button)
         self.stackedWidget.addWidget(self.view_payment_page)
     
-
+        update_table_widget("Payments", self.payment_table_widget, self.show_view_payment_temp)
 
     def edit_payment_page(self):
         self.edit_payment_page_nigg = QWidget()
@@ -3606,7 +3607,7 @@ class Maintenance(QWidget):
             geometry=QRect(60, 330, 420, 40),
         )
 
-        self.edit_payment_date_input = createOutputLabel(
+        self.edit_payment_date_input = createDate(
             parent=self.edit_payment_page_nigg,
             geometry=QRect(510, 330, 420, 40),
         )

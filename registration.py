@@ -460,7 +460,7 @@ class Registration(QWidget):
         if input == "Attendance":
             INPUTS = {
                 "date": self.attendance_date_input.date(),
-                "member_id": self.output_label.text(),
+                "member_id": self.attendance_membership_id_output_label.text(),
                 "time": self.attendance_time_input.time(),
                 "attendance": self.attendance_type_combo_box.currentText(),
             }

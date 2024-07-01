@@ -493,7 +493,7 @@ class Reports(QWidget):  # Inherit from QWidget
             table_data.append(list(row))
 
         # Specifying smaller column widths to fit the table
-        col_widths = [60, 100, 60, 60, 80, 80, 80, 60, 60, 80]
+        col_widths = [80, 100, 60, 60, 80, 80, 80, 60, 60, 80]
 
         # Creating table with smaller font size and styles
         table = Table(table_data, colWidths=col_widths)
@@ -516,7 +516,7 @@ class Reports(QWidget):  # Inherit from QWidget
 
         timestamp = datetime.now().strftime('%B %d, %Y %I:%M %p')
         generated_time = Paragraph(f"Generated on: {timestamp} by {full_name}", styles['Normal'])
-        elements.append(Spacer(1, 270))
+        elements.append(Spacer(1, 240))
         elements.append(generated_time)
 
         doc.build(elements)
@@ -696,7 +696,8 @@ class Reports(QWidget):  # Inherit from QWidget
 
         timestamp = datetime.now().strftime('%B %d, %Y %I:%M %p')
         generated_time = Paragraph(f"Generated on: {timestamp} by {full_name}", styles['Normal'])
-        elements.append(Spacer(1, 220))
+
+        generated_time.drawOn(doc, 1, 50)
         elements.append(generated_time)
 
         doc.build(elements)

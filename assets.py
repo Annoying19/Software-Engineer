@@ -306,12 +306,12 @@ SQL_SEARCH_EMPLOYEE = '''
     SELECT 
     employee_id, first_name || ' ' || last_name AS full_name, position, phone, hire_date
     FROM Employees
-    WHERE employee_id LIKE ? OR first_name LIKE ? OR last_name LIKE ?;
+    WHERE employee_id LIKE ? OR first_name || ' ' || last_name LIKE ?;
 '''
 
 SQL_SEARCH_USER = '''
     SELECT 
-    employee_id, cusername, role
+    employee_id, username, role
     FROM Users
     WHERE employee_id LIKE ? OR username LIKE ?;
 '''
@@ -351,9 +351,9 @@ def search_entity(entity, search_text, table_widget, function):
     }
     query = queries.get(entity)
     # Adjust the number of parameters in the query based on the entity
-    if entity in ["Members", "Employees", "Equipments", "Payments"]:
+    if entity in ["Members", "Equipments", "Payments"]:
         cursor.execute(query, (f'%{keyword}%', f'%{keyword}%', f'%{keyword}%'))
-    elif entity in ["Users", "Products"]:
+    elif entity in ["Users", "Products", "Employees"]:
         cursor.execute(query, (f'%{keyword}%', f'%{keyword}%'))
 
     results = cursor.fetchall()
@@ -522,8 +522,6 @@ def register_user(inputs, page):
 def register_equipment(inputs, page, text):
     try:
         if validate_all_inputs("Equipments", inputs):
-            password_bytes = inputs["password"].encode()
-            hashed_password = hashlib.sha256(password_bytes).hexdigest()
             cursor.execute(SQL_INSERT_EQUIPMENT, (
                         inputs['equipment_id'], 
                         inputs['equipment_name'], 
@@ -555,12 +553,13 @@ def register_product(inputs, page, text):
             cursor.execute(SQL_INSERT_PRODUCT, (
                             inputs['product_id'],
                             inputs['product_name'],
+                            inputs['brand'],
                             inputs['sku'],
                             inputs['quantity'],
                             inputs['supplier'],
                             inputs['price'],
-                            inputs['purchase_date'],
-                            inputs['expiry_date'],
+                            inputs['purchase_date'].toString("yyyy-MM-dd"),
+                            inputs['expiry_date'].toString("yyyy-MM-dd"),
                         )
             )
             connection.commit()
