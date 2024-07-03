@@ -58,6 +58,10 @@ def validate_input(field_name, value, rules):
             image = QImage()
             if not image.loadFromData(byte_array):
                 return False, f"{field_name} must be a valid image."
+        if rule == "alphabet":
+            pattern = r"^[a-zA-Z\s\-]+$"
+            if not re.match(pattern, value):
+                return False, f"{field_name} must contain only alphabetic characters, spaces, or hyphens."
         # Add more rules as needed
     return True, ""
 
@@ -75,13 +79,13 @@ def validate_all_inputs(entity_type, inputs):
         # MEMBERS TABLE
         'Members': {
             'member_id': ["required"], 
-            'first_name': ["required"], 
-            'middle_name': ["required"], 
-            'last_name': ["required"], 
+            'first_name': ["required", 'alphabet'], 
+            'middle_name': ["required", 'alphabet'], 
+            'last_name': ["required", 'alphabet'], 
             'address': ["required"],
             'gender': ["required"],
             'birthdate': ["required"],
-            'phone': ["required"],
+            'phone': ["required", "phone", 'numeric'],
             'membership_type': ["required"],
             'membership_start_date': ["required"],
             'membership_end_date': ["required"],
@@ -91,15 +95,15 @@ def validate_all_inputs(entity_type, inputs):
         # EMPLOYEES TABLE
         'Employees': {
             'employee_id': ["required"], 
-            'first_name': ["required"], 
-            'middle_name': ["required"], 
-            'last_name': ["required"], 
+            'first_name': ["required", 'alphabet'], 
+            'middle_name': ["required", 'alphabet'], 
+            'last_name': ["required", 'alphabet'], 
             'birthdate': ["required"],
             'gender': ["required"],
             'address': ["required"],
-            'phone': ["required"],
+            'phone': ["required", 'phone', 'numeric'],
             'hire_date': ["required"],
-            'position': ["required"],
+            'position': ["required", 'alphabet'],
             'photo': ["required", "image"],
         },
         # EQUIPMENTS TABLE
@@ -110,7 +114,7 @@ def validate_all_inputs(entity_type, inputs):
             'equipment_category': ["required"], 
             'equipment_purchase_date': ["required"],
             'equipment_warranty_expiry': ["required"],
-            'equipment_price': ["required"],
+            'equipment_price': ["required", 'numeric'],
             'equipment_manufacturer': ["required"],
             'equipment_location': ["required"],
             'equipment_status': ["required"],
@@ -120,9 +124,9 @@ def validate_all_inputs(entity_type, inputs):
             'product_id': ["required"],
             'product_name': ["required"],
             'sku': ["required"],
-            'quantity': ["required"],
+            'quantity': ["required", 'numeric'],
             'supplier':["required"],
-            'price': ["required"],
+            'price': ["required", 'numeric'],
             'purchase_date': ["required"],
             'expiry_date': ["required"]
         },
@@ -297,10 +301,20 @@ SQL_FETCH_PAYMENT = ''' SELECT * FROM Contracts '''
 
 SQL_SEARCH_MEMBER = '''
     SELECT 
-    member_id, first_name || ' ' || last_name AS full_name, membership_type, phone_number, membership_start_date, membership_end_date
+        member_id, 
+        first_name || ' ' || last_name AS full_name, 
+        membership_type, 
+        phone_number, 
+        membership_start_date, 
+        membership_end_date
     FROM Members
-    WHERE member_id LIKE ? OR first_name LIKE ? OR last_name LIKE ?;
+    WHERE 
+        member_id LIKE ? OR 
+        first_name LIKE ? OR 
+        last_name LIKE ? OR
+        first_name || ' ' || last_name LIKE ?;
 '''
+
 
 SQL_SEARCH_EMPLOYEE = '''
     SELECT 
@@ -351,10 +365,12 @@ def search_entity(entity, search_text, table_widget, function):
     }
     query = queries.get(entity)
     # Adjust the number of parameters in the query based on the entity
-    if entity in ["Members", "Equipments", "Payments"]:
+    if entity in ["Equipments", "Payments"]:
         cursor.execute(query, (f'%{keyword}%', f'%{keyword}%', f'%{keyword}%'))
     elif entity in ["Users", "Products", "Employees"]:
         cursor.execute(query, (f'%{keyword}%', f'%{keyword}%'))
+    elif entity in ["Members"]:
+        cursor.execute(query, (f'%{keyword}%', f'%{keyword}%', f'%{keyword}%', f'%{keyword}%'))
 
     results = cursor.fetchall()
     table_widget.setRowCount(len(results))
@@ -448,9 +464,9 @@ def register_member(inputs, page, text):
         if validate_all_inputs("Members", inputs):
             cursor.execute(SQL_INSERT_MEMBER, (
                 inputs["member_id"],
-                inputs["first_name"],
-                inputs["middle_name"],
-                inputs["last_name"],
+                inputs["first_name"].strip(),
+                inputs["middle_name"].strip(),
+                inputs["last_name"].strip(),
                 inputs["address"],
                 inputs["phone"],
                 inputs["birthdate"].toString("yyyy-MM-dd"),
@@ -475,9 +491,9 @@ def register_employee(inputs, page, text):
         if validate_all_inputs("Employees", inputs):
             cursor.execute(SQL_INSERT_EMPLOYEE, (
                 inputs["employee_id"],
-                inputs["first_name"],
-                inputs["middle_name"],  # Handle cases where middle_name might be missing
-                inputs["last_name"],
+                inputs["first_name"].strip(),
+                inputs["middle_name"].strip(),  # Handle cases where middle_name might be missing
+                inputs["last_name"].strip(),
                 inputs["birthdate"].toString("yyyy-MM-dd"),  # Format date correctly
                 inputs["gender"],
                 inputs["address"],
@@ -579,9 +595,9 @@ def update_member(inputs, page):
     try:
         if validate_all_inputs("Members", inputs):
             cursor.execute(SQL_UPDATE_MEMBERS, (
-                            inputs["first_name"],
-                            inputs["middle_name"],
-                            inputs["last_name"],
+                            inputs["first_name"].strip(),
+                            inputs["middle_name"].strip(),
+                            inputs["last_name"].strip(),
                             inputs["address"],
                             inputs["phone"],
                             inputs["birthdate"].toString("yyyy-MM-dd"),
@@ -710,8 +726,6 @@ def update_product(inputs, page):
 def update_payment(inputs, page):
     try:
         if validate_all_inputs("Contracts", inputs):
-            password_bytes = inputs["password"].encode()
-            hashed_password = hashlib.sha256(password_bytes).hexdigest()
             cursor.execute(SQL_UPDATE_CONTRACT, (
                         inputs['softcopy'],
                         inputs['date_recorded'],

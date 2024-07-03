@@ -109,7 +109,7 @@ class Login(QMainWindow):
             set_username_global(current_username)
         else:
             # Handle invalid login
-            QMessageBox.warning(self, "Login Failed", "Invalid username or password.")
+            QMessageBox.warning(None, "Login Failed", "Invalid username or password.")
 
     def check_credentials(self, username, password):
         connection = sqlite3.connect('database.db')
@@ -127,9 +127,9 @@ class Login(QMainWindow):
                 print(f"Logged in as {role}")
                 return True, role, employee_id
             else:
-                QMessageBox.warning(self, "Login Failed", "Invalid password.")
+                QMessageBox.warning(None, "Login Failed", "Invalid password.")
         else:
-            QMessageBox.warning(self, "Login Failed", "Invalid username.")
+            QMessageBox.warning(None, "Login Failed", "Invalid username.")
 
         return False, None, None
 

@@ -829,7 +829,7 @@ class Maintenance(QWidget):
             parent=self.edit_member,
             name="clear_button",
             geometry=QRect(510, 730, 170, 50),
-            text="Clear",
+            text="Cancel",
             font=font3,
             style="background-color: #882400"
         )
@@ -847,7 +847,7 @@ class Maintenance(QWidget):
         self.edit_member_clear_button.clicked.connect(self.show_view_member)
         self.edit_member_insert_image_button.clicked.connect(lambda: insert_image(self.edit_member_image_label))
         self.edit_member_insert_signature_button.clicked.connect(lambda: insert_image(self.edit_member_signature_label))
-        self.edit_member_update_button.clicked.connect(lambda: update_member(self.assigned_input("Update Member"), self.show_view_member))
+        self.edit_member_update_button.clicked.connect(lambda: update_member(self.assigned_input("Update Member"), self.show_member_page))
 
     def open_view_member(self):
         self.view_member = QWidget()
@@ -1644,7 +1644,7 @@ class Maintenance(QWidget):
         self.edit_employee_back_button.clicked.connect(self.show_view_employee)
         self.edit_employee_cancel_button.clicked.connect(self.show_view_employee)
         self.edit_employee_insert_image_button.clicked.connect(lambda: insert_image(self.edit_employee_image_label))
-        self.edit_employee_register_button.clicked.connect(lambda: update_employee(self.assigned_input("Update Employee"), self.show_view_employee))
+        self.edit_employee_register_button.clicked.connect(lambda: update_employee(self.assigned_input("Update Employee"), self.show_employee_page))
 
 
     def show_view_employee_temp(self, row):
@@ -3196,7 +3196,7 @@ class Maintenance(QWidget):
         )
 
         self.edit_equipment_back_button.clicked.connect(self.show_view_equipment_page)
-        self.edit_equipment_register_button.clicked.connect(lambda: update_equipment(self.assigned_input('Update Equipments'), self.show_view_equipment_page))
+        self.edit_equipment_register_button.clicked.connect(lambda: update_equipment(self.assigned_input('Update Equipments'), self.show_equipment_page))
 
     def view_equipment(self):
         self.view_equipment_page = QWidget()
