@@ -199,11 +199,13 @@ class Registration(QWidget):
             geometry=QRect(40, 670, 200, 40),
         )
 
+        disable_past_date(self.member_start_date)
         self.member_end_date = createDate(
             parent=self.member_page,
             geometry=QRect(280, 670, 200, 40),
         )
 
+        disable_past_date(self.member_end_date)
         # ===========================================
         #              MEMBER PAGE BUTTONS
         # ===========================================
@@ -215,7 +217,7 @@ class Registration(QWidget):
             geometry=QRect(40, 50, 70, 50),
             text="Back",
             font=font3,
-            style="background-color: #004F9A"
+            style="background-color: #004F9A; color: #FFFFFF"
         )
 
         self.member_insert_image_button = createButton(
@@ -224,7 +226,7 @@ class Registration(QWidget):
             geometry=QRect(680, 400, 250, 50),
             text="Insert Image",
             font=font3,
-            style="background-color: #004F9A"
+            style="background-color: #004F9A; color: #FFFFFF"
         )
 
         self.member_insert_signature_button = createButton(
@@ -233,7 +235,7 @@ class Registration(QWidget):
             geometry=QRect(680, 560, 250, 50),
             text="Insert Signature",
             font=font3,
-            style="background-color: #004F9A"
+            style="background-color: #004F9A; color: #FFFFFF"
         )
 
         self.member_clear_button = createButton(
@@ -242,7 +244,7 @@ class Registration(QWidget):
             geometry=QRect(510, 730, 170, 50),
             text="Clear",
             font=font3,
-            style="background-color: #882400"
+            style="background-color: #882400; color: #FFFFFF"
         )
 
         self.member_register_button = createButton(
@@ -251,7 +253,7 @@ class Registration(QWidget):
             geometry=QRect(690, 730, 250, 50),
             text="Register",
             font=font3,
-            style="background-color: #006646"
+            style="background-color: #006646; color: #FFFFFF"
         )
 
         # Connect signals and slots

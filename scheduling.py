@@ -31,6 +31,7 @@ class Scheduling(QMainWindow):
     
     def show_main_appointment_page(self):
         self.stackedWidget.setCurrentIndex(0)
+
     def show_add_appointment_page(self):
         clear_inputs(self.schedule_page)
         self.stackedWidget.setCurrentIndex(1)
@@ -108,22 +109,21 @@ class Scheduling(QMainWindow):
 
         self.cancel_appointment_button.clicked.connect(self.cancel_appointment)
         self.add_appointment_button.clicked.connect(self.show_add_appointment_page)
-        self.load_appointments()
     def show_appointments(self, date):
         self.appointments_table.setRowCount(0)
         date_str = date.toString("yyyy-MM-dd")
         cursor.execute('''
-            SELECT s.schedule_id,
-                    m.first_name || ' ' || m.middle_name || ' ' || m.last_name AS member_name, 
-                   e.first_name || ' ' || e.last_name AS employee_name, 
-                   s.appointment_start_time, 
-                   s.appointment_end_time, 
-                   s.appointment_name, 
-                   s.status 
-            FROM Schedule s
-            JOIN Members m ON s.member_id = m.member_id
-            JOIN Employees e ON s.employee_id = e.employee_id
-            WHERE s.appointment_date = ? AND s.status != "Cancelled"
+                SELECT  s.schedule_id,
+                        m.first_name || ' ' || m.last_name AS member_name, 
+                        e.first_name || ' ' || e.last_name AS employee_name, 
+                        s.appointment_start_time, 
+                        s.appointment_end_time, 
+                        s.appointment_name, 
+                        s.status 
+                    FROM Schedule s
+                    JOIN Members m ON s.member_id = m.member_id
+                    JOIN Employees e ON s.employee_id = e.employee_id
+                    WHERE s.appointment_date = ? AND s.status != "Cancelled"
         ''', (date_str,))
         for row in cursor.fetchall():
             row_position = self.appointments_table.rowCount()
@@ -317,14 +317,14 @@ class Scheduling(QMainWindow):
         self.member_search_results.hide()  # Hide initially
         self.member_search_results.setGeometry(250, 180, 410, 150)
         self.member_search_results.setFont(font2)
-        # Connect signals
+
         self.member_search_results.itemClicked.connect(self.handle_member_item_selection)
 
         self.employee_search_results = QListWidget(self.schedule_page)
         self.employee_search_results.hide()  # Hide initially
         self.employee_search_results.setGeometry(250, 370, 410, 150)
         self.employee_search_results.setFont(font2)
-        # Connect signals
+
         self.employee_search_results.itemClicked.connect(self.handle_employee_item_selection)
 
 
@@ -397,7 +397,7 @@ class Scheduling(QMainWindow):
             style = "background-color: #006646"
         )
 
-        self.schedule_clear_button.clicked.connect(clear_inputs(self.schedule_page))
+        self.schedule_clear_button.clicked.connect(lambda: clear_inputs(self.schedule_page))
         self.schedule_register_button.clicked.connect(self.add_appointment)
         self.member_back_button.clicked.connect(self.show_main_appointment_page)
 
@@ -463,41 +463,42 @@ class Scheduling(QMainWindow):
             QMessageBox.information(None, "Yippie", "Schedule booked.")
             self.load_appointments()
             self.update_calendar()
+            clear_inputs(self.schedule_page)
 
         else:
             QMessageBox.warning(None, "Conflict", "The selected time slot is already booked.")
     
 
     def check_for_conflicts(self, date, start_time, end_time):
-        cursor.execute('''
-            SELECT * FROM schedule
-            WHERE appointment_date = ? 
-            AND (
-                (
-                    appointment_start_time < ? AND appointment_end_time > ?
+        if validate_time(start_time, end_time):
+            cursor.execute('''
+                SELECT * FROM schedule
+                WHERE appointment_date = ? 
+                AND (
+                    (
+                        appointment_start_time < ? AND appointment_end_time > ?
+                    )
+                    OR
+                    (
+                        appointment_start_time < ? AND appointment_end_time > ?
+                    )
+                    OR
+                    (
+                        appointment_start_time >= ? AND appointment_end_time <= ?
+                    )
                 )
-                OR
-                (
-                    appointment_start_time < ? AND appointment_end_time > ?
-                )
-                OR
-                (
-                    appointment_start_time >= ? AND appointment_end_time <= ?
-                )
-            )
-            AND status != "Cancelled";
+                AND status != "Cancelled";
 
-        ''', (date, end_time, start_time, end_time, start_time, start_time, end_time))
-        
-
-        return cursor.fetchone() is not None
-
+            ''', (date, end_time, start_time, end_time, start_time, start_time, end_time))
+            
+            return False, cursor.fetchone() is not None
+        return True
     def load_appointments(self):
         self.appointments_table.setRowCount(0)  # Clear existing rows
 
         cursor.execute('''
             SELECT s.schedule_id,
-                    m.first_name || ' ' || m.middle_name || ' ' || m.last_name AS member_name, 
+                    m.first_name || ' ' || m.last_name AS member_name, 
                    e.first_name || ' ' || e.last_name AS employee_name, 
                    s.appointment_start_time, 
                    s.appointment_end_time, 

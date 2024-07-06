@@ -77,7 +77,7 @@ class Inventory(QWidget):
             font=font5,
             style="background: lime; color: white"
         )
-        self.equipment_stockButton.clicked.connect(self.switchPage)
+        self.equipment_stockButton.clicked.connect(self.switchPage())
         self.equipment_searchButton.clicked.connect(lambda: self.search("Equipments"))
         self.loadData(lambda: "Equipments")
         

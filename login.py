@@ -79,37 +79,76 @@ class Login(QMainWindow):
         self.login_button.setStyleSheet(button_style)
         self.login_button.clicked.connect(self.handle_login)
 
-    def open_main_window(self, role, full_name):
-        if role == "Admin":
-            self.main_window = Admin()  # Create Admin window
-            self.main_window.full_name = full_name  # Set full_name
-            self.main_window.setWindowTitle(f"Admin - {full_name}")  # Set window title
-            self.main_window.show()
-            self.close()
-        else:
-            self.main_window = Staff()  # Create Staff window
-            self.main_window.full_name = full_name  # Set full_name
-            self.main_window.setWindowTitle(f"Staff - {full_name}")  # Set window title
-            self.main_window.show()
-            self.close()
-
     def handle_login(self):
         username = self.username_input.text()
         password = self.password_input.text()
 
         valid, role, employee_id = self.check_credentials(username, password)
         if valid:
-            current_username = username  # Set the global variable
-            full_name = self.get_full_name(employee_id)  # Get full name based on employee_id
-            session_manager.set_full_name(full_name)  # Store full_name in singleton
+            full_name = self.get_full_name(employee_id)
+            session_manager.set_full_name(full_name)
+            session_manager.set_logged_in(True)  # Set login status to true
             print(f"Logged in as: {full_name} ({current_username})")
             QMessageBox.information(None, "Login Successful", f"Welcome {full_name}")
             get_user_log("Login", username)
-            self.open_main_window(role, full_name)
             set_username_global(current_username)
+            self.open_main_window()
         else:
-            # Handle invalid login
-            QMessageBox.warning(None, "Login Failed", "Invalid username or password.")
+            QMessageBox.warning(self, "Login Failed", "Invalid username or password.")
+
+    def handle_login(self):
+        username = self.username_input.text()
+        password = self.password_input.text()
+        valid, role, employee_id = self.check_credentials(username, password)
+        if valid and role == "Admin":
+            full_name = self.get_full_name(employee_id)
+            session_manager.set_full_name(full_name)
+            session_manager.set_role("Admin")
+            session_manager.set_logged_in(True)  # Set login status to true
+            print(f"Logged in as: {full_name} ({current_username})")
+            QMessageBox.information(None, "Login Successful", f"Welcome {full_name}")
+            get_user_log("Login", username)
+            set_username_global(current_username)
+            self.open_main_window()
+        elif valid and role == "Staff":
+            full_name = self.get_full_name(employee_id)
+            session_manager.set_full_name(full_name)
+            session_manager.set_role("Staff")
+            session_manager.set_logged_in(True)  # Set login status to true
+            print(f"Logged in as: {full_name} ({current_username})")
+            QMessageBox.information(None, "Login Successful", f"Welcome {full_name}")
+            get_user_log("Login", username)
+            set_username_global(current_username)
+            self.open_main_window()
+        else:
+            QMessageBox.warning(self, "Login Failed", "Invalid username or password.")
+
+    def open_main_window(self):
+        if session_manager.get_role() == "Admin":
+            from admin import Admin  # Delayed import
+            self.main_window = Admin()
+        elif session_manager.get_role() == "Staff":
+            from staff import Staff  # Delayed import
+            self.main_window = Staff()
+        self.main_window.show()
+        self.close()
+    def handle_logout(self):
+        if not session_manager.is_logged_in():
+            QMessageBox.warning(self, "Logout Failed", "No user is currently logged in.")
+            return
+
+        username = session_manager.get_full_name()
+        record_log(username, "Logout")
+        session_manager.set_logged_in(False)
+        session_manager.set_full_name(None)
+        print(f"Logged out: {username}")
+        self.show_login_window()
+
+    def show_login_window(self):
+        self.login_window = Login()
+        self.login_window.show()
+        self.close()
+
 
     def check_credentials(self, username, password):
         connection = sqlite3.connect('database.db')

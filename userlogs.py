@@ -66,7 +66,7 @@ class UserLogs(QMainWindow):  # Inherit from QWidget
         self.user_log_table.setRowCount(0)  # Clear existing rows
 
         cursor.execute('''
-            SELECT * FROM UserLog
+            SELECT * FROM UserLog ORDER BY log_id DESC
             ''')
 
 

@@ -468,7 +468,7 @@ class Maintenance(QWidget):
         self.member_table_widget.horizontalHeader().setStretchLastSection(True)
         self.member_table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
 
-        self.manage_search_input.textChanged.connect(lambda: self.search_entity("Members", self.member_table_widget, self.manage_search_input))
+        self.manage_search_input.textChanged.connect(lambda: search_entity("Members", self.manage_search_input, self.member_table_widget, self.show_view_member_temp))
         update_table_widget('Members', self.member_table_widget, self.show_view_member_temp)
 
 
@@ -628,7 +628,7 @@ class Maintenance(QWidget):
             geometry=QRect(40, 50, 70, 50),
             text="Back",
             font=font3,
-            style="background-color: #004F9A"
+            style="background-color: #004F9A; color: #FFFFFF"
         )
 
         self.member_insert_image_button = createButton(
@@ -637,7 +637,7 @@ class Maintenance(QWidget):
             geometry=QRect(680, 400, 250, 50),
             text="Insert Image",
             font=font3,
-            style="background-color: #004F9A"
+            style="background-color: #004F9A; color: #FFFFFF"
         )
 
         self.member_insert_signature_button = createButton(
@@ -646,7 +646,7 @@ class Maintenance(QWidget):
             geometry=QRect(680, 560, 250, 50),
             text="Insert Signature",
             font=font3,
-            style="background-color: #004F9A"
+            style="background-color: #004F9A; color: #FFFFFF"
         )
 
         self.member_clear_button = createButton(
@@ -655,7 +655,7 @@ class Maintenance(QWidget):
             geometry=QRect(510, 730, 170, 50),
             text="Clear",
             font=font3,
-            style="background-color: #882400"
+            style="background-color: #882400; color: #FFFFFF"
         )
 
         self.member_register_button = createButton(
@@ -664,7 +664,7 @@ class Maintenance(QWidget):
             geometry=QRect(690, 730, 250, 50),
             text="Register",
             font=font3,
-            style="background-color: #006646"
+            style="background-color: #006646; color: #FFFFFF"
         )
 
         self.member_back_button.clicked.connect(self.show_member_page)
@@ -1105,36 +1105,6 @@ class Maintenance(QWidget):
         update_table_widget('Members', self.member_table_widget, self.show_view_member_temp)
         self.show_edit_member()
     
-    def search_entity(self, entity_type, table_widget, input_text):
-        search_term = input_text.text().strip()  # Get the search term from input widget
-
-        if entity_type == "Members":
-            query = """
-                SELECT member_id, 
-                        first_name || ' ' || last_name AS full_name, 
-                        membership_type, 
-                        phone_number, 
-                        membership_start_date, 
-                        membership_end_date
-                FROM Members
-                WHERE member_id LIKE ? OR first_name LIKE ? OR last_name LIKE ?;
-            """
-        try:
-            cursor.execute(query, (f'%{search_term}%', f'%{search_term}%', f'%{search_term}%'))
-            results = cursor.fetchall()
-
-            table_widget.setRowCount(len(results))
-            for row_idx, row_data in enumerate(results):
-                for col_idx, col_data in enumerate(row_data):
-                    table_widget.setItem(row_idx, col_idx, QTableWidgetItem(str(col_data)))
-                view_button = QPushButton("View")
-                view_button.clicked.connect(partial(self.show_view_member_temp, row_idx))
-                table_widget.setCellWidget(row_idx, len(row_data), view_button)
-            self.add_view_buttons()
-
-        except Exception as e:
-            print(f"Error executing query: {e}")
-    
     def add_view_buttons(self):
    
         for row in range(self.member_table_widget.rowCount()):
@@ -1155,7 +1125,7 @@ class Maintenance(QWidget):
         self.manage_employee_text_label = createLabel(
             parent=self.employee_page,
             name="manage_members_text",
-            geometry=QRect(120, 40, 310, 40),
+            geometry=QRect(120, 40, 350, 40),
             text="Manage Employees",
             font=font4,
             style="font: bold"
@@ -1237,7 +1207,7 @@ class Maintenance(QWidget):
         # ===========================================
 
         labels_info = [
-            {"geometry": QRect(305, 50, 385, 40), "text": "Employee Registration", "font": font4, "style": "font: bold"},
+            {"geometry": QRect(305, 50, 400, 40), "text": "Employee Registration", "font": font4, "style": "font: bold"},
             {"geometry": QRect(40, 150, 191, 40), "text": "Employee ID:"},
             {"geometry": QRect(40, 210, 130, 40), "text": "First Name"},
             {"geometry": QRect(380, 210, 160, 40), "text": "Middle Name"},
@@ -3056,7 +3026,7 @@ class Maintenance(QWidget):
             style = "background-color: #006646"
         )
         update_table_widget("Equipments", self.equipment_table_widget, self.show_view_equipment_page)
-
+        self.create_equipment_clear_button.clicked.connect(lambda: self.create_equipment_page)
         self.create_equipment_back_button.clicked.connect(self.show_equipment_page)
         self.create_equipment_register_button.clicked.connect(lambda: register_equipment(self.assigned_input("Equipments"), self.create_equipment_page, self.create_equipment_id_output_label))
 
@@ -3073,7 +3043,7 @@ class Maintenance(QWidget):
             parent=self.edit_equipment_page,
             name="view_equipment_text",
             geometry=QRect(280, 50, 430, 40),
-            text="Register Equipment",
+            text="Edit Equipment",
             font=font4,
             style="font: bold"
         )
@@ -3211,7 +3181,7 @@ class Maintenance(QWidget):
             parent=self.view_equipment_page,
             name="view_equipment_text",
             geometry=QRect(280, 50, 430, 40),
-            text="Register Equipment",
+            text="View Equipment",
             font=font4,
             style="font: bold"
         )
@@ -3316,7 +3286,7 @@ class Maintenance(QWidget):
             parent=self.view_equipment_page,
             name="register_button",
             geometry=QRect(690, 730, 250, 50),
-            text="Register Equipment",
+            text="Edit Equipment",
             font=font3,
             style="background-color: #006646"
         )

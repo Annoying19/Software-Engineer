@@ -45,8 +45,9 @@ def validate_input(field_name, value, rules):
             pattern = r"[^@]+@[^@]+\.[^@]+"
             if not re.match(pattern, value):
                 return False, f"{field_name} must be a valid email."
-        if rule == "date" and not isinstance(value, str):
-            return False, f"{field_name} must be a valid date."
+        if rule == "date":
+            if not isinstance(value, QDate):
+                return False, f"{field_name} must be a valid date."
         if rule == "phone":
             pattern = r"^\+?\d{10,15}$"
             if not re.match(pattern, value):
@@ -62,7 +63,20 @@ def validate_input(field_name, value, rules):
             pattern = r"^[a-zA-Z\s\-]+$"
             if not re.match(pattern, value):
                 return False, f"{field_name} must contain only alphabetic characters, spaces, or hyphens."
-        # Add more rules as needed
+        if rule == "adult":
+            if isinstance(value, QDate):
+                current_date = QDate.currentDate()
+                age = current_date.year() - value.year()
+                if current_date.month() < value.month() or (current_date.month() == value.month() and current_date.day() < value.day()):
+                    age -= 1
+                if age < 18:
+                    return False, f"{field_name} must be at least 18 years old."
+        if rule == "date_range":
+            start_date, end_date = value
+            if not isinstance(start_date, QDate) or not isinstance(end_date, QDate):
+                return False, f"{field_name} must be valid dates."
+            if start_date >= end_date:
+                return False, f"{field_name} start date must be before the end date."
     return True, ""
 
 
@@ -84,11 +98,11 @@ def validate_all_inputs(entity_type, inputs):
             'last_name': ["required", 'alphabet'], 
             'address': ["required"],
             'gender': ["required"],
-            'birthdate': ["required"],
+            'birthdate': ["required", "adult"],
             'phone': ["required", "phone", 'numeric'],
             'membership_type': ["required"],
-            'membership_start_date': ["required"],
-            'membership_end_date': ["required"],
+            'membership_start_date': ["required", "date_range"],
+            'membership_end_date': ["required", "date_range"],
             'image': ["required", "image"],
             'signature': ["required", "image"]
         },
@@ -236,7 +250,8 @@ SQL_UPDATE_MEMBERS = '''
 
 SQL_UPDATE_USER = '''
     UPDATE Users
-    SET username = ?, password_hash = ?, role = ?   
+    SET username = ?, password_hash = ?, role = ? 
+    WHERE employee_id = ?
 '''
 
 SQL_UPDATE_EQUIPMENT = '''
@@ -281,7 +296,7 @@ SQL_FETCH_EMPLOYEE = '''
 SQL_FETCH_USER = '''
     SELECT 
     employee_id, username, role 
-    FROM Users  
+    FROM Users 
 '''
 
 SQL_FETCH_EQUIPMENT = '''
@@ -302,23 +317,19 @@ SQL_FETCH_PAYMENT = ''' SELECT * FROM Contracts '''
 SQL_SEARCH_MEMBER = '''
     SELECT 
         member_id, 
-        first_name || ' ' || last_name AS full_name, 
+        first_name || ' ' || last_name, 
         membership_type, 
         phone_number, 
         membership_start_date, 
         membership_end_date
     FROM Members
-    WHERE 
-        member_id LIKE ? OR 
-        first_name LIKE ? OR 
-        last_name LIKE ? OR
-        first_name || ' ' || last_name LIKE ?;
+    WHERE member_id LIKE ? OR first_name || ' ' || last_name LIKE ? OR first_name LIKE ? ;
 '''
 
 
 SQL_SEARCH_EMPLOYEE = '''
     SELECT 
-    employee_id, first_name || ' ' || last_name AS full_name, position, phone, hire_date
+    employee_id, first_name || ' ' || last_name, position, phone, hire_date
     FROM Employees
     WHERE employee_id LIKE ? OR first_name || ' ' || last_name LIKE ?;
 '''
@@ -365,12 +376,10 @@ def search_entity(entity, search_text, table_widget, function):
     }
     query = queries.get(entity)
     # Adjust the number of parameters in the query based on the entity
-    if entity in ["Equipments", "Payments"]:
+    if entity in ["Equipments", "Payments", "Members"]:
         cursor.execute(query, (f'%{keyword}%', f'%{keyword}%', f'%{keyword}%'))
     elif entity in ["Users", "Products", "Employees"]:
         cursor.execute(query, (f'%{keyword}%', f'%{keyword}%'))
-    elif entity in ["Members"]:
-        cursor.execute(query, (f'%{keyword}%', f'%{keyword}%', f'%{keyword}%', f'%{keyword}%'))
 
     results = cursor.fetchall()
     table_widget.setRowCount(len(results))
@@ -408,12 +417,21 @@ def get_last_attendance(cursor, member_id, date):
     return cursor.fetchone()
 
 def update_table_widget(entity, table_widget, function):
+    # Fetch the data
     data = fetch_entity(entity)
+    
+    # Sort the data in descending order (assuming sorting by the first column)
+    data.sort(key=lambda x: x[0], reverse=True)
+    # Set the number of rows in the table
     table_widget.setRowCount(len(data))
     print(len(data))
+
     for row_index, row_data in enumerate(data):
         for col_index, col_data in enumerate(row_data):
+            # Add data to the table
             table_widget.setItem(row_index, col_index, QTableWidgetItem(str(col_data)))
+        
+        # Add a view button
         view_button = QPushButton("View")
         view_button.clicked.connect(partial(function, row_index))
         table_widget.setCellWidget(row_index, len(row_data), view_button)
@@ -435,6 +453,7 @@ def register_attendance(inputs, page):
     last_record = get_last_attendance(cursor, member_id, date)
     
     try:
+
         if validate_all_inputs("Attendance", inputs):
             if inputs["attendance"] == "Entry":
                 if last_record and not last_record[2]:  # If there's an entry with no exit
@@ -461,27 +480,28 @@ def register_attendance(inputs, page):
 
 def register_member(inputs, page, text):
     try:
-        if validate_all_inputs("Members", inputs):
-            cursor.execute(SQL_INSERT_MEMBER, (
-                inputs["member_id"],
-                inputs["first_name"].strip(),
-                inputs["middle_name"].strip(),
-                inputs["last_name"].strip(),
-                inputs["address"],
-                inputs["phone"],
-                inputs["birthdate"].toString("yyyy-MM-dd"),
-                inputs["membership_type"],
-                inputs["gender"],
-                inputs["start_date"].toString("yyyy-MM-dd"),
-                inputs["end_date"].toString("yyyy-MM-dd"),
-                inputs["image"],
-                inputs["signature"],
-            ))
-            connection.commit()
-            QMessageBox.information(None, "Success", "Member registered successfully!")
-            get_user_log(f"Registered a Member", current_username)
-            clear_inputs(page)
-            generate_id("Members", text)
+        if validate_date(inputs["start_date"], inputs["end_date"]):
+            if validate_all_inputs("Members", inputs):
+                cursor.execute(SQL_INSERT_MEMBER, (
+                    inputs["member_id"],
+                    inputs["first_name"].strip(),
+                    inputs["middle_name"].strip(),
+                    inputs["last_name"].strip(),
+                    inputs["address"],
+                    inputs["phone"],
+                    inputs["birthdate"].toString("yyyy-MM-dd"),
+                    inputs["membership_type"],
+                    inputs["gender"],
+                    inputs["start_date"].toString("yyyy-MM-dd"),
+                    inputs["end_date"].toString("yyyy-MM-dd"),
+                    inputs["image"],
+                    inputs["signature"],
+                ))
+                connection.commit()
+                QMessageBox.information(None, "Success", "Member registered successfully!")
+                get_user_log(f"Registered a Member", current_username)
+                clear_inputs(page)
+                generate_id("Members", text)
     except sqlite3.Error as e:
         connection.rollback()
         return f"Database error: {e}"
@@ -538,27 +558,28 @@ def register_user(inputs, page):
 def register_equipment(inputs, page, text):
     try:
         if validate_all_inputs("Equipments", inputs):
-            cursor.execute(SQL_INSERT_EQUIPMENT, (
-                        inputs['equipment_id'], 
-                        inputs['equipment_name'], 
-                        inputs['equipment_serial_number'], 
-                        inputs['equipment_category'], 
-                        inputs['equipment_purchase_date'], 
-                        inputs['equipment_warranty_expiry'], 
-                        inputs['equipment_price'], 
-                        inputs['equipment_manufacturer'], 
-                        inputs['equipment_location'], 
-                        inputs['equipment_status']
-                        )
-            )
-            connection.commit()
-            QMessageBox.information(None, "Registered", "Account Sucessfully Registered")
-            get_user_log(f"Registered an Equipment", current_username)
-            clear_inputs(page)
-            generate_id("Equipments", text)
-        else: 
-            QMessageBox.warning(None, "Error", "Register of Equipment Failed")
-            get_user_log(f"Registered an Equipment Failedd", current_username)
+            if validate_date(inputs['equipment_purchase_date'], inputs['equipment_warranty_expiry']):
+                cursor.execute(SQL_INSERT_EQUIPMENT, (
+                            inputs['equipment_id'], 
+                            inputs['equipment_name'], 
+                            inputs['equipment_serial_number'], 
+                            inputs['equipment_category'], 
+                            inputs['equipment_purchase_date'], 
+                            inputs['equipment_warranty_expiry'], 
+                            inputs['equipment_price'], 
+                            inputs['equipment_manufacturer'], 
+                            inputs['equipment_location'], 
+                            inputs['equipment_status']
+                            )
+                )
+                connection.commit()
+                QMessageBox.information(None, "Registered", "Account Sucessfully Registered")
+                get_user_log(f"Registered an Equipment", current_username)
+                clear_inputs(page)
+                generate_id("Equipments", text)
+            else: 
+                QMessageBox.warning(None, "Error", "Register of Equipment Failed")
+                get_user_log(f"Registered an Equipment Failedd", current_username)
     except sqlite3.Error as e:
             connection.rollback()
             return f"Database error: {e}"
@@ -654,10 +675,16 @@ def update_employee(inputs, page):
 def update_user(inputs, page):
     try:
         if validate_all_inputs("Users", inputs):
+            print("lmao")
+            password_bytes = inputs["password"].encode()
+            hashed_password = hashlib.sha256(password_bytes).hexdigest()
+            print(hashed_password)
             cursor.execute(SQL_UPDATE_USER, (
                             inputs["username"],
-                            inputs["password"],
-                            inputs["role"]
+                            hashed_password,
+                            inputs["role"],
+                            inputs["employee_id"],
+
                         )
             )
             connection.commit()
@@ -674,26 +701,27 @@ def update_user(inputs, page):
 def update_equipment(inputs, page):
     try:
         if validate_all_inputs("Equipments", inputs):
-            cursor.execute(SQL_UPDATE_EQUIPMENT, (
-                            inputs['equipment_name'], 
-                            inputs['equipment_serial_number'], 
-                            inputs['equipment_category'], 
-                            inputs['equipment_purchase_date'].toString("yyyy-MM-dd"), 
-                            inputs['equipment_warranty_expiry'].toString("yyyy-MM-dd"), 
-                            inputs['equipment_price'], 
-                            inputs['equipment_manufacturer'], 
-                            inputs['equipment_location'], 
-                            inputs['equipment_status'],
-                            inputs['equipment_id']
-                        )
-            )
-            connection.commit()
-            QMessageBox.information(None, "Updated", "Equipment Sucessfully Updated")
-            get_user_log(f"Updated an Account", current_username)
-            page()
-        else: 
-            QMessageBox.warning(None, "Error", "Update Information Failed")
-            get_user_log(f"Update Equipment Information Failed", current_username)
+            if validate_date(inputs['equipment_purchase_date'], inputs['equipment_warranty_expiry']):
+                cursor.execute(SQL_UPDATE_EQUIPMENT, (
+                                inputs['equipment_name'], 
+                                inputs['equipment_serial_number'], 
+                                inputs['equipment_category'], 
+                                inputs['equipment_purchase_date'].toString("yyyy-MM-dd"), 
+                                inputs['equipment_warranty_expiry'].toString("yyyy-MM-dd"), 
+                                inputs['equipment_price'], 
+                                inputs['equipment_manufacturer'], 
+                                inputs['equipment_location'], 
+                                inputs['equipment_status'],
+                                inputs['equipment_id']
+                            )
+                )
+                connection.commit()
+                QMessageBox.information(None, "Updated", "Equipment Sucessfully Updated")
+                get_user_log(f"Updated an Account", current_username)
+                page()
+            else: 
+                QMessageBox.warning(None, "Error", "Update Information Failed")
+                get_user_log(f"Update Equipment Information Failed", current_username)
     except sqlite3.Error as e:
             connection.rollback()
             return f"Database error: {e}"
@@ -701,21 +729,22 @@ def update_equipment(inputs, page):
 def update_product(inputs, page):
     try:
         if validate_all_inputs("Products", inputs):
-            cursor.execute(SQL_UPDATE_EQUIPMENT, (
-                            inputs['product_id'],
-                            inputs['product_name'],
-                            inputs['sku'],
-                            inputs['quantity'],
-                            inputs['supplier'],
-                            inputs['price'],
-                            inputs['purchase_date'],
-                            inputs['expiry_date'],
-                        )
-            )
-            connection.commit()
-            QMessageBox.information(None, "Updated", "Product Sucessfully Updated")
-            get_user_log(f"Updated a Product", current_username)
-            page()
+            if validate_date(inputs['equipment_purchase_date'], inputs['equipment_warranty_expiry']):
+                cursor.execute(SQL_UPDATE_EQUIPMENT, (
+                                inputs['product_id'],
+                                inputs['product_name'],
+                                inputs['sku'],
+                                inputs['quantity'],
+                                inputs['supplier'],
+                                inputs['price'],
+                                inputs['purchase_date'],
+                                inputs['expiry_date'],
+                            )
+                )
+                connection.commit()
+                QMessageBox.information(None, "Updated", "Product Sucessfully Updated")
+                get_user_log(f"Updated a Product", current_username)
+                page()
         else: 
             QMessageBox.warning(None, "Error", "Update Information Failed")
             get_user_log(f"Update Product Information Failed", current_username)
@@ -748,7 +777,17 @@ def disable_past_date(label):
         # Disable selection of past dates
     label.setDateRange(QDate.currentDate(), QDate(2099, 12, 31))
 
+def validate_date(start_date, end_date):
+    if start_date >= end_date:
+        QMessageBox.warning(None, "Invalid Date", "Start Date must be less than End Date.")
+        return False
+    return True
     
+def validate_time(start_time, end_time):
+    if start_time >= end_time:
+        QMessageBox.warning(None, "Invalid Time", "Start Time must be less than End Time.")
+        return False
+    return True
 def generate_id(entity_type, label):
 
     current_time = datetime.now()
