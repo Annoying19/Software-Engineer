@@ -77,7 +77,7 @@ class Inventory(QWidget):
             font=font5,
             style="background: lime; color: white"
         )
-        self.equipment_stockButton.clicked.connect(self.switchPage())
+        self.equipment_stockButton.clicked.connect(self.switchPage)
         self.equipment_searchButton.clicked.connect(lambda: self.search("Equipments"))
         self.loadData(lambda: "Equipments")
         
@@ -117,36 +117,28 @@ class Inventory(QWidget):
             style="background: #4681f4; color: white"
         )
 
-        self.stock_startDateEdit = createDate(
+        self.stock_date = createDate(
             parent=self.page2,
-            name="stock_startDateEdit",
+            name="stock_date",
             geometry=QRect(130, 140, 171, 41),
             font=font5,
             style=""
         )
 
-        self.stock_endDateEdit = createDate(
+        self.stock_dateDirectory = createComboBox(
             parent=self.page2,
-            name="stock_endDateEdit",
-            geometry=QRect(400, 140, 171, 41),
+            name="stock_dateDirectory",
+            geometry=QRect(350, 140, 171, 41),
             font=font5,
-            style=""
+            style="",
+            item = ('on', 'before', 'after')
         )
 
         self.stock_startDatelabel = createLabel(
             parent=self.page2,
             name="stock_startDatelabel",
-            geometry=QRect(70, 150, 61, 21),
-            text="From :",
-            font=font5,
-            style=""
-        )
-
-        self.stock_endDateLabel = createLabel(
-            parent=self.page2,
-            name="stock_endDateLabel",
-            geometry=QRect(370, 150, 31, 21),
-            text="To :",
+            geometry=QRect(50, 150, 71, 21),
+            text="Expiry Date :",
             font=font5,
             style=""
         )
@@ -167,15 +159,18 @@ class Inventory(QWidget):
         self.tableWidget2 = QTableWidget(self.page2)  # Assign to self.page2
         self.tableWidget2.setGeometry(QRect(30, 200, 891, 571))
         self.tableWidget2.setRowCount(0)
-        self.tableWidget2.setColumnCount(5)
+        self.tableWidget2.setColumnCount(10)
         self.tableWidget2.setObjectName("stocktableWidget")
         self.tableWidget2.verticalHeader().setVisible(False)
-        header = self.tableWidget2.horizontalHeader()
-        header.setSectionResizeMode(QHeaderView.Stretch)
-        header.setDefaultAlignment(Qt.AlignCenter)
+        self.tableWidget2.setHorizontalScrollMode(QAbstractItemView.ScrollPerPixel)
+        self.tableWidget2.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        header2 = self.tableWidget2.horizontalHeader()
+        header2.setSectionResizeMode(QHeaderView.Stretch)
+        header2.setDefaultAlignment(Qt.AlignCenter)
+        header2.setSectionResizeMode(QHeaderView.ResizeToContents)  # Adjust columns to content
+        header2.setStretchLastSection(True)
         self.tableWidget2.setStyleSheet("background: white")
         self.loadData(lambda: "Products")
-
 
 
     def switchPage(self):
@@ -239,7 +234,6 @@ class Inventory(QWidget):
             elif select == 3:
                 status = "Retired"
             
-
             self.tableWidget.setRowCount(0)
 
             cursor.execute("""
@@ -259,26 +253,35 @@ class Inventory(QWidget):
 
         elif table == "Products":
             search_term = self.stock_lineEdit.text()
-            self.tableWidget.setRowCount(0)
-            start = self.stock_startDateEdit.date().toString(Qt.ISODate)
-            end = self.stock_endDateEdit.date().toString(Qt.ISODate) 
+            select = self.stock_dateDirectory.currentIndex()
+            
+            if select == 0:
+                status = "="
+            elif select == 1:
+                status = "<"
+            elif select == 2:
+                status = ">"
 
-            cursor.execute("""
+            
+            start = self.stock_date.date().toString(Qt.ISODate)
+
+
+            self.tableWidget2.setRowCount(0)
+            cursor.execute(f"""
                 SELECT * 
                 FROM Products 
                 WHERE (CAST(product_id AS TEXT) LIKE ? OR 
                     CAST(name AS TEXT) LIKE ?) AND
-                    expiry_date BETWEEN ? AND ?
-                """, (search_term + '%', search_term + '%', start, end))
+                    expiry_date {status} ?
+                """, (search_term + '%', search_term + '%', start))
             
             print(start)
-            print(end)
             for row_number, row_data in enumerate(cursor):
                 self.tableWidget2.insertRow(row_number)  
                 for column_number, data in enumerate(row_data):
                     item = QTableWidgetItem(str(data))
                     item.setTextAlignment(Qt.AlignRight)
-                    self.tableWidget.setItem(row_number, column_number, item)
+                    self.tableWidget2.setItem(row_number, column_number, item)
 
 if __name__ == "__main__":
     import sys
