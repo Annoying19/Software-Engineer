@@ -431,7 +431,7 @@ class Registration(QWidget):
             geometry=QRect(510, 730, 170, 50),
             text="Clear",
             font=font3,
-            style="background-color: #882400"
+            style="background-color: #882400; color: #FFFFFF"
         )
 
         # REGISTER BUTTON
@@ -441,7 +441,7 @@ class Registration(QWidget):
             geometry=QRect(690, 730, 250, 50),
             text="Register",
             font=font3,
-            style="background-color: #006646"
+            style="background-color: #006646; color: #FFFFFF"
         )
 
         # BACK BUTTON
@@ -451,7 +451,7 @@ class Registration(QWidget):
             geometry=QRect(40, 50, 70, 50),
             text="Back",
             font=font3,
-            style="background-color: #004F9A"
+            style="background-color: #004F9A; color: #FFFFFF"
         )
 
         self.attendance_register_button.clicked.connect(lambda: register_attendance(self.assigned_input("Attendance"), self.attendance_page))

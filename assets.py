@@ -217,27 +217,27 @@ SQL_UPDATE_ATTENDANCE = '''
 SQL_INSERT_MEMBER = '''
     INSERT INTO Members 
     (member_id, first_name, middle_name, last_name, address, phone_number, birthdate, membership_type,
-    gender, membership_start_date, membership_end_date, photo, signature) 
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    gender, membership_start_date, membership_end_date, photo, signature, void) 
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
 '''
 
 SQL_INSERT_EMPLOYEE = '''
     INSERT INTO Employees 
     (employee_id, first_name, middle_name, last_name, birthdate, gender, address, phone,
-    hire_date, position, photo) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    hire_date, position, photo, void) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
 '''
 
 SQL_INSERT_USER = '''
     INSERT INTO Users
-    (employee_id, username, password_hash, role) VALUES
-    (?, ?, ?, ?)
+    (employee_id, username, password_hash, role, void) VALUES
+    (?, ?, ?, ?, 0)
 '''
 
 SQL_INSERT_EQUIPMENT = '''
     INSERT INTO Equipments 
     (equipment_id, equipment_name, equipment_serial_number, equipment_category, equipment_purchase_date, 
-    equipment_warranty_expiry, equipment_price, equipment_manufacturer, equipment_location, equipment_status
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    equipment_warranty_expiry, equipment_price, equipment_manufacturer, equipment_location, equipment_status, void
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
 
 '''
 
@@ -270,8 +270,8 @@ SQL_UPDATE_EMPLOYEE = '''
 
 SQL_INSERT_PRODUCT = '''
     INSERT INTO Products
-    (product_id, name, brand, sku, quantity, supplier, price, purchase_date, expiry_date, status) 
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active')
+    (product_id, name, brand, sku, quantity, supplier, price, purchase_date, expiry_date, status, void) 
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active', 0)
 '''
 
 SQL_UPDATE_CONTRACT = '''
@@ -285,31 +285,35 @@ SQL_FETCH_MEMBER =  '''
     SELECT member_id, 
     first_name || ' ' || last_name, membership_type, phone_number, membership_end_date
     FROM Members
+    WHERE void = 0
 '''
 
 SQL_FETCH_EMPLOYEE = '''
     SELECT 
     employee_id, first_name || ' ' || last_name, position, phone, hire_date
     FROM Employees 
+    WHERE void = 0
 '''
 
 SQL_FETCH_USER = '''
     SELECT 
     employee_id, username, role 
     FROM Users 
+    WHERE void = 0
 '''
 
 SQL_FETCH_EQUIPMENT = '''
     SELECT 
     equipment_id, equipment_name, equipment_serial_number, equipment_category, equipment_status 
     FROM Equipments
-
+    WHERE void = 0
 '''
 
 SQL_FETCH_PRODUCT = '''
     SELECT 
     product_id, name, quantity,expiry_date, status
-    FROM Products 
+    FROM Products
+    WHERE void = 0 
 '''
 
 SQL_FETCH_PAYMENT = ''' SELECT * FROM Contracts '''
@@ -319,11 +323,10 @@ SQL_SEARCH_MEMBER = '''
         member_id, 
         first_name || ' ' || last_name, 
         membership_type, 
-        phone_number, 
-        membership_start_date, 
+        phone_number,  
         membership_end_date
     FROM Members
-    WHERE member_id LIKE ? OR first_name || ' ' || last_name LIKE ? OR first_name LIKE ? ;
+    WHERE (member_id LIKE ? OR first_name || ' ' || last_name LIKE ? OR first_name LIKE ?) AND void = 0 ;
 '''
 
 
@@ -331,28 +334,28 @@ SQL_SEARCH_EMPLOYEE = '''
     SELECT 
     employee_id, first_name || ' ' || last_name, position, phone, hire_date
     FROM Employees
-    WHERE employee_id LIKE ? OR first_name || ' ' || last_name LIKE ?;
+    WHERE (employee_id LIKE ? OR first_name || ' ' || last_name LIKE ?) AND void = 0;
 '''
 
 SQL_SEARCH_USER = '''
     SELECT 
     employee_id, username, role
     FROM Users
-    WHERE employee_id LIKE ? OR username LIKE ?;
+    WHERE (employee_id LIKE ? OR username LIKE ?) AND void = 0;
 '''
 
 SQL_SEARCH_EQUIPMENT = '''
     SELECT 
     equipment_id, equipment_name, equipment_serial_number, equipment_category, equipment_status, equipment_purchase_date
     FROM Equipments
-    WHERE equipment_id LIKE ? OR equipment_name LIKE ? OR equipment_serial_number LIKE ?;
+    WHERE (equipment_id LIKE ? OR equipment_name LIKE ? OR equipment_serial_number LIKE ?) AND void = 0;
 '''
 
 SQL_SEARCH_PRODUCT = '''
     SELECT 
     product_id, name, quantity, expiry_date, status
     FROM Products
-    WHERE product_id LIKE ? OR name LIKE ?;
+    WHERE (product_id LIKE ? OR name LIKE ?) AND void = 0;
 '''
 
 SQL_SEARCH_PAYMENT = '''
@@ -363,9 +366,18 @@ SQL_SEARCH_PAYMENT = '''
     WHERE c.reference_number LIKE ? OR m.first_name LIKE ? OR m.last_name LIKE ?;
 '''
 
-def search_entity(entity, search_text, table_widget, function):
-
+ENTITY_ID_MAPPING = {
+    'Members': 'member_id',
+    'Employees': 'employee_id',
+    'Equipments': 'equipment_id',
+    'Products': 'product_id',
+    'Users': 'employee_id',
+    # Add more entities as needed
+}
+def search_entity(entity, search_text, table_widget, view_function):
     keyword = search_text.text().strip()
+
+    # Assuming cursor and queries are defined elsewhere
     queries = {
         "Members": SQL_SEARCH_MEMBER,
         "Employees": SQL_SEARCH_EMPLOYEE,
@@ -375,6 +387,7 @@ def search_entity(entity, search_text, table_widget, function):
         "Payments": SQL_SEARCH_PAYMENT
     }
     query = queries.get(entity)
+
     # Adjust the number of parameters in the query based on the entity
     if entity in ["Equipments", "Payments", "Members"]:
         cursor.execute(query, (f'%{keyword}%', f'%{keyword}%', f'%{keyword}%'))
@@ -383,18 +396,29 @@ def search_entity(entity, search_text, table_widget, function):
 
     results = cursor.fetchall()
     table_widget.setRowCount(len(results))
+
     for row_idx, row_data in enumerate(results):
         for col_idx, col_data in enumerate(row_data):
             table_widget.setItem(row_idx, col_idx, QTableWidgetItem(str(col_data)))
 
-        add_view_buttons(table_widget, function, len(row_data))
+        # Add view button in the correct column after the last data column
+        add_view_buttons(table_widget, void_row, row_idx, row_data)
 
-def add_view_buttons(table_widget, function, row_data):
-        for row_idx in range(table_widget.rowCount()):
-            view_button = QPushButton("View")
-            view_button.clicked.connect(partial(function, row_idx))
-            table_widget.setCellWidget(row_idx, row_data, view_button)
+        # Add void button in the correct column after the view button
+        add_void_buttons(table_widget, void_row, row_idx, entity, row_data)
+       
+def add_view_buttons(table_widget, view_function, row_idx, row_data):
+    view_button = QPushButton("View")
+    view_button.clicked.connect(partial(view_function, row_idx))
+    # Place the button in the next column after the last data column
+    table_widget.setCellWidget(row_idx, len(row_data), view_button)
 
+def add_void_buttons(table_widget, void_function, row_idx, entity, row_data):
+    void_button = QPushButton("Void")
+    void_button.setStyleSheet("background-color: red; color: #FFFFFF")
+    void_button.clicked.connect(partial(void_function, table_widget, row_idx, entity))
+    # Place the button in the next column after the "View" button
+    table_widget.setCellWidget(row_idx, len(row_data) + 1, void_button)
 def fetch_entity(entity):
 
     fetch_queries = {
@@ -416,25 +440,59 @@ def get_last_attendance(cursor, member_id, date):
     cursor.execute(SQL_GET_LAST_ATTENDANCE, (member_id, date))
     return cursor.fetchone()
 
-def update_table_widget(entity, table_widget, function):
+
+def update_table_widget(entity, table_widget, view_function):
     # Fetch the data
     data = fetch_entity(entity)
     
     # Sort the data in descending order (assuming sorting by the first column)
     data.sort(key=lambda x: x[0], reverse=True)
+
     # Set the number of rows in the table
     table_widget.setRowCount(len(data))
-    print(len(data))
 
     for row_index, row_data in enumerate(data):
         for col_index, col_data in enumerate(row_data):
             # Add data to the table
             table_widget.setItem(row_index, col_index, QTableWidgetItem(str(col_data)))
-        
+
         # Add a view button
         view_button = QPushButton("View")
-        view_button.clicked.connect(partial(function, row_index))
+        view_button.clicked.connect(partial(view_function, row_index))
         table_widget.setCellWidget(row_index, len(row_data), view_button)
+
+        add_void_buttons(table_widget, void_row, row_index, entity, row_data)
+
+    table_widget.verticalHeader().setVisible(False)
+
+def void_row(table_widget, row_index, entity):
+
+    first_column_value = table_widget.item(row_index, 0).text()
+
+
+    # Show a confirmation dialof
+    reply = QMessageBox.question(
+        None, 'Confirmation', 'Are you sure you want to void this row?',
+        QMessageBox.Yes | QMessageBox.No, QMessageBox.No
+    )
+
+    if reply == QMessageBox.Yes:
+        if entity in ENTITY_ID_MAPPING:
+            id_column = ENTITY_ID_MAPPING[entity]
+            cursor = connection.cursor()
+            cursor.execute(f"UPDATE {entity} SET void = 1 WHERE {id_column} = ?", (first_column_value,))
+            connection.commit()
+
+        for col_index in range(table_widget.columnCount() - 1):
+            table_widget.setItem(row_index, col_index, QTableWidgetItem("VOIDED"))
+        
+        view_button = table_widget.cellWidget(row_index, table_widget.columnCount() - 2)
+        if view_button:
+            view_button.setDisabled(True)
+
+        void_button = table_widget.cellWidget(row_index, table_widget.columnCount() - 1)
+        if void_button:
+            void_button.setDisabled(True)
 
 
 def insert_attendance(cursor, member_id, entry_time, date):

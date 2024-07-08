@@ -39,8 +39,8 @@ class Ui_MainWindow(object):
 
         self.logo = QLabel(self.logo_frame)
         self.logo.setGeometry(50, 20, 150, 150)
-        self.logo.setStyleSheet("border-radius: 75px; background-color: #FFFFFF")
-        self.logo.setPixmap(QPixmap("slimmerslogo-removebg-preview.png"))
+        self.logo.setStyleSheet("border-radius: 10px; background-color: #FFFFFF")
+        self.logo.setPixmap(QPixmap("assets\slimmerslogo.jpg"))
         self.logo.setScaledContents(True)
 
         self.taskbar_frame = QFrame(self.side_frame)
@@ -52,7 +52,7 @@ class Ui_MainWindow(object):
         self.buttons = {}
         button_names = [
             "Inventory", "Registration", "Scheduling", "Reports", "Payment",
-            "UserLogs", "Maintenance", "Help", "About"
+            "User Logs", "Maintenance", "Help", "About"
         ]
 
         FONT = QFont()
@@ -90,12 +90,45 @@ class Ui_MainWindow(object):
         self.stacked_widget = QStackedWidget(self.main_frame)
 
         self.pages = {}
-        page_classes = [Inventory, Registration, Scheduling, Reports, Payment, UserLogs, Maintenance, Help, About]
-        for page_class in page_classes:
-            page_instance = page_class()
-            page_name = page_class.__name__.lower()
-            self.stacked_widget.addWidget(page_instance)
-            self.pages[page_name] = page_instance
+
+        # Create instances for each page and add them to stacked widget and pages dictionary
+        self.inventory_page = Inventory()
+        self.stacked_widget.addWidget(self.inventory_page)
+        self.pages["inventory"] = self.inventory_page
+
+        self.registration_page = Registration()
+        self.stacked_widget.addWidget(self.registration_page)
+        self.pages["registration"] = self.registration_page
+
+        self.scheduling_page = Scheduling()
+        self.stacked_widget.addWidget(self.scheduling_page)
+        self.pages["scheduling"] = self.scheduling_page
+
+        self.reports_page = Reports()
+        self.stacked_widget.addWidget(self.reports_page)
+        self.pages["reports"] = self.reports_page
+
+        self.payment_page = Payment()
+        self.stacked_widget.addWidget(self.payment_page)
+        self.pages["payment"] = self.payment_page
+
+        self.user_logs_page = UserLogs()
+        self.stacked_widget.addWidget(self.user_logs_page)
+        self.pages["user logs"] = self.user_logs_page  # Use "user logs" as the key
+
+
+        self.maintenance_page = Maintenance()
+        self.stacked_widget.addWidget(self.maintenance_page)
+        self.pages["maintenance"] = self.maintenance_page
+
+        self.help_page = Help()
+        self.stacked_widget.addWidget(self.help_page)
+        self.pages["help"] = self.help_page
+
+        self.about_page = About()
+        self.stacked_widget.addWidget(self.about_page)
+        self.pages["about"] = self.about_page
+
 
         self.side_frame_layout.addWidget(self.logo_frame)
         self.side_frame_layout.addWidget(self.taskbar_frame)

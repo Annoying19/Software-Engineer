@@ -454,11 +454,11 @@ class Maintenance(QWidget):
         self.member_table_widget = QTableWidget(self.manage_member_page)
         self.member_table_widget.setGeometry(QRect(10, 200, 930, 590))
         self.member_table_widget.setRowCount(0)
-        self.member_table_widget.setColumnCount(6)  # Limited columns
+        self.member_table_widget.setColumnCount(7)  # Limited columns
 
         # Set the horizontal header labels
         self.member_table_widget.setHorizontalHeaderLabels(
-            ["Member ID", "Full Name", "Membership Type", "Phone Number", "Membership End Date", "Actions"]
+            ["Member ID", "Full Name", "Membership Type", "Phone Number", "Membership End Date", "Actions", "Void"],
         )
 
         self.stackedWidget.addWidget(self.manage_member_page)
@@ -1034,7 +1034,7 @@ class Maintenance(QWidget):
 
         # Unpack the results
         (employee_id, first_name, middle_name, last_name, address, gender, birthdate, phone,
-        membership_type, start_date, end_date, photo, signature) = results
+        membership_type, start_date, end_date, photo, signature, void) = results
 
         pixmap = QPixmap()
         pixmap_2 = QPixmap()
@@ -1159,12 +1159,12 @@ class Maintenance(QWidget):
         self.employee_table_widget = QTableWidget(self.employee_page)
         self.employee_table_widget.setGeometry(QRect(10, 200, 930, 590))
         self.employee_table_widget.setRowCount(0)
-        self.employee_table_widget.setColumnCount(6)  # Limited columns
+        self.employee_table_widget.setColumnCount(7)# Limited columns
     
         self.manage_employee_search_input.textChanged.connect(lambda: search_entity("Employees", self.manage_employee_search_input, self.employee_table_widget, self.show_view_employee_temp))
         # Set the horizontal header labels
         self.employee_table_widget.setHorizontalHeaderLabels(
-            ["Employee ID", "Full Name", "Position", "Phone", "Hire Date", "Actions"]
+            ["Employee ID", "Full Name", "Position", "Phone", "Hire Date", "Actions", "Void"]
         )
 
         self.stackedWidget.addWidget(self.employee_page)
@@ -1631,7 +1631,7 @@ class Maintenance(QWidget):
 
         results = cursor.fetchone()
 
-        employee_id, first_name, middle_name, last_name, birth_date, gender, address, phone, hire_date, position, photo = results
+        employee_id, first_name, middle_name, last_name, birth_date, gender, address, phone, hire_date, position, photo, void = results
 
         pixmap = QPixmap()
         self.view_employee_id_output_label.setText(str(employee_id))
@@ -1729,11 +1729,11 @@ class Maintenance(QWidget):
         self.user_table_widget = QTableWidget(self.user_page)
         self.user_table_widget.setGeometry(QRect(10, 200, 930, 590))
         self.user_table_widget.setRowCount(0)
-        self.user_table_widget.setColumnCount(4)  # Limited columns
+        self.user_table_widget.setColumnCount(5)  # Limited columns
 
         # Set the horizontal header labels
         self.user_table_widget.setHorizontalHeaderLabels(
-            ["Employee ID", "Username", "Role", "Actions"]
+            ["Employee ID", "Username", "Role", "Actions", "Void"]
         )
 
         self.stackedWidget.addWidget(self.user_page)
@@ -2338,11 +2338,11 @@ class Maintenance(QWidget):
         self.product_table_widget = QTableWidget(self.product_page)
         self.product_table_widget.setGeometry(QRect(10, 200, 930, 590))
         self.product_table_widget.setRowCount(0)
-        self.product_table_widget.setColumnCount(6)  # Limited columns
+        self.product_table_widget.setColumnCount(7)# Limited columns
 
         # Set the horizontal header labels
         self.product_table_widget.setHorizontalHeaderLabels(
-            ["Product ID", "Name", " Quantity", "Expiry Date", "Status", "Actions"]
+            ["Product ID", "Name", " Quantity", "Expiry Date", "Status", "Actions", "Void"]
         )
         self.stackedWidget.addWidget(self.product_page)
         self.product_table_widget.resizeColumnsToContents()
@@ -2735,7 +2735,7 @@ class Maintenance(QWidget):
 
         results = cursor.fetchone()
 
-        product_id, name, quantity, price, expiry_date, purchase_date, supplier, brand, status, sku = results
+        product_id, name, quantity, price, expiry_date, purchase_date, supplier, brand, status, sku, void= results
 
 
         self.view_product_id_output_label.setText(product_id)
@@ -2807,7 +2807,7 @@ class Maintenance(QWidget):
 
         connection.commit()
 
-        self.show_main_page()
+        self.show_product_page()
 
 
 # ======================================================================================================================================================
@@ -2852,11 +2852,11 @@ class Maintenance(QWidget):
         self.equipment_table_widget = QTableWidget(self.equipment_page)
         self.equipment_table_widget.setGeometry(QRect(10, 200, 930, 590))
         self.equipment_table_widget.setRowCount(0)
-        self.equipment_table_widget.setColumnCount(6)  # Limited columns
+        self.equipment_table_widget.setColumnCount(7)# Limited columns
 
         # Set the horizontal header labels
         self.equipment_table_widget.setHorizontalHeaderLabels(
-            ["Equipment ID", "Name", "Serial Number", "Category", "Status", "Actions"]
+            ["Equipment ID", "Name", "Serial Number", "Category", "Status", "Actions", "Void"]
         )
 
         self.stackedWidget.addWidget(self.equipment_page)
@@ -3355,7 +3355,8 @@ class Maintenance(QWidget):
             equipment_price, 
             equipment_manufacturer, 
             equipment_location, 
-            equipment_status
+            equipment_status,
+            void
         ) = results
 
         # Update the UI elements with the fetched data

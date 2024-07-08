@@ -51,7 +51,7 @@ class DateSelectionDialog(QDialog):
         return self.date_edit.date().toString("yyyy-MM-dd")
 
 
-class Reports(QWidget):  # Inherit from QWidget
+class Reports(QWidget):
     def __init__(self, parent=None):
         super(Reports, self).__init__(parent)
         self.setObjectName("Form")
@@ -62,83 +62,41 @@ class Reports(QWidget):  # Inherit from QWidget
 
     def open_reports_maintenance(self):
         self.verticalLayout = QVBoxLayout(self)
-        self.verticalLayout.setSpacing(0)
-        self.verticalLayout.setContentsMargins(0, 0, 0, 0)
+        self.verticalLayout.setSpacing(20)  # Adjust spacing between buttons
+        self.verticalLayout.setContentsMargins(300, 20, 300, 20)  # Adjust margins
 
-        self.stackedWidget = QStackedWidget(self)
-        self.stackedWidget.setObjectName("stackedWidget")
-
-        self.open_main_page()
-        self.verticalLayout.addWidget(self.stackedWidget)
-        self.stackedWidget.setCurrentIndex(0)
-        QMetaObject.connectSlotsByName(self)
-
-    def open_main_page(self):
-        self.main_page_widget = QWidget()
-        self.main_page_layout = QVBoxLayout(self.main_page_widget)
-
-        self.membership_btn = createButton(
-            parent = self.main_page_widget,
-            name = "generate_membership_report",
-            geometry = QRect(50, 50, 200, 100),
-            text = "Membership Report",
-            font = font3,
-            style = "background-color: #004F9A; color: #FFFFFF"
-        )
-
-        self.scheduling_btn= createButton(
-            parent = self.main_page_widget,
-            name="generate_membership_report",
-            geometry=QRect(50, 50, 200, 100),
-            text="Schedule Report",
-            font=font3,
-            style="background-color: #004F9A; color: #FFFFFF"
-        )
-
-        self.equipment_btn = createButton(
-            parent = self.main_page_widget,
-            name="generate_membership_report",
-            geometry=QRect(50, 50, 200, 100),
-            text="Equipment Report",
-            font=font3,
-            style="background-color: #004F9A; color: #FFFFFF"
-        )
-
-        self.stock_btn = createButton(
-            parent = self.main_page_widget,
-            name="generate_membership_report",
-            geometry=QRect(50, 50, 200, 100),
-            text = "Stock Report",
-            font=font3,
-            style="background-color: #004F9A; color: #FFFFFF"
-        )
-
-        self.attendance_btn = createButton(
-            parent=self.main_page_widget,
-            name="generate_attendance_report",
-            geometry=QRect(50, 50, 200, 100),
-            text="Attendance Report",
-            font=font3,
-            style="background-color: #004F9A; color: #FFFFFF"
-        )
-
+        self.membership_btn = QPushButton("Membership Report")
+        self.membership_btn.setStyleSheet("background-color: #004F9A; color: #FFFFFF; height: 70px;")  # Adjust button height
+        self.membership_btn.setFont(font3)
         self.membership_btn.clicked.connect(self.generate_membership_report)
+
+        self.scheduling_btn = QPushButton("Schedule Report")
+        self.scheduling_btn.setStyleSheet("background-color: #004F9A; color: #FFFFFF; height: 70px;")
+        self.scheduling_btn.setFont(font3)
         self.scheduling_btn.clicked.connect(self.generate_scheduling_report)
+
+        self.equipment_btn = QPushButton("Equipment Report")
+        self.equipment_btn.setStyleSheet("background-color: #004F9A; color: #FFFFFF; height: 70px;")
+        self.equipment_btn.setFont(font3)
         self.equipment_btn.clicked.connect(self.generate_equipment_report)
+
+        self.stock_btn = QPushButton("Stock Report")
+        self.stock_btn.setStyleSheet("background-color: #004F9A; color: #FFFFFF; height: 70px;")
+        self.stock_btn.setFont(font3)
         self.stock_btn.clicked.connect(self.generate_stock_report)
+
+        self.attendance_btn = QPushButton("Attendance Report")
+        self.attendance_btn.setStyleSheet("background-color: #004F9A; color: #FFFFFF; height: 70px;")
+        self.attendance_btn.setFont(font3)
         self.attendance_btn.clicked.connect(self.generate_attendance_report)
 
-
-
-        self.main_page_layout.addWidget(self.membership_btn)
-        self.main_page_layout.addWidget(self.scheduling_btn)
-        self.main_page_layout.addWidget(self.equipment_btn)
-        self.main_page_layout.addWidget(self.stock_btn)
-        self.main_page_layout.addWidget(self.attendance_btn)
-
-
-        self.stackedWidget.addWidget(self.main_page_widget)
-
+        # Add buttons to layout
+        self.verticalLayout.addWidget(self.membership_btn)
+        self.verticalLayout.addWidget(self.scheduling_btn)
+        self.verticalLayout.addWidget(self.equipment_btn)
+        self.verticalLayout.addWidget(self.stock_btn)
+        self.verticalLayout.addWidget(self.attendance_btn)
+        
     def generate_membership_report(self):
         conn = sqlite3.connect('database.db')
         cursor = conn.cursor()
